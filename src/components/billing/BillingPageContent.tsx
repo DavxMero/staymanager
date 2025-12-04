@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
+import {
   Plus,
   Eye,
   Download,
@@ -62,14 +62,14 @@ interface BillingPageContentProps {
   selectedReservation: Reservation | null;
   isAddingBillingItem: boolean;
   setIsAddingBillingItem: (open: boolean) => void;
-  handleAddBillingItem: (billingItem: Omit<BillingItem, 'id' | 'created_at'>) => void;
+  handleAddBillingItem: (billingItems: Omit<BillingItem, 'id' | 'created_at'>[]) => void;
   billingItems: BillingItem[];
   handleUpdateBillingItem: (id: number, updates: Partial<BillingItem>) => void;
   setSelectedReservation: (reservation: Reservation | null) => void;
   fetchBillingItems: (reservationId: number) => void;
 }
 
-export function BillingPageContent({ 
+export function BillingPageContent({
   invoices,
   reservations,
   guests,
@@ -115,7 +115,7 @@ export function BillingPageContent({
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error! </strong>
           <span className="block sm:inline">{error}</span>
-          <button 
+          <button
             className="mt-2 bg-red-700 text-white px-4 py-2 rounded"
             onClick={fetchInvoices}
           >
@@ -140,14 +140,14 @@ export function BillingPageContent({
       </div>
 
       {/* Financial Summary */}
-      <BillingDashboard 
+      <BillingDashboard
         totalRevenue={totalRevenue}
         pendingPayments={pendingPayments}
         overdueAmount={overdueAmount}
       />
 
       {/* Invoices Table */}
-      <InvoicesTable 
+      <InvoicesTable
         invoices={invoices}
         onEditInvoice={handleEditInvoice}
         onViewInvoice={handleViewInvoice}
@@ -211,7 +211,7 @@ export function BillingPageContent({
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSaveInvoice}
               disabled={!reservationId || !amount || parseFloat(amount) <= 0}
             >
@@ -222,7 +222,7 @@ export function BillingPageContent({
       </Dialog>
 
       {/* Add Invoice Dialog */}
-      <AddInvoiceForm 
+      <AddInvoiceForm
         isOpen={isAddInvoiceDialogOpen}
         onOpenChange={setIsAddInvoiceDialogOpen}
         onAddInvoice={handleCreateInvoice}
@@ -251,33 +251,33 @@ export function BillingPageContent({
                   Reservation #{selectedReservation.id}
                 </p>
               </div>
-              
+
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-medium">Billing Items</h3>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => setIsAddingBillingItem(true)}
                     disabled={isAddingBillingItem}
                   >
                     Add Item
                   </Button>
                 </div>
-                
+
                 {isAddingBillingItem ? (
                   <div className="mb-4 p-4 border rounded-lg">
                     <h4 className="font-medium mb-3">Add New Billing Item</h4>
-                    <AddBillingItemForm 
+                    <AddBillingItemForm
                       reservationId={selectedReservation.id}
                       onAddItem={handleAddBillingItem}
                       onCancel={() => setIsAddingBillingItem(false)}
                     />
                   </div>
                 ) : null}
-                
+
                 {billingItems.length > 0 ? (
-                  <UnpaidBillingsList 
-                    billingItems={billingItems} 
+                  <UnpaidBillingsList
+                    billingItems={billingItems}
                     onItemUpdate={handleUpdateBillingItem}
                     editable={true}
                   />
@@ -310,8 +310,8 @@ export function BillingPageContent({
                         const room = rooms.find(r => r.id === reservation.room_id);
                         return (
                           <SelectItem key={reservation.id} value={reservation.id.toString()}>
-                            {guest ? guest.full_name : 'Guest #' + reservation.guest_id} - 
-                            Room {room ? room.number : 'Room #' + reservation.room_id} - 
+                            {guest ? guest.full_name : 'Guest #' + reservation.guest_id} -
+                            Room {room ? room.number : 'Room #' + reservation.room_id} -
                             Reservation #{reservation.id}
                           </SelectItem>
                         );
