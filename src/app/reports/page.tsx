@@ -81,8 +81,8 @@ import {
 import { format, startOfMonth, endOfMonth } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { 
-  formatReportCurrency, 
+import {
+  formatReportCurrency,
   formatPercentage,
   calculateGrowthRate,
   getPeriodComparisonText
@@ -128,20 +128,20 @@ export default function ReportsPage() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
         roomType: roomTypeFilter
       })
-      
+
       const response = await fetch(`/api/reports/analytics?${params}`)
       const result = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Failed to fetch analytics data')
       }
-      
+
       if (result.success) {
         setAnalyticsData(result.data)
         console.log('Analytics data loaded:', result.data)
@@ -178,7 +178,7 @@ export default function ReportsPage() {
         title: "Export Started",
         description: `Generating ${type.toUpperCase()} report...`,
       })
-      
+
       const response = await fetch('/api/reports/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -189,9 +189,9 @@ export default function ReportsPage() {
           filters: { roomType: roomTypeFilter }
         })
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
         toast({
           title: "Export Complete!",
@@ -254,8 +254,8 @@ export default function ReportsPage() {
   }
 
   const getPriorityColor = (priority: string) => {
-    switch(priority.toLowerCase()) {
-      case 'high': 
+    switch (priority.toLowerCase()) {
+      case 'high':
       case 'urgent': return 'bg-red-100 text-red-800'
       case 'medium': return 'bg-yellow-100 text-yellow-800'
       case 'low': return 'bg-green-100 text-green-800'
@@ -264,7 +264,7 @@ export default function ReportsPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch(status.toLowerCase()) {
+    switch (status.toLowerCase()) {
       case 'completed': return 'bg-green-100 text-green-800'
       case 'in-progress': return 'bg-blue-100 text-blue-800'
       case 'pending': return 'bg-orange-100 text-orange-800'
@@ -297,7 +297,7 @@ export default function ReportsPage() {
             Real-time hotel performance insights from your StayManager database
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
@@ -350,17 +350,17 @@ export default function ReportsPage() {
               </div>
             </DialogContent>
           </Dialog>
-          
+
           <Button variant="outline" onClick={fetchAnalyticsData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          
+
           <Button className="gap-2" onClick={() => handleExport('pdf')}>
             <Download className="h-4 w-4" />
             Export PDF
           </Button>
-          
+
           <Button className="gap-2" variant="outline" onClick={() => handleExport('excel')}>
             <Download className="h-4 w-4" />
             Export Excel
@@ -493,10 +493,10 @@ export default function ReportsPage() {
                   </CardTitle>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleExportReport('pdf')}>
+                  <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
                     <Download className="h-4 w-4 mr-1" /> PDF
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleExportReport('excel')}>
+                  <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
                     <Download className="h-4 w-4 mr-1" /> Excel
                   </Button>
                 </div>
@@ -506,19 +506,19 @@ export default function ReportsPage() {
                   <AreaChart data={analyticsData.revenueData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
                       </linearGradient>
                       <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1}/>
+                        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis yAxisId="left" tickFormatter={(value) => formatReportCurrency(value).replace('Rp ', 'Rp')} />
                     <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value, name) => [
                         name === 'revenue' ? formatReportCurrency(value as number) : value,
                         name === 'revenue' ? 'Revenue' : 'Bookings'
@@ -671,22 +671,22 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Room Occupancy</span>
                     <span className="text-sm text-muted-foreground">{analyticsData.summary.occupiedRooms}/{analyticsData.summary.totalRooms} rooms</span>
                   </div>
                   <Progress value={analyticsData.summary.currentOccupancyRate} className="w-full" />
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Revenue Growth</span>
                     <span className="text-sm text-muted-foreground">vs last period</span>
                   </div>
                   <Progress value={75} className="w-full" />
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Service Quality</span>
                     <span className="text-sm text-muted-foreground">{formatPercentage((analyticsData.roomServiceStats.completed / Math.max(1, analyticsData.roomServiceStats.total)) * 100)} completion rate</span>
@@ -712,7 +712,7 @@ export default function ReportsPage() {
                   </div>
                   <DollarSign className="h-5 w-5 text-green-500" />
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <div>
                     <p className="text-sm font-medium">Room Service Revenue</p>
@@ -720,7 +720,7 @@ export default function ReportsPage() {
                   </div>
                   <TrendingUp className="h-5 w-5 text-blue-500" />
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <div>
                     <p className="text-sm font-medium">Service Efficiency</p>
@@ -728,7 +728,7 @@ export default function ReportsPage() {
                   </div>
                   <CheckCircle className="h-5 w-5 text-purple-500" />
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <div>
                     <p className="text-sm font-medium">Total Bookings</p>
@@ -787,7 +787,7 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-green-600">87%</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-blue-600" />
@@ -795,7 +795,7 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-blue-600">23%</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-orange-600" />
@@ -803,7 +803,7 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-orange-600">15%</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <UserX className="h-5 w-5 text-red-600" />
@@ -830,7 +830,7 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-green-600">92%</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-blue-600" />
@@ -838,7 +838,7 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-blue-600">8%</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Heart className="h-5 w-5 text-purple-600" />
@@ -846,7 +846,7 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-purple-600">4.7/5</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Target className="h-5 w-5 text-yellow-600" />
@@ -929,11 +929,10 @@ export default function ReportsPage() {
                           <div className="flex items-center gap-2">
                             <div className="flex">
                               {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-4 w-4 ${
-                                    i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                  }`} 
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                    }`}
                                 />
                               ))}
                             </div>
