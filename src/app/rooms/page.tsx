@@ -157,8 +157,8 @@ export default function RoomsPage() {
   const [taskRoomId, setTaskRoomId] = useState<number | null>(null)
   const [assignedTo, setAssignedTo] = useState<string>('')
   const [taskStatus, setTaskStatus] = useState<'pending' | 'assigned' | 'in-progress' | 'completed' | 'cancelled' | 'failed'>('pending')
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium')
-  const [taskType, setTaskType] = useState<'daily' | 'deep' | 'checkout' | 'special'>('daily')
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent' | 'critical'>('medium')
+  const [taskType, setTaskType] = useState<'daily' | 'deep' | 'checkout' | 'checkin' | 'maintenance' | 'special' | 'inspection'>('daily')
   const [notes, setNotes] = useState<string>('')
   const [estimatedDuration, setEstimatedDuration] = useState<number>(30)
 
