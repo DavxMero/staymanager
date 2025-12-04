@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { 
+import {
   Receipt,
   User,
   Calendar,
@@ -36,19 +36,18 @@ interface AddInvoiceFormProps {
   onAddInvoice: (invoice: Omit<Invoice, 'id' | 'created_at'>) => void
 }
 
-export function AddInvoiceForm({ 
-  isOpen, 
-  onOpenChange, 
-  onAddInvoice 
+export function AddInvoiceForm({
+  isOpen,
+  onOpenChange,
+  onAddInvoice
 }: AddInvoiceFormProps) {
   const [formData, setFormData] = useState({
     reservation_id: '',
     amount: '',
-    description: '',
     due_date: '',
     status: 'pending' as 'paid' | 'pending' | 'overdue'
   })
-  
+
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [guests, setGuests] = useState<Guest[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
@@ -101,29 +100,27 @@ export function AddInvoiceForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
 
     setLoading(true)
-    
+
     try {
       const invoiceData: Omit<Invoice, 'id' | 'created_at'> = {
         reservation_id: parseInt(formData.reservation_id),
         amount: parseFloat(formData.amount),
-        description: formData.description || undefined,
         due_date: formData.due_date,
         status: formData.status
       }
 
       await onAddInvoice(invoiceData)
-      
+
       // Reset form
       setFormData({
         reservation_id: '',
         amount: '',
-        description: '',
         due_date: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
         status: 'pending'
       })
@@ -153,7 +150,7 @@ export function AddInvoiceForm({
           </DialogDescription>
         </DialogHeader>
 
-        <motion.form 
+        <motion.form
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -166,8 +163,8 @@ export function AddInvoiceForm({
               <User className="h-4 w-4" />
               <span>Reservation *</span>
             </Label>
-            <Select 
-              value={formData.reservation_id} 
+            <Select
+              value={formData.reservation_id}
               onValueChange={(value) => {
                 setFormData(prev => ({ ...prev, reservation_id: value }))
                 setErrors(prev => ({ ...prev, reservation_id: '' }))
@@ -296,8 +293,8 @@ export function AddInvoiceForm({
           {/* Status */}
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
-            <Select 
-              value={formData.status} 
+            <Select
+              value={formData.status}
               onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as any }))}
             >
               <SelectTrigger>
@@ -311,31 +308,18 @@ export function AddInvoiceForm({
             </Select>
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span>Description (Optional)</span>
-            </Label>
-            <Textarea
-              id="description"
-              placeholder="Add invoice description or notes..."
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-            />
-          </div>
+
         </motion.form>
 
         <DialogFooter className="flex gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={loading || !formData.reservation_id || !formData.amount}
             className="flex items-center space-x-2"
