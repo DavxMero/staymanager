@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { 
-  Eye, 
+import {
+  Eye,
   Download,
   Edit,
   MoreHorizontal,
@@ -16,26 +16,26 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select'
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 
 interface Invoice {
@@ -43,7 +43,7 @@ interface Invoice {
   reservation_id: number
   amount: number
   status: 'paid' | 'pending' | 'overdue'
-  due_date: string
+  due_date?: string
   created_at: string
 }
 
@@ -58,12 +58,12 @@ const statusVariants = {
   overdue: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
 }
 
-export function EnhancedInvoicesTable({ 
+export function EnhancedInvoicesTable({
   invoices,
   onViewInvoice,
   onDownloadInvoice,
   onEditInvoice
-}: { 
+}: {
   invoices: Invoice[]
   onViewInvoice: (invoice: Invoice) => void
   onDownloadInvoice: (invoice: Invoice) => void
@@ -77,23 +77,26 @@ export function EnhancedInvoicesTable({
   const filteredAndSortedInvoices = useMemo(() => {
     // Filter invoices
     const filtered = invoices.filter(invoice => {
-      const matchesSearch = 
+      const matchesSearch =
         invoice.id.toString().includes(searchTerm) ||
         invoice.reservation_id.toString().includes(searchTerm) ||
         invoice.amount.toString().includes(searchTerm)
-      
+
       const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter
-      
+
       return matchesSearch && matchesStatus
     })
 
     // Sort invoices
     if (sortConfig.key) {
+      const sortKey = sortConfig.key
       filtered.sort((a, b) => {
-        if (a[sortConfig.key!] < b[sortConfig.key!]) {
+        const aVal = a[sortKey] ?? ''
+        const bVal = b[sortKey] ?? ''
+        if (aVal < bVal) {
           return sortConfig.direction === 'asc' ? -1 : 1
         }
-        if (a[sortConfig.key!] > b[sortConfig.key!]) {
+        if (aVal > bVal) {
           return sortConfig.direction === 'asc' ? 1 : -1
         }
         return 0
@@ -113,8 +116,8 @@ export function EnhancedInvoicesTable({
 
   const getSortIcon = (column: keyof Invoice) => {
     if (sortConfig.key === column) {
-      return sortConfig.direction === 'asc' ? 
-        <SortAsc className="ml-2 h-4 w-4" /> : 
+      return sortConfig.direction === 'asc' ?
+        <SortAsc className="ml-2 h-4 w-4" /> :
         <SortDesc className="ml-2 h-4 w-4" />
     }
     return <SortAsc className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -131,9 +134,9 @@ export function EnhancedInvoicesTable({
           <div className="flex flex-wrap gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Search invoices..." 
-                className="pl-10 w-full md:w-64" 
+              <Input
+                placeholder="Search invoices..."
+                className="pl-10 w-full md:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -236,7 +239,7 @@ export function EnhancedInvoicesTable({
             </TableBody>
           </Table>
         </div>
-        
+
         {filteredAndSortedInvoices.length > 0 && (
           <div className="flex items-center justify-between py-4">
             <p className="text-sm text-muted-foreground">
