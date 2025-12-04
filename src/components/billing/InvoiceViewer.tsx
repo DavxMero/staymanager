@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { 
+import {
   Receipt,
   Download,
   Printer,
@@ -38,11 +38,11 @@ interface InvoiceViewerProps {
   onDownload?: (invoice: Invoice) => void
 }
 
-export function InvoiceViewer({ 
-  invoice, 
-  isOpen, 
+export function InvoiceViewer({
+  invoice,
+  isOpen,
   onOpenChange,
-  onDownload 
+  onDownload
 }: InvoiceViewerProps) {
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [guest, setGuest] = useState<Guest | null>(null)
@@ -57,7 +57,7 @@ export function InvoiceViewer({
 
   const fetchRelatedData = async () => {
     if (!invoice) return
-    
+
     setLoading(true)
     try {
       // Fetch reservation
@@ -69,13 +69,13 @@ export function InvoiceViewer({
 
       if (reservationData) {
         setReservation(reservationData)
-        
+
         // Fetch guest and room data
         const [guestRes, roomRes] = await Promise.all([
           supabase.from('guests').select('*').eq('id', reservationData.guest_id).single(),
           supabase.from('rooms').select('*').eq('id', reservationData.room_id).single()
         ])
-        
+
         if (guestRes.data) setGuest(guestRes.data)
         if (roomRes.data) setRoom(roomRes.data)
       }
@@ -224,15 +224,15 @@ export function InvoiceViewer({
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-muted-foreground">Reservation ID:</span>
                     <span className="font-medium">#{reservation?.id || invoice.reservation_id}</span>
-                    
+
                     <span className="text-muted-foreground">Room:</span>
                     <span className="font-medium">Room {room?.number || 'N/A'}</span>
-                    
+
                     <span className="text-muted-foreground">Check-in:</span>
                     <span className="font-medium">
                       {reservation?.check_in ? format(new Date(reservation.check_in), 'MMM dd, yyyy') : 'N/A'}
                     </span>
-                    
+
                     <span className="text-muted-foreground">Check-out:</span>
                     <span className="font-medium">
                       {reservation?.check_out ? format(new Date(reservation.check_out), 'MMM dd, yyyy') : 'N/A'}
@@ -266,7 +266,7 @@ export function InvoiceViewer({
                           <td className="p-3">
                             <div>
                               <p className="font-medium">
-                                {invoice.description || 'Hotel Services & Accommodation'}
+                                Hotel Services & Accommodation
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 Reservation #{invoice.reservation_id}
