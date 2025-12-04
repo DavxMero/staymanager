@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -13,9 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { 
-  CreditCard, 
-  Banknote, 
+import {
+  CreditCard,
+  Banknote,
   Smartphone,
   QrCode,
   Wallet,
@@ -24,7 +24,7 @@ import {
   Minus,
   Trash2
 } from "lucide-react"
-import { POSTransaction, POSTransactionItem } from "@/types"
+import type { POSTransaction, POSTransactionItem } from "@/types"
 import { posTransactionsApi } from "@/lib/billingApi"
 
 interface POSTransactionProps {
@@ -55,21 +55,21 @@ const itemCategories = [
   { value: 'misc', label: 'Miscellaneous' },
 ]
 
-export function POSTransaction({ 
+export function POSTransaction({
   reservationId,
   guestId,
   transactionType,
   initialItems = [],
   onTransactionComplete,
   onCancel,
-  className 
+  className
 }: POSTransactionProps) {
   const [items, setItems] = useState<Omit<POSTransactionItem, 'id' | 'transaction_id'>[]>(initialItems)
   const [paymentMethod, setPaymentMethod] = useState<string>('')
   const [cashReceived, setCashReceived] = useState<string>('')
   const [notes, setNotes] = useState<string>('')
   const [isProcessing, setIsProcessing] = useState(false)
-  
+
   // New item form
   const [newItemName, setNewItemName] = useState('')
   const [newItemQuantity, setNewItemQuantity] = useState('1')
@@ -77,8 +77,8 @@ export function POSTransaction({
   const [newItemCategory, setNewItemCategory] = useState<string>('')
 
   const totalAmount = items.reduce((sum, item) => sum + item.total_price, 0)
-  const changeAmount = paymentMethod === 'cash' && cashReceived 
-    ? Math.max(0, parseFloat(cashReceived) - totalAmount) 
+  const changeAmount = paymentMethod === 'cash' && cashReceived
+    ? Math.max(0, parseFloat(cashReceived) - totalAmount)
     : 0
 
   const addItem = () => {
@@ -87,12 +87,12 @@ export function POSTransaction({
       alert('❌ Nama item tidak boleh kosong\n\nSilakan masukkan nama item.')
       return
     }
-    
+
     if (!newItemCategory) {
       alert('❌ Kategori item belum dipilih\n\nSilakan pilih kategori item.')
       return
     }
-    
+
     if (!newItemUnitPrice || parseFloat(newItemUnitPrice) <= 0) {
       alert('❌ Harga unit tidak valid\n\nHarga unit harus lebih dari Rp 0.')
       return
@@ -101,13 +101,13 @@ export function POSTransaction({
     const quantity = parseInt(newItemQuantity) || 1
     const unitPrice = parseFloat(newItemUnitPrice) || 0
     const totalPrice = quantity * unitPrice
-    
+
     // Final validation
     if (quantity <= 0) {
       alert('❌ Jumlah quantity tidak valid\n\nQuantity harus lebih dari 0.')
       return
     }
-    
+
     if (totalPrice <= 0) {
       alert('❌ Total harga tidak valid\n\nTotal harga item harus lebih dari Rp 0.')
       return
@@ -122,7 +122,7 @@ export function POSTransaction({
     }
 
     setItems([...items, newItem])
-    
+
     // Reset form
     setNewItemName('')
     setNewItemQuantity('1')
@@ -136,9 +136,9 @@ export function POSTransaction({
 
   const updateItemQuantity = (index: number, quantity: number) => {
     if (quantity < 1) return
-    
-    const updatedItems = items.map((item, i) => 
-      i === index 
+
+    const updatedItems = items.map((item, i) =>
+      i === index
         ? { ...item, quantity, total_price: quantity * item.unit_price }
         : item
     )
@@ -151,38 +151,38 @@ export function POSTransaction({
       alert('❌ Tidak ada item dalam transaksi.\n\nSilakan tambahkan setidaknya satu item terlebih dahulu.')
       return
     }
-    
+
     if (totalAmount <= 0) {
       alert('❌ Total amount tidak valid.\n\nTotal amount harus lebih dari Rp 0.\nSilakan periksa kembali item dan harga yang diinput.')
       return
     }
-    
+
     if (!paymentMethod) {
       alert('❌ Metode pembayaran belum dipilih.\n\nSilakan pilih metode pembayaran (Cash, Card, Transfer, dll.)')
       return
     }
-    
+
     // Validate individual items
-    const invalidItems = items.filter(item => 
-      !item.item_name || 
-      item.quantity <= 0 || 
-      item.unit_price < 0 || 
+    const invalidItems = items.filter(item =>
+      !item.item_name ||
+      item.quantity <= 0 ||
+      item.unit_price < 0 ||
       item.total_price <= 0
     )
-    
+
     if (invalidItems.length > 0) {
-      alert(`❌ Ada item yang tidak valid:\n\n${invalidItems.map((item, index) => 
+      alert(`❌ Ada item yang tidak valid:\n\n${invalidItems.map((item, index) =>
         `• Item ${index + 1}: ${item.item_name || 'Unnamed'} - ${formatCurrency(item.total_price)}`
       ).join('\n')}\n\nSilakan perbaiki item tersebut atau hapus dari transaksi.`)
       return
     }
-    
+
     if (paymentMethod === 'cash') {
       if (!cashReceived || parseFloat(cashReceived) <= 0) {
         alert('❌ Jumlah uang yang diterima tidak valid.\n\nSilakan masukkan jumlah uang cash yang diterima.')
         return
       }
-      
+
       if (parseFloat(cashReceived) < totalAmount) {
         const shortage = totalAmount - parseFloat(cashReceived)
         alert(`❌ Uang yang diterima kurang.\n\nTotal: ${formatCurrency(totalAmount)}\nDiterima: ${formatCurrency(parseFloat(cashReceived))}\nKekurangan: ${formatCurrency(shortage)}`)
@@ -191,7 +191,7 @@ export function POSTransaction({
     }
 
     setIsProcessing(true)
-    
+
     try {
       console.log('Processing transaction with data:', {
         reservationId,
@@ -201,7 +201,7 @@ export function POSTransaction({
         transactionType,
         itemsCount: items.length
       })
-      
+
       const transactionData: Omit<POSTransaction, 'id' | 'created_at'> = {
         reservation_id: reservationId,
         guest_id: guestId,
@@ -214,20 +214,20 @@ export function POSTransaction({
         cash_received: paymentMethod === 'cash' ? parseFloat(cashReceived) : undefined,
         change_amount: paymentMethod === 'cash' ? changeAmount : undefined
       }
-      
+
       console.log('Sending transaction data to API:', transactionData)
 
       const createdTransaction = await posTransactionsApi.create(transactionData)
-      
+
       console.log('Transaction created successfully:', createdTransaction)
-      
+
       if (onTransactionComplete) {
         onTransactionComplete(createdTransaction)
       }
     } catch (error) {
       console.error('Error processing transaction:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      
+
       // User-friendly error messages
       if (errorMessage.includes('Total amount must be greater than 0')) {
         alert('❌ Error: Total amount tidak valid\n\nTotal pembayaran harus lebih dari Rp 0. Silakan periksa kembali item dan harga yang diinput.')
@@ -340,8 +340,8 @@ export function POSTransaction({
               />
             </div>
           </div>
-          <Button 
-            onClick={addItem} 
+          <Button
+            onClick={addItem}
             disabled={!newItemName || !newItemUnitPrice || !newItemCategory}
             className="w-full"
           >
@@ -461,13 +461,12 @@ export function POSTransaction({
                     }
                   }}
                   placeholder={`Min: ${formatCurrency(totalAmount)}`}
-                  className={`${
-                    cashReceived !== '' && parseFloat(cashReceived) < totalAmount 
-                      ? parseFloat(cashReceived) <= 0 
-                        ? 'border-red-500' 
+                  className={`${cashReceived !== '' && parseFloat(cashReceived) < totalAmount
+                      ? parseFloat(cashReceived) <= 0
+                        ? 'border-red-500'
                         : 'border-orange-500'
                       : ''
-                  }`}
+                    }`}
                 />
                 {changeAmount > 0 && (
                   <div className="text-sm font-medium text-green-600">
@@ -493,8 +492,8 @@ export function POSTransaction({
                   Cancel
                 </Button>
               )}
-              <Button 
-                onClick={processTransaction} 
+              <Button
+                onClick={processTransaction}
                 disabled={!paymentMethod || totalAmount <= 0 || isProcessing}
                 className="flex-1"
               >
