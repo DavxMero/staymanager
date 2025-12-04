@@ -156,7 +156,7 @@ export default function RoomsPage() {
   // Housekeeping form fields
   const [taskRoomId, setTaskRoomId] = useState<number | null>(null)
   const [assignedTo, setAssignedTo] = useState<string>('')
-  const [taskStatus, setTaskStatus] = useState<'pending' | 'in-progress' | 'completed' | 'cancelled'>('pending')
+  const [taskStatus, setTaskStatus] = useState<'pending' | 'assigned' | 'in-progress' | 'completed' | 'cancelled' | 'failed'>('pending')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium')
   const [taskType, setTaskType] = useState<'daily' | 'deep' | 'checkout' | 'special'>('daily')
   const [notes, setNotes] = useState<string>('')
