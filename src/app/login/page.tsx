@@ -37,8 +37,8 @@ export default function LoginPage() {
                 description: 'Logged in successfully!',
             });
 
-            router.push('/dashboard');
-            router.refresh();
+            // Force full page reload to ensure sidebar loads
+            window.location.href = '/dashboard';
         } catch (error: any) {
             toast({
                 title: 'Error',
@@ -51,14 +51,14 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4">
-            <Card className="w-full max-w-sm shadow-2xl">
-                <CardHeader className="space-y-3 text-center">
-                    <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                        <Building className="w-8 h-8 text-white" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-3">
+            <Card className="w-full max-w-xs shadow-2xl">
+                <CardHeader className="space-y-2 text-center px-4 pt-4 pb-3">
+                    <div className="mx-auto w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Building className="w-6 h-6 text-white" />
                     </div>
-                    <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-                    <CardDescription className="text-sm">
+                    <CardTitle className="text-xl font-bold">Welcome Back</CardTitle>
+                    <CardDescription className="text-xs">
                         Sign in to your StayManager account
                     </CardDescription>
                 </CardHeader>
