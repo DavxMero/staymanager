@@ -8,10 +8,10 @@ const supabase = createClient(
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const poId = params.id
+        const { id: poId } = await params
 
         // 1. Fetch PO and its items
         const { data: po, error: poError } = await supabase

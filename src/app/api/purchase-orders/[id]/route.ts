@@ -9,10 +9,10 @@ const supabase = createClient(
 // GET - Fetch single PO with items
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id
+        const { id } = await params
 
         const { data, error } = await supabase
             .from('inventory_purchase_orders')
@@ -43,10 +43,10 @@ export async function GET(
 // PUT - Update PO (Status or Details)
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id
+        const { id } = await params
         const body = await request.json()
         const { status, items, ...updates } = body
 
