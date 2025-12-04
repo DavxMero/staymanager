@@ -52,13 +52,13 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4">
-            <Card className="w-full max-w-md shadow-2xl">
+            <Card className="w-full max-w-sm shadow-2xl">
                 <CardHeader className="space-y-3 text-center">
                     <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                         <Building className="w-8 h-8 text-white" />
                     </div>
-                    <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-                    <CardDescription className="text-base">
+                    <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+                    <CardDescription className="text-sm">
                         Sign in to your StayManager account
                     </CardDescription>
                 </CardHeader>
