@@ -118,21 +118,21 @@ export default function ExpensesPage() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const params = new URLSearchParams({
         category: filters.category,
         status: filters.status,
         startDate: filters.startDate,
         endDate: filters.endDate
       })
-      
+
       const response = await fetch(`/api/expenses?${params}`)
       const result = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Failed to fetch expenses')
       }
-      
+
       if (result.success) {
         setExpenses(result.data)
         calculateStats(result.data)
@@ -156,7 +156,7 @@ export default function ExpensesPage() {
   const calculateStats = (expenseData: Expense[]) => {
     const total = expenseData.reduce((sum, expense) => sum + expense.amount, 0)
     const pending = expenseData.filter(e => e.status === 'pending').length
-    
+
     // Calculate monthly total (current month)
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
@@ -165,19 +165,19 @@ export default function ExpensesPage() {
       return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear
     })
     const monthlyTotal = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-    
+
     // Find top category
     const categoryTotals = expenseData.reduce((acc, expense) => {
       acc[expense.category] = (acc[expense.category] || 0) + expense.amount
       return acc
     }, {} as Record<string, number>)
-    
+
     // Safe reduce with check for empty array
     const categoryEntries = Object.entries(categoryTotals)
-    const topCategory = categoryEntries.length > 0 
-      ? categoryEntries.reduce((a, b) => 
-          categoryTotals[a[0]] > categoryTotals[b[0]] ? a : b
-        )[0] 
+    const topCategory = categoryEntries.length > 0
+      ? categoryEntries.reduce((a, b) =>
+        categoryTotals[a[0]] > categoryTotals[b[0]] ? a : b
+      )[0]
       : ''
 
     setStats({
@@ -202,8 +202,8 @@ export default function ExpensesPage() {
 
       const method = editingExpense ? 'PUT' : 'POST'
       const endpoint = '/api/expenses'
-      
-      const payload = editingExpense 
+
+      const payload = editingExpense
         ? { ...formData, id: editingExpense.id }
         : formData
 
@@ -224,12 +224,12 @@ export default function ExpensesPage() {
           title: editingExpense ? "Expense Updated" : "Expense Added",
           description: result.message,
         })
-        
+
         // Reset form and close dialog
         resetForm()
         setIsAddDialogOpen(false)
         setEditingExpense(null)
-        
+
         // Refresh data
         fetchExpenses()
       } else {
@@ -306,7 +306,7 @@ export default function ExpensesPage() {
       payment_method: expense.payment_method,
       receipt_url: expense.receipt_url || '',
       supplier: expense.supplier || '',
-      date: expense.date,
+      date: expense.expense_date,
       status: expense.status,
       notes: expense.notes || '',
       recurring: expense.recurring || false,
@@ -390,7 +390,7 @@ export default function ExpensesPage() {
             Track and manage hotel operational expenses
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
@@ -409,7 +409,7 @@ export default function ExpensesPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="filterCategory">Category</Label>
-                  <Select value={filters.category} onValueChange={(value) => 
+                  <Select value={filters.category} onValueChange={(value) =>
                     setFilters(prev => ({ ...prev, category: value }))
                   }>
                     <SelectTrigger>
@@ -427,7 +427,7 @@ export default function ExpensesPage() {
                 </div>
                 <div>
                   <Label htmlFor="filterStatus">Status</Label>
-                  <Select value={filters.status} onValueChange={(value) => 
+                  <Select value={filters.status} onValueChange={(value) =>
                     setFilters(prev => ({ ...prev, status: value }))
                   }>
                     <SelectTrigger>
@@ -466,7 +466,7 @@ export default function ExpensesPage() {
               </div>
             </DialogContent>
           </Dialog>
-          
+
           <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
             setIsAddDialogOpen(open)
             if (!open) {
@@ -520,7 +520,7 @@ export default function ExpensesPage() {
                 </div>
                 <div>
                   <Label htmlFor="category">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => 
+                  <Select value={formData.category} onValueChange={(value) =>
                     setFormData(prev => ({ ...prev, category: value }))
                   }>
                     <SelectTrigger>
@@ -537,7 +537,7 @@ export default function ExpensesPage() {
                 </div>
                 <div>
                   <Label htmlFor="payment_method">Payment Method *</Label>
-                  <Select value={formData.payment_method} onValueChange={(value) => 
+                  <Select value={formData.payment_method} onValueChange={(value) =>
                     setFormData(prev => ({ ...prev, payment_method: value }))
                   }>
                     <SelectTrigger>
@@ -572,7 +572,7 @@ export default function ExpensesPage() {
                 </div>
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => 
+                  <Select value={formData.status} onValueChange={(value) =>
                     setFormData(prev => ({ ...prev, status: value }))
                   }>
                     <SelectTrigger>
@@ -613,7 +613,7 @@ export default function ExpensesPage() {
                   />
                   <Label htmlFor="recurring">Recurring expense</Label>
                   {formData.recurring && (
-                    <Select value={formData.recurring_period} onValueChange={(value) => 
+                    <Select value={formData.recurring_period} onValueChange={(value) =>
                       setFormData(prev => ({ ...prev, recurring_period: value }))
                     }>
                       <SelectTrigger className="w-32">
@@ -760,11 +760,11 @@ export default function ExpensesPage() {
               {expenses.map((expense) => {
                 const categoryInfo = getCategoryInfo(expense.category)
                 const statusInfo = getStatusInfo(expense.status)
-                
+
                 return (
                   <TableRow key={expense.id}>
                     <TableCell className="font-medium">
-                      {format(new Date(expense.date), 'dd MMM yyyy')}
+                      {format(new Date(expense.expense_date), 'dd MMM yyyy')}
                       {expense.recurring && (
                         <Repeat className="h-3 w-3 inline ml-1 text-blue-500" />
                       )}
@@ -830,7 +830,7 @@ export default function ExpensesPage() {
               })}
             </TableBody>
           </Table>
-          
+
           {expenses.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
