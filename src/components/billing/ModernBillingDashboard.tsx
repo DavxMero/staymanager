@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  CreditCard, 
-  Banknote, 
+import {
+  CreditCard,
+  Banknote,
   Wallet,
   DollarSign,
   Clock,
@@ -26,28 +26,28 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select'
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -74,7 +74,7 @@ interface Invoice {
   reservation_id: number
   amount: number
   status: 'paid' | 'pending' | 'overdue'
-  due_date: string
+  due_date?: string
   created_at: string
 }
 
@@ -98,12 +98,12 @@ const statusVariants = {
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444']
 
-export function ModernBillingDashboard({ 
-  totalRevenue, 
-  pendingPayments, 
+export function ModernBillingDashboard({
+  totalRevenue,
+  pendingPayments,
   overdueAmount,
   invoices
-}: { 
+}: {
   totalRevenue: number
   pendingPayments: number
   overdueAmount: number
@@ -111,7 +111,7 @@ export function ModernBillingDashboard({
 }) {
   const totalOutstanding = pendingPayments + overdueAmount
   const collectionRate = totalRevenue > 0 ? ((totalRevenue / (totalRevenue + totalOutstanding)) * 100) : 0
-  
+
   // Mock data for charts
   const revenueData = [
     { name: 'Jan', value: 4000 },
@@ -122,17 +122,17 @@ export function ModernBillingDashboard({
     { name: 'Jun', value: 2390 },
     { name: 'Jul', value: 3490 },
   ]
-  
+
   const paymentStatusData = [
     { name: 'Paid', value: totalRevenue },
     { name: 'Pending', value: pendingPayments },
     { name: 'Overdue', value: overdueAmount },
   ]
-  
-  const StatCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
+
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
     color = "text-blue-600",
     bgColor = "bg-blue-50 dark:bg-blue-900/20",
     trend,
@@ -174,9 +174,8 @@ export function ModernBillingDashboard({
                 ) : (
                   <ArrowDown className="h-4 w-4 text-red-500" />
                 )}
-                <span className={`text-xs ml-1 ${
-                  trend.startsWith('+') ? 'text-green-500' : 'text-red-500'
-                }`}>
+                <span className={`text-xs ml-1 ${trend.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                  }`}>
                   {trend}
                 </span>
                 <span className="text-xs text-muted-foreground ml-1">from last month</span>
@@ -225,7 +224,7 @@ export function ModernBillingDashboard({
           subtitle="Payments received"
           delay={0.1}
         />
-        
+
         <StatCard
           title="Pending Payments"
           value={formatCurrencyCompat(pendingPayments)}
@@ -235,7 +234,7 @@ export function ModernBillingDashboard({
           subtitle="Awaiting payment"
           delay={0.2}
         />
-        
+
         <StatCard
           title="Overdue Amount"
           value={formatCurrencyCompat(overdueAmount)}
@@ -246,7 +245,7 @@ export function ModernBillingDashboard({
           trend={overdueAmount > 0 ? "+5%" : "0%"}
           delay={0.3}
         />
-        
+
         <StatCard
           title="Collection Rate"
           value={`${collectionRate.toFixed(1)}%`}
@@ -285,7 +284,7 @@ export function ModernBillingDashboard({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value) => [formatCurrencyCompat(Number(value)), 'Amount']}
                     labelFormatter={(label) => `Month: ${label}`}
                   />
@@ -346,7 +345,7 @@ export function ModernBillingDashboard({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -360,7 +359,7 @@ export function ModernBillingDashboard({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
