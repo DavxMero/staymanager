@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
+import {
   Plus,
   Eye,
   Download,
@@ -65,9 +65,9 @@ export default function PendingPaymentsPage() {
         .select('*')
         .eq('status', 'pending') // Only fetch pending invoices
         .order('created_at', { ascending: false })
-      
+
       if (error) throw error
-      
+
       setInvoices(data)
     } catch (err) {
       console.error('Error fetching pending invoices:', err)
@@ -81,9 +81,9 @@ export default function PendingPaymentsPage() {
         .from('reservations')
         .select('*')
         .order('created_at', { ascending: false })
-      
+
       if (error) throw error
-      
+
       setReservations(data)
     } catch (err) {
       console.error('Error fetching reservations:', err)
@@ -96,9 +96,9 @@ export default function PendingPaymentsPage() {
         .from('guests')
         .select('*')
         .order('full_name')
-      
+
       if (error) throw error
-      
+
       setGuests(data || [])
     } catch (err) {
       console.error('Error fetching guests:', err)
@@ -111,9 +111,9 @@ export default function PendingPaymentsPage() {
         .from('rooms')
         .select('*')
         .order('number')
-      
+
       if (error) throw error
-      
+
       setRooms(data || [])
     } catch (err) {
       console.error('Error fetching rooms:', err)
@@ -137,15 +137,18 @@ export default function PendingPaymentsPage() {
     fetchUnpaidBillings(invoice.reservation_id)
   }
 
-  const handleAddBillingItem = async (billingItem: Omit<BillingItem, 'id' | 'created_at'>) => {
+  const handleAddBillingItem = async (billingItems: Omit<BillingItem, 'id' | 'created_at'>[]) => {
     try {
-      await billingItemsApi.create(billingItem)
+      // Add all billing items
+      for (const item of billingItems) {
+        await billingItemsApi.create(item)
+      }
       // Refresh unpaid billings
       await fetchUnpaidBillings(selectedInvoice?.reservation_id || 0)
       setIsAddingBillingItem(false)
     } catch (err) {
-      console.error('Error adding billing item:', err)
-      setError(err instanceof Error ? err.message : 'Failed to add billing item')
+      console.error('Error adding billing items:', err)
+      setError(err instanceof Error ? err.message : 'Failed to add billing items')
     }
   }
 
@@ -179,7 +182,7 @@ export default function PendingPaymentsPage() {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error! </strong>
           <span className="block sm:inline">{error}</span>
-          <button 
+          <button
             className="mt-2 bg-red-700 text-white px-4 py-2 rounded"
             onClick={fetchInvoices}
           >
@@ -223,14 +226,14 @@ export default function PendingPaymentsPage() {
               const reservation = reservations.find(r => r.id === invoice.reservation_id)
               const guest = guests.find(g => g.id === reservation?.guest_id)
               const room = rooms.find(r => r.id === reservation?.room_id)
-              
+
               return (
                 <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <div className="font-medium">Invoice #{invoice.id}</div>
                     <div className="text-sm text-muted-foreground">
-                      {guest ? guest.full_name : `Guest #${reservation?.guest_id}`} • 
-                      Room {room ? room.number : `#${reservation?.room_id}`} • 
+                      {guest ? guest.full_name : `Guest #${reservation?.guest_id}`} •
+                      Room {room ? room.number : `#${reservation?.room_id}`} •
                       Due: {invoice.due_date ? format(new Date(invoice.due_date), "MMM dd, yyyy") : 'N/A'}
                     </div>
                   </div>
@@ -238,9 +241,9 @@ export default function PendingPaymentsPage() {
                     <div className="font-medium">
                       {formatCurrency(invoice.amount)}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleViewInvoice(invoice)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
@@ -250,7 +253,7 @@ export default function PendingPaymentsPage() {
                 </div>
               )
             })}
-            
+
             {getPendingInvoices().length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 No pending payments found
@@ -290,33 +293,33 @@ export default function PendingPaymentsPage() {
                   Pending
                 </Badge>
               </div>
-              
+
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-medium">Unpaid Billings</h3>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => setIsAddingBillingItem(true)}
                     disabled={isAddingBillingItem}
                   >
                     Add Item
                   </Button>
                 </div>
-                
+
                 {isAddingBillingItem ? (
                   <div className="mb-4 p-4 border rounded-lg">
                     <h4 className="font-medium mb-3">Add New Billing Item</h4>
-                    <AddBillingItemForm 
+                    <AddBillingItemForm
                       reservationId={selectedInvoice.reservation_id}
                       onAddItem={handleAddBillingItem}
                       onCancel={() => setIsAddingBillingItem(false)}
                     />
                   </div>
                 ) : null}
-                
+
                 {unpaidBillings.length > 0 ? (
-                  <UnpaidBillingsList 
-                    billingItems={unpaidBillings} 
+                  <UnpaidBillingsList
+                    billingItems={unpaidBillings}
                     onItemUpdate={handleUpdateBillingItem}
                     editable={true}
                   />
