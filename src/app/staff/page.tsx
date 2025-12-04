@@ -87,7 +87,7 @@ const STATUS_CONFIG = {
 
 const ROLE_OPTIONS = [
   'front-desk',
-  'housekeeper', 
+  'housekeeper',
   'senior-housekeeper',
   'housekeeping-supervisor',
   'maintenance',
@@ -102,7 +102,7 @@ const DEPARTMENT_OPTIONS = [
   'front-office',
   'housekeeping',
   'maintenance',
-  'security', 
+  'security',
   'food-beverage',
   'management',
   'administration'
@@ -118,12 +118,12 @@ export default function StaffPage() {
   // Dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [departmentFilter, setDepartmentFilter] = useState("all")
-  
+
   // Form states
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -241,7 +241,7 @@ export default function StaffPage() {
       email: member.email || '',
       phone: member.phone || '',
       role: member.role,
-      department: member.department,
+      department: member.department || '',
       shift_start: member.shift_start,
       shift_end: member.shift_end,
       status: member.status,
@@ -304,7 +304,7 @@ export default function StaffPage() {
         if (error) throw error
 
         toast({
-          title: "Success", 
+          title: "Success",
           description: "Staff member added successfully",
         })
       }
@@ -339,12 +339,12 @@ export default function StaffPage() {
         title: "Success",
         description: "Staff member deleted successfully",
       })
-      
+
       fetchStaff()
     } catch (err) {
       console.error('Error deleting staff:', err)
       toast({
-        variant: "destructive", 
+        variant: "destructive",
         title: "Error",
         description: 'Failed to delete staff member: ' + (err as Error).message,
       })
@@ -501,7 +501,7 @@ export default function StaffPage() {
                 <SelectItem value="all">All Departments</SelectItem>
                 {DEPARTMENT_OPTIONS.map((dept) => (
                   <SelectItem key={dept} value={dept}>
-                    {dept.split('-').map(word => 
+                    {dept.split('-').map(word =>
                       word.charAt(0).toUpperCase() + word.slice(1)
                     ).join(' ')}
                   </SelectItem>
@@ -523,8 +523,8 @@ export default function StaffPage() {
               <UserCog className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-3">No Staff Found</h3>
               <p className="text-muted-foreground mb-6">
-                {staff.length === 0 
-                  ? "No staff members have been added yet." 
+                {staff.length === 0
+                  ? "No staff members have been added yet."
                   : "No staff members match your current filters."
                 }
               </p>
@@ -611,7 +611,7 @@ export default function StaffPage() {
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => handleDelete(member)}
                                 className="text-red-600"
                               >
@@ -639,7 +639,7 @@ export default function StaffPage() {
               {editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'}
             </DialogTitle>
             <DialogDescription>
-              {editingStaff 
+              {editingStaff
                 ? 'Update the staff member information below.'
                 : 'Fill in the details to add a new staff member.'
               }
@@ -710,7 +710,7 @@ export default function StaffPage() {
                     <SelectContent>
                       {ROLE_OPTIONS.map((role) => (
                         <SelectItem key={role} value={role}>
-                          {role.split('-').map(word => 
+                          {role.split('-').map(word =>
                             word.charAt(0).toUpperCase() + word.slice(1)
                           ).join(' ')}
                         </SelectItem>
@@ -727,7 +727,7 @@ export default function StaffPage() {
                     <SelectContent>
                       {DEPARTMENT_OPTIONS.map((dept) => (
                         <SelectItem key={dept} value={dept}>
-                          {dept.split('-').map(word => 
+                          {dept.split('-').map(word =>
                             word.charAt(0).toUpperCase() + word.slice(1)
                           ).join(' ')}
                         </SelectItem>

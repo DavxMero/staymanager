@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { 
-  Building, 
-  Calendar, 
-  CreditCard, 
+import {
+  Building,
+  Calendar,
+  CreditCard,
   Users,
   TrendingUp,
   TrendingDown,
@@ -31,18 +31,17 @@ import {
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { Reservation, Guest, Room } from "@/types"
-import HotelChatbot from "@/components/chatbot/HotelChatbot"
 import { transformRoomsQuery, transformGuestsQuery, transformReservationsQuery, formatCurrency as formatCurrencyCompat } from "@/lib/database-compatibility"
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   LineChart,
   Line,
@@ -55,7 +54,7 @@ import { getBadgeColor } from '@/lib/badge-colors'
 // Color schemes for charts
 const CHART_COLORS = {
   primary: '#3B82F6',
-  success: '#10B981', 
+  success: '#10B981',
   warning: '#F59E0B',
   danger: '#EF4444',
   purple: '#8B5CF6',
@@ -76,14 +75,14 @@ export default function DashboardPage() {
     todayCheckOuts: 0,
     pendingPayments: 0
   })
-  
+
   const [roomStatus, setRoomStatus] = useState([
     { name: "Available", value: 0, color: CHART_COLORS.success },
     { name: "Occupied", value: 0, color: CHART_COLORS.danger },
     { name: "Cleaning", value: 0, color: CHART_COLORS.warning },
     { name: "Maintenance", value: 0, color: CHART_COLORS.primary },
   ])
-  
+
   const [weeklyData, setWeeklyData] = useState<any[]>([])
   const [recentActivities, setRecentActivities] = useState<any[]>([])
   const [billingData, setBillingData] = useState<any[]>([])
@@ -95,7 +94,7 @@ export default function DashboardPage() {
     try {
       setLoading(true)
       console.log('🚀 Starting comprehensive dashboard data fetch...')
-      
+
       // Fetch all data in parallel for better performance
       const [roomsResult, guestsResult, reservationsResult, billingResult] = await Promise.allSettled([
         supabase.from('rooms').select('*'),
@@ -103,34 +102,34 @@ export default function DashboardPage() {
         supabase.from('reservations').select('*').order('created_at', { ascending: false }),
         supabase.from('billing_items').select('*').eq('status', 'pending')
       ])
-      
+
       // Process rooms data
       let rooms: Room[] = []
       if (roomsResult.status === 'fulfilled' && !roomsResult.value.error) {
         const roomsData = roomsResult.value.data || []
         rooms = transformRoomsQuery(roomsData)
       }
-      
+
       // Process guests data
       let guests: Guest[] = []
       if (guestsResult.status === 'fulfilled' && !guestsResult.value.error) {
         const guestsData = guestsResult.value.data || []
         guests = transformGuestsQuery(guestsData)
       }
-      
+
       // Process reservations data
       let reservations: Reservation[] = []
       if (reservationsResult.status === 'fulfilled' && !reservationsResult.value.error) {
         const reservationsData = reservationsResult.value.data || []
         reservations = transformReservationsQuery(reservationsData)
       }
-      
+
       // Process billing data
       let billingItems: any[] = []
       if (billingResult.status === 'fulfilled' && !billingResult.value.error) {
         billingItems = billingResult.value.data || []
       }
-      
+
       // Calculate room statistics
       const roomStats = {
         available: rooms.filter(r => r.status === 'available' || !r.status).length,
@@ -138,7 +137,7 @@ export default function DashboardPage() {
         cleaning: rooms.filter(r => r.status === 'cleaning').length,
         maintenance: rooms.filter(r => r.status === 'maintenance').length,
       }
-      
+
       // Update room status for pie chart
       setRoomStatus([
         { name: "Available", value: roomStats.available, color: CHART_COLORS.success },
@@ -146,23 +145,23 @@ export default function DashboardPage() {
         { name: "Cleaning", value: roomStats.cleaning, color: CHART_COLORS.warning },
         { name: "Maintenance", value: roomStats.maintenance, color: CHART_COLORS.primary },
       ])
-      
+
       // Calculate revenue from billing items
       const totalRevenue = billingItems.reduce((sum, item) => sum + (item.total_price || 0), 0)
       const pendingPayments = billingItems.length
-      
+
       // Calculate today's check-ins/check-outs
       const today = new Date().toISOString().split('T')[0]
-      const todayCheckIns = reservations.filter(r => 
+      const todayCheckIns = reservations.filter(r =>
         r.check_in?.startsWith(today) || r.status === 'checked-in'
       ).length
-      const todayCheckOuts = reservations.filter(r => 
+      const todayCheckOuts = reservations.filter(r =>
         r.check_out?.startsWith(today) || r.status === 'checked-out'
       ).length
-      
+
       // Update main dashboard data
       const occupancyRate = rooms.length > 0 ? Math.round((roomStats.occupied / rooms.length) * 100) : 0
-      
+
       setDashboardData({
         totalRooms: rooms.length,
         totalGuests: guests.length,
@@ -173,26 +172,26 @@ export default function DashboardPage() {
         todayCheckOuts,
         pendingPayments
       })
-      
+
       // Generate weekly occupancy data
       const weekStart = startOfWeek(new Date())
       const weekEnd = endOfWeek(new Date())
       const daysOfWeek = eachDayOfInterval({ start: weekStart, end: weekEnd })
-      
+
       const weeklyOccupancy = daysOfWeek.map(day => ({
         day: format(day, 'EEE'),
         occupancy: Math.floor(Math.random() * 100), // Mock data for now
         revenue: Math.floor(Math.random() * 1000000),
         checkins: Math.floor(Math.random() * 10)
       }))
-      
+
       setWeeklyData(weeklyOccupancy)
-      
+
       // Recent activities with better formatting
       const activities = reservations.slice(0, 5).map((res, index) => {
         const guest = guests.find(g => g.id === res.guest_id)
         const room = rooms.find(r => r.id === res.room_id)
-        
+
         return {
           id: res.id || index,
           guest_name: guest?.full_name || 'Guest',
@@ -202,26 +201,26 @@ export default function DashboardPage() {
           type: res.status || 'reservation'
         }
       })
-      
+
       setRecentActivities(activities)
-      
+
       // Billing category data
       const billingCategories = billingItems.reduce((acc, item) => {
         const category = item.category || 'other'
         acc[category] = (acc[category] || 0) + (item.total_price || 0)
         return acc
       }, {})
-      
+
       const billingChartData = Object.entries(billingCategories).map(([category, amount]) => ({
         category: category.charAt(0).toUpperCase() + category.slice(1),
         amount: amount as number
       }))
-      
+
       setBillingData(billingChartData)
-      
+
       setLastUpdated(new Date())
       console.log('✅ Dashboard data fetch completed successfully')
-      
+
     } catch (err) {
       console.error('❌ Error fetching dashboard data:', err)
       setError(`Failed to load dashboard: ${err instanceof Error ? err.message : 'Unknown error'}`)
@@ -271,7 +270,7 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="p-4"
@@ -283,7 +282,7 @@ export default function DashboardPage() {
               <strong className="font-bold">Dashboard Error</strong>
             </div>
             <p className="text-red-600 dark:text-red-400 mt-2">{error}</p>
-            <Button 
+            <Button
               className="mt-4 bg-red-600 hover:bg-red-700"
               onClick={fetchDashboardData}
             >
@@ -309,9 +308,9 @@ export default function DashboardPage() {
             <span className="text-sm">Loading...</span>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
@@ -326,7 +325,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -342,7 +341,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🏨 Hotel Dashboard</h1>
           <p className="text-muted-foreground">Real-time overview of your property performance</p>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -372,7 +371,7 @@ export default function DashboardPage() {
           change="+2"
           color="text-blue-600"
         />
-        
+
         <StatCard
           title="Occupancy Rate"
           value={`${dashboardData.occupancyRate}%`}
@@ -381,7 +380,7 @@ export default function DashboardPage() {
           change={`${dashboardData.occupancyRate > 70 ? '+' : '-'}${Math.abs(dashboardData.occupancyRate - 70)}%`}
           color="text-green-600"
         />
-        
+
         <StatCard
           title="Today's Revenue"
           value={formatCurrencyCompat(dashboardData.totalRevenue)}
@@ -390,7 +389,7 @@ export default function DashboardPage() {
           change="+15%"
           color="text-purple-600"
         />
-        
+
         <StatCard
           title="Active Guests"
           value={dashboardData.totalGuests}
@@ -439,7 +438,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -478,8 +477,8 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-2 mt-4">
                 {roomStatus.map((status, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
+                    <div
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: status.color }}
                     ></div>
                     <span className="text-xs text-muted-foreground">
@@ -491,7 +490,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -559,13 +558,13 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                      dataKey="day" 
+                    <XAxis
+                      dataKey="day"
                       className="text-xs fill-muted-foreground"
                     />
                     <YAxis className="text-xs fill-muted-foreground" />
-                    <Tooltip 
-                      contentStyle={{ 
+                    <Tooltip
+                      contentStyle={{
                         backgroundColor: 'var(--background)',
                         border: '1px solid var(--border)',
                         borderRadius: '8px'
@@ -609,21 +608,21 @@ export default function DashboardPage() {
                   <span className="text-sm">Manage Rooms</span>
                 </Link>
               </Button>
-              
+
               <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
                 <Link href="/occupancy">
                   <Calendar className="h-6 w-6" />
                   <span className="text-sm">View Calendar</span>
                 </Link>
               </Button>
-              
+
               <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
                 <Link href="/guests">
                   <Users className="h-6 w-6" />
                   <span className="text-sm">Guest List</span>
                 </Link>
               </Button>
-              
+
               <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
                 <Link href="/billing">
                   <CreditCard className="h-6 w-6" />
@@ -634,15 +633,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </motion.div>
-      
-      {/* AI Chatbot for Staff */}
-      <HotelChatbot 
-        userContext={{ 
-          type: 'staff', 
-          staffRole: 'admin' 
-        }}
-        position="bottom-right"
-      />
+
+
     </motion.div>
   )
 }
