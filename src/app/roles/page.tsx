@@ -32,6 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 interface User {
     id: string;
     email: string;
+    full_name?: string;
     created_at: string;
 }
 
@@ -61,13 +62,20 @@ export default function RolesManagementPage() {
 
     const fetchData = async () => {
         try {
+            // Fetch all users from API route (server-side)
+            const usersResponse = await fetch('/api/users');
+            if (!usersResponse.ok) {
+                throw new Error('Failed to fetch users');
+            }
+            const { users: allUsers } = await usersResponse.json();
+
             // Fetch all users with their roles
             const { data: usersData, error: usersError } = await supabase
                 .from('user_roles')
                 .select(`
-          user_id,
-          role:roles(*)
-        `);
+                    user_id,
+                    role:roles(*)
+                `);
 
             if (usersError) throw usersError;
 
@@ -79,23 +87,23 @@ export default function RolesManagementPage() {
 
             if (rolesError) throw rolesError;
 
-            // Fetch all auth users (requires admin access)
-            // For now, get unique user_ids from user_roles table
-            const uniqueUserIds = [...new Set(usersData?.map((ur: any) => ur.user_id) || [])];
-
-            // Create users array with roles
-            const usersWithRoles = uniqueUserIds.map(userId => {
-                const userRoles = usersData
-                    ?.filter((ur: any) => ur.user_id === userId)
-                    .map((ur: any) => ({ role: ur.role })) || [];
-
-                return {
-                    id: userId,
-                    email: `User ${userId.substring(0, 8)}`, // Placeholder - will need actual user data
-                    created_at: new Date().toISOString(),
-                    user_roles: userRoles,
-                };
+            // Create a map of user roles
+            const userRolesMap: Record<string, Array<{ role: Role }>> = {};
+            usersData?.forEach((ur: any) => {
+                if (!userRolesMap[ur.user_id]) {
+                    userRolesMap[ur.user_id] = [];
+                }
+                userRolesMap[ur.user_id].push({ role: ur.role });
             });
+
+            // Combine all users with their roles
+            const usersWithRoles = allUsers.map((user: any) => ({
+                id: user.id,
+                email: user.email,
+                full_name: user.full_name,
+                created_at: user.created_at,
+                user_roles: userRolesMap[user.id] || [],
+            }));
 
             setUsers(usersWithRoles);
             setRoles(rolesData || []);
@@ -238,7 +246,7 @@ export default function RolesManagementPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>User ID</TableHead>
+                                <TableHead>User</TableHead>
                                 <TableHead>Current Roles</TableHead>
                                 <TableHead>Assign Role</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
@@ -247,8 +255,20 @@ export default function RolesManagementPage() {
                         <TableBody>
                             {users.map(user => (
                                 <TableRow key={user.id}>
-                                    <TableCell className="font-medium font-mono text-xs">
-                                        {user.id}
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">
+                                                {user.full_name || user.email}
+                                            </span>
+                                            {user.full_name && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {user.email}
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-muted-foreground font-mono">
+                                                ID: {user.id.substring(0, 8)}...
+                                            </span>
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-2">

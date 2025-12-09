@@ -25,20 +25,38 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) throw error;
 
-            toast({
-                title: 'Success',
-                description: 'Logged in successfully!',
-            });
+            // Check user role to determine redirect
+            if (data.user) {
+                const { data: userRoles } = await supabase
+                    .from('user_roles')
+                    .select(`
+                        role:roles(name)
+                    `)
+                    .eq('user_id', data.user.id);
 
-            // Force full page reload to ensure sidebar loads
-            window.location.href = '/dashboard';
+                const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
+
+                toast({
+                    title: 'Success',
+                    description: 'Logged in successfully!',
+                });
+
+                // Redirect based on role
+                if (hasGuestRole && userRoles?.length === 1) {
+                    // Only guest role - redirect to chatbot
+                    window.location.href = '/chatbot';
+                } else {
+                    // Has other roles - redirect to dashboard
+                    window.location.href = '/dashboard';
+                }
+            }
         } catch (error: any) {
             toast({
                 title: 'Error',

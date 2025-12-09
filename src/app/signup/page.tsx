@@ -60,16 +60,35 @@ export default function SignUpPage() {
 
             if (error) throw error;
 
+            // Auto-assign guest role to new user
+            if (data.user) {
+                const { data: guestRole } = await supabase
+                    .from('roles')
+                    .select('id')
+                    .eq('name', 'guest')
+                    .single();
+
+                if (guestRole) {
+                    await supabase
+                        .from('user_roles')
+                        .insert({
+                            user_id: data.user.id,
+                            role_id: guestRole.id
+                        });
+                    console.log('✅ Assigned guest role to new user');
+                }
+            }
+
             setSuccess(true);
             toast({
                 title: 'Success',
-                description: 'Account created successfully! Please check your email to verify your account.',
+                description: 'Account created successfully! Redirecting to chatbot...',
             });
 
-            // Redirect to login after 3 seconds
+            // Redirect to chatbot after 2 seconds
             setTimeout(() => {
-                router.push('/login');
-            }, 3000);
+                window.location.href = '/chatbot';
+            }, 2000);
         } catch (error: any) {
             toast({
                 title: 'Error',
@@ -91,8 +110,8 @@ export default function SignUpPage() {
                         </div>
                         <h2 className="text-2xl font-bold">Account Created!</h2>
                         <p className="text-muted-foreground">
-                            Please check your email to verify your account.<br />
-                            Redirecting to login...
+                            Welcome! Your guest account is ready.<br />
+                            Redirecting to chatbot...
                         </p>
                     </CardContent>
                 </Card>

@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   title: "StayManager",
   description: "Property management application",
   icons: {
-    icon: '/gedung.ico',
+    icon: '/gedung.svg',
   },
 };
 
