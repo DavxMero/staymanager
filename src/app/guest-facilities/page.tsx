@@ -46,6 +46,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
+import { usePermissions } from "@/lib/hooks/usePermissions"
 
 // Types based on DB Schema
 interface ServiceItem {
@@ -83,6 +84,12 @@ export default function GuestFacilitiesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+
+  // Permissions
+  const { permissions } = usePermissions()
+  const canManageServices = permissions.includes('*') ||
+    permissions.includes('operations') ||
+    permissions.includes('staff')
 
   // Order Dialog State
   const [isOrderOpen, setIsOrderOpen] = useState(false)
@@ -360,10 +367,12 @@ export default function GuestFacilitiesPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button onClick={handleAddService} className="shrink-0">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Service
-          </Button>
+          {canManageServices && (
+            <Button onClick={handleAddService} className="shrink-0">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Service
+            </Button>
+          )}
         </div>
       </div>
 
@@ -386,24 +395,26 @@ export default function GuestFacilitiesPage() {
         {filteredServices.map((service) => (
           <Card key={service.id} className="flex flex-col hover:shadow-lg transition-shadow cursor-pointer group relative overflow-hidden">
             {/* Admin Controls Overlay - MOVED TO AVOID OVERLAP */}
-            <div className="absolute top-12 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm border"
-                onClick={(e) => handleEditService(e, service)}
-              >
-                <Pencil className="h-4 w-4 text-blue-600" />
-              </Button>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="h-8 w-8 shadow-sm border"
-                onClick={(e) => handleDeleteService(e, service.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            {canManageServices && (
+              <div className="absolute top-12 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm border"
+                  onClick={(e) => handleEditService(e, service)}
+                >
+                  <Pencil className="h-4 w-4 text-blue-600" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8 shadow-sm border"
+                  onClick={(e) => handleDeleteService(e, service.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
             <div onClick={() => handleOrderClick(service)} className="flex-1 flex flex-col">
               <CardHeader className="pb-4">
