@@ -29,40 +29,31 @@ interface PhoneInputProps {
 }
 
 export function PhoneInput({ value, onChange, className, placeholder = "812-3456-7890", id }: PhoneInputProps) {
-    // Helper to parse value into code and number
     const getInitialParts = (val: string) => {
         if (!val) return { code: '+62', number: '' }
 
-        // Check for country codes
-        // Sort by length desc to match longer codes first (though ours are mostly 3 chars)
         const sortedCodes = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length)
 
         for (const country of sortedCodes) {
             if (val.startsWith(country.code)) {
-                // Remove code and whitespace
                 const numberPart = val.slice(country.code.length).trim()
                 return { code: country.code, number: numberPart }
             }
         }
 
-        // Default fallback if no code found (e.g. local number 0812...)
         return { code: '+62', number: val }
     }
 
-    // We derive state from props to ensure single source of truth
     const { code: currentCode, number: currentNumber } = getInitialParts(value)
 
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let val = e.target.value.replace(/\D/g, '')
 
-        // Handle paste with 62 or 0 prefix
         if (val.startsWith('62')) val = val.slice(2)
         if (val.startsWith('0')) val = val.slice(1)
 
-        // Limit length
         if (val.length > 13) val = val.slice(0, 13)
 
-        // Add dashes
         let formatted = val
         if (val.length > 3) {
             formatted = `${val.slice(0, 3)}-${val.slice(3)}`
@@ -71,7 +62,6 @@ export function PhoneInput({ value, onChange, className, placeholder = "812-3456
             formatted = `${val.slice(0, 3)}-${val.slice(3, 7)}-${val.slice(7)}`
         }
 
-        // Call parent with full formatted string
         onChange(`${currentCode} ${formatted}`)
     }
 

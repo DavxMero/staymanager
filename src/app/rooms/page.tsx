@@ -74,7 +74,6 @@ import { transformRoomsQuery, formatCurrency as formatCurrencyCompat } from "@/l
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
 
-// Types
 interface HousekeepingTask {
   id: number
   created_at: string
@@ -91,8 +90,8 @@ interface HousekeepingTask {
   completed_at?: string
   scheduled_at?: string
   due_date?: string
-  estimated_duration: number // in minutes
-  actual_duration?: number // in minutes
+  estimated_duration: number
+  actual_duration?: number
 }
 
 interface StaffMember {
@@ -116,7 +115,6 @@ const statusVariants = {
 }
 
 export default function RoomsPage() {
-  // Room management state
   const [rooms, setRooms] = useState<Room[]>([])
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -127,33 +125,27 @@ export default function RoomsPage() {
   const [roomStatus, setRoomStatus] = useState<string>("available")
   const [error, setError] = useState<string | null>(null)
 
-  // Custom room type states
   const [customRoomTypes, setCustomRoomTypes] = useState<string[]>([])
   const [isAddingCustomType, setIsAddingCustomType] = useState(false)
   const [newCustomType, setNewCustomType] = useState("")
 
-  // Room filter states
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [floorFilter, setFloorFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [showFilters, setShowFilters] = useState(false)
 
-  // Housekeeping state
   const [tasks, setTasks] = useState<HousekeepingTask[]>([])
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [filteredTasks, setFilteredTasks] = useState<HousekeepingTask[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Housekeeping form states
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<HousekeepingTask | null>(null)
 
-  // Housekeeping filter states
   const [taskStatusFilter, setTaskStatusFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState<string>('')
 
-  // Housekeeping form fields
   const [taskRoomId, setTaskRoomId] = useState<number | null>(null)
   const [assignedTo, setAssignedTo] = useState<string>('')
   const [taskStatus, setTaskStatus] = useState<'pending' | 'assigned' | 'in-progress' | 'completed' | 'cancelled' | 'failed'>('pending')
@@ -165,17 +157,14 @@ export default function RoomsPage() {
   const applyFilters = useCallback(() => {
     let result = [...rooms]
 
-    // Filter by room type
     if (typeFilter !== "all") {
       result = result.filter(room => room.type === typeFilter)
     }
 
-    // Filter by floor
     if (floorFilter !== "all") {
       result = result.filter(room => room.floor === parseInt(floorFilter))
     }
 
-    // Filter by status
     if (statusFilter !== "all") {
       result = result.filter(room => room.status === statusFilter)
     }
@@ -185,7 +174,6 @@ export default function RoomsPage() {
 
   const fetchRooms = async () => {
     try {
-      // Fetch all rooms
       const { data: roomsData, error: roomsError } = await supabase
         .from('rooms')
         .select('*')
@@ -193,7 +181,6 @@ export default function RoomsPage() {
 
       if (roomsError) {
         console.error('Rooms fetch error:', roomsError)
-        // Handle specific RLS error
         if (roomsError.message?.includes('row-level security')) {
           throw new Error('Permission denied: You do not have permission to view rooms. Please check your user role.')
         }
@@ -202,7 +189,6 @@ export default function RoomsPage() {
 
       console.log('Rooms data fetched:', roomsData)
 
-      // Fetch current reservations to check room occupancy
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('reservations')
         .select('room_id, status')
@@ -210,19 +196,16 @@ export default function RoomsPage() {
 
       if (reservationsError) {
         console.error('Reservations fetch error:', reservationsError)
-        // Handle specific RLS error
         if (reservationsError.message?.includes('row-level security')) {
           throw new Error('Permission denied: You do not have permission to view reservations.')
         }
         throw reservationsError
       }
 
-      // Create a set of occupied room IDs
       const occupiedRoomIds = new Set(
         reservationsData.map(reservation => reservation.room_id)
       )
 
-      // Update room status based on reservations
       const updatedRooms = roomsData.map(room => {
         if (occupiedRoomIds.has(room.id)) {
           return { ...room, status: 'occupied' }
@@ -239,7 +222,6 @@ export default function RoomsPage() {
         stack: (err as Error).stack
       })
 
-      // Handle specific RLS error
       if ((err as Error).message?.includes('row-level security')) {
         setError('Permission denied: ' + (err as Error).message)
       } else {
@@ -261,7 +243,6 @@ export default function RoomsPage() {
     applyFilters()
   }, [applyFilters])
 
-  // Custom room type management functions
   const loadCustomRoomTypes = () => {
     try {
       const savedTypes = localStorage.getItem('customRoomTypes')
@@ -290,7 +271,6 @@ export default function RoomsPage() {
       return
     }
 
-    // Check if type already exists (case insensitive)
     const allExistingTypes = [...getDefaultRoomTypes(), ...customRoomTypes]
     if (allExistingTypes.some(type => type.toLowerCase() === trimmedType.toLowerCase())) {
       setError('This room type already exists')
@@ -313,13 +293,11 @@ export default function RoomsPage() {
     return [...getDefaultRoomTypes(), ...customRoomTypes]
   }
 
-  // Real booking system functions
 
   const handleRoomCheckout = async (roomId: number, roomNumber: string) => {
     if (!confirm(`Confirm checkout for Room ${roomNumber}?`)) return false
 
     try {
-      // Find and complete the current reservation
       const { data: reservations, error: findError } = await supabase
         .from('reservations')
         .select('id')
@@ -330,7 +308,6 @@ export default function RoomsPage() {
       if (findError) throw findError
 
       if (reservations && reservations.length > 0) {
-        // Update reservation status to checked-out
         const { error: updateError } = await supabase
           .from('reservations')
           .update({
@@ -342,7 +319,6 @@ export default function RoomsPage() {
         if (updateError) throw updateError
       }
 
-      // Set room status to cleaning (this will trigger HIGH priority task creation)
       const { error: roomError } = await supabase
         .from('rooms')
         .update({ status: 'cleaning' })
@@ -363,7 +339,6 @@ export default function RoomsPage() {
 
   const handleRoomCheckin = async (roomId: number, roomNumber: string) => {
     try {
-      // Check room status first
       const { data: roomData, error: roomStatusError } = await supabase
         .from('rooms')
         .select('status')
@@ -377,7 +352,6 @@ export default function RoomsPage() {
         return false
       }
 
-      // Find pending/confirmed reservation for this room
       const { data: reservations, error: findError } = await supabase
         .from('reservations')
         .select('id, guest_name, check_in_date')
@@ -399,7 +373,6 @@ export default function RoomsPage() {
         return false
       }
 
-      // Update reservation status to checked-in
       const { error: updateError } = await supabase
         .from('reservations')
         .update({
@@ -410,7 +383,6 @@ export default function RoomsPage() {
 
       if (updateError) throw updateError
 
-      // Set room status to occupied
       const { error: roomError } = await supabase
         .from('rooms')
         .update({ status: 'occupied' })
@@ -431,7 +403,6 @@ export default function RoomsPage() {
 
   const handleRoomBooking = async (roomId: number, roomNumber: string, roomPrice: number) => {
     try {
-      // Check room status first
       const { data: roomData, error: roomStatusError } = await supabase
         .from('rooms')
         .select('status')
@@ -445,7 +416,6 @@ export default function RoomsPage() {
         return false
       }
 
-      // Show booking dialog
       const guestName = prompt('Enter guest name for booking:')
       if (!guestName) return false
 
@@ -463,10 +433,8 @@ export default function RoomsPage() {
       const checkoutDate = new Date(checkinDate)
       checkoutDate.setDate(checkoutDate.getDate() + numberOfNights)
 
-      // --- GUEST MANAGEMENT INTEGRATION ---
       let guestId: number | null = null
 
-      // 1. Try to find existing guest
       let query = supabase.from('guests').select('id')
       if (guestPhone) {
         query = query.eq('phone', guestPhone)
@@ -479,7 +447,6 @@ export default function RoomsPage() {
       if (existingGuests && existingGuests.length > 0) {
         guestId = existingGuests[0].id
       } else {
-        // 2. Create new guest
         const { data: newGuest, error: createGuestError } = await supabase
           .from('guests')
           .insert({
@@ -496,14 +463,12 @@ export default function RoomsPage() {
           guestId = newGuest.id
         }
       }
-      // ------------------------------------
 
-      // Create reservation with correct field names
       const { data: reservation, error: reservationError } = await supabase
         .from('reservations')
         .insert({
           room_id: roomId,
-          guest_id: guestId, // Link guest
+          guest_id: guestId,
           guest_name: guestName,
           guest_phone: guestPhone,
           check_in_date: checkinDate.toISOString(),
@@ -521,7 +486,6 @@ export default function RoomsPage() {
 
       if (reservationError) throw reservationError
 
-      // Set room status to reserved
       const { error: roomError } = await supabase
         .from('rooms')
         .update({ status: 'reserved' })
@@ -546,7 +510,6 @@ export default function RoomsPage() {
     if (!confirm(`Mark maintenance complete for Room ${roomNumber}?`)) return false
 
     try {
-      // Set room status to available
       const { error } = await supabase
         .from('rooms')
         .update({ status: 'available' })
@@ -592,7 +555,6 @@ export default function RoomsPage() {
   const handleSaveRoom = async () => {
     try {
       if (currentRoom) {
-        // Edit existing room
         const { data, error } = await supabase
           .from('rooms')
           .update({
@@ -612,7 +574,6 @@ export default function RoomsPage() {
 
         console.log('Room updated:', data)
       } else {
-        // Add new room
         const { data, error } = await supabase
           .from('rooms')
           .insert({
@@ -632,7 +593,6 @@ export default function RoomsPage() {
         console.log('Room inserted:', data)
       }
 
-      // Refresh the room list
       await fetchRooms()
       setIsDialogOpen(false)
     } catch (err) {
@@ -643,7 +603,6 @@ export default function RoomsPage() {
         stack: (err as Error).stack
       })
 
-      // Handle specific RLS error
       if ((err as Error).message?.includes('row-level security')) {
         setError('Permission denied: You do not have permission to modify rooms. Please check your user role.')
       } else {
@@ -661,14 +620,12 @@ export default function RoomsPage() {
 
       if (error) {
         console.error('Delete room error:', error)
-        // Handle specific RLS error
         if (error.message?.includes('row-level security')) {
           throw new Error('Permission denied: You do not have permission to delete rooms.')
         }
         throw error
       }
 
-      // Refresh the room list
       await fetchRooms()
     } catch (err) {
       console.error('Error deleting room:', err)
@@ -678,7 +635,6 @@ export default function RoomsPage() {
         stack: (err as Error).stack
       })
 
-      // Handle specific RLS error
       if ((err as Error).message?.includes('row-level security')) {
         setError('Permission denied: ' + (err as Error).message)
       } else {
@@ -696,24 +652,19 @@ export default function RoomsPage() {
     }).format(amount)
   }
 
-  // Housekeeping functions
   const applyTaskFilters = useCallback(() => {
     let result = [...tasks]
 
-    // Filter out completed tasks (hide completed from view)
     result = result.filter(task => task.status !== 'completed')
 
-    // Status filter
     if (taskStatusFilter !== 'all') {
       result = result.filter(task => task.status === taskStatusFilter)
     }
 
-    // Priority filter
     if (priorityFilter !== 'all') {
       result = result.filter(task => task.priority === priorityFilter)
     }
 
-    // Search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       result = result.filter(task =>
@@ -726,17 +677,15 @@ export default function RoomsPage() {
     setFilteredTasks(result)
   }, [tasks, taskStatusFilter, priorityFilter, searchTerm])
 
-  // Utility function to check if error indicates missing table
   const isTableMissingError = (error: any): boolean => {
     if (!error) return false
 
-    // Check for various indicators that table doesn't exist
     return (
       error.message?.includes('relation') && error.message?.includes('does not exist') ||
-      error.code === '42P01' || // PostgreSQL: undefined_table
-      error.code === 'PGRST102' || // PostgREST: table not found
-      Object.keys(error).length === 0 || // Empty error object
-      JSON.stringify(error) === '{}' // Stringified empty object
+      error.code === '42P01' ||
+      error.code === 'PGRST102' ||
+      Object.keys(error).length === 0 ||
+      JSON.stringify(error) === '{}'
     )
   }
 
@@ -745,7 +694,6 @@ export default function RoomsPage() {
       setLoading(true)
       setError(null)
 
-      // Fetch tasks with room information via JOIN
       try {
         const { data: tasksData, error: tasksError } = await supabase
           .from('housekeeping_tasks')
@@ -770,7 +718,6 @@ export default function RoomsPage() {
             setTasks([])
           }
         } else {
-          // Transform tasks to include room_number from JOIN
           const transformedTasks = (tasksData || []).map(task => ({
             ...task,
             room_number: task.rooms?.number || 'Unknown',
@@ -788,7 +735,6 @@ export default function RoomsPage() {
         setTasks([])
       }
 
-      // Fetch real staff data
       try {
         const { data: staffData, error: staffError } = await supabase
           .from('staff_members')
@@ -822,10 +768,8 @@ export default function RoomsPage() {
       }
     } catch (err) {
       console.error('Error fetching housekeeping data:', err)
-      // Don't show error to user if it's just missing tables - this is expected in new setups
       console.info('Housekeeping data fetch completed with warnings. This is normal if housekeeping features are not yet configured.')
     } finally {
-      // Final status summary
       console.info(`Data fetch complete - Tasks: ${tasks.length}, Staff: ${staff.length}`)
       setLoading(false)
     }
@@ -940,7 +884,6 @@ export default function RoomsPage() {
         return
       }
 
-      // Find staff_id if a staff member is selected
       const selectedStaff = assignedTo ? staff.find(s => s.full_name === assignedTo) : null
       const staff_id = selectedStaff ? selectedStaff.id : null
 
@@ -1015,7 +958,6 @@ export default function RoomsPage() {
 
   const handleMarkAsComplete = async (id: number) => {
     try {
-      // 1. Get the task details first to know which room to update
       const { data: taskData, error: fetchError } = await supabase
         .from('housekeeping_tasks')
         .select('room_id')
@@ -1024,7 +966,6 @@ export default function RoomsPage() {
 
       if (fetchError) throw fetchError
 
-      // 2. Update task status to completed
       const { error: updateTaskError } = await supabase
         .from('housekeeping_tasks')
         .update({
@@ -1035,7 +976,6 @@ export default function RoomsPage() {
 
       if (updateTaskError) throw updateTaskError
 
-      // 3. Update room status to available
       if (taskData && taskData.room_id) {
         const { error: updateRoomError } = await supabase
           .from('rooms')
@@ -1045,9 +985,8 @@ export default function RoomsPage() {
         if (updateRoomError) throw updateRoomError
       }
 
-      // 4. Refresh data
       await fetchHousekeepingData()
-      await fetchRooms() // Refresh rooms to reflect status change
+      await fetchRooms()
 
     } catch (err) {
       console.error('Error completing task:', err)
@@ -1095,12 +1034,10 @@ export default function RoomsPage() {
     }
   }
 
-  // Apply task filters
   useEffect(() => {
     applyTaskFilters()
   }, [applyTaskFilters])
 
-  // Calculate statistics
   const stats = {
     totalTasks: tasks.length,
     completedTasks: tasks.filter(t => t.status === 'completed').length,
@@ -1116,7 +1053,6 @@ export default function RoomsPage() {
     ? Math.round((stats.completedTasks / stats.totalTasks) * 100)
     : 0
 
-  // Get unique room types and floors for filters
   const roomTypes = [...new Set([...rooms.map(room => room.type), ...getAllRoomTypes()])]
   const floors = [...new Set(rooms.map(room => room.floor))].filter(f => f !== undefined && f !== null).sort((a, b) => (a as number) - (b as number))
 

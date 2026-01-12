@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'PO Number and Supplier are required' }, { status: 400 })
         }
 
-        // 1. Create Header
         const { data: po, error: poError } = await supabase
             .from('inventory_purchase_orders')
             .insert([{
@@ -58,7 +57,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: poError.message }, { status: 500 })
         }
 
-        // 2. Create Items (if any)
         if (items && Array.isArray(items) && items.length > 0) {
             const itemsToInsert = items.map((item: any) => ({
                 po_id: po.id,
@@ -74,7 +72,6 @@ export async function POST(request: NextRequest) {
 
             if (itemsError) {
                 console.error('Error creating PO items:', itemsError)
-                // Optional: Rollback PO creation if items fail (not implemented here for simplicity)
                 return NextResponse.json({
                     success: true,
                     data: po,

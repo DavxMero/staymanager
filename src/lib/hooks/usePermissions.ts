@@ -30,7 +30,6 @@ export function usePermissions(): UserPermissions {
                 return;
             }
 
-            // Fetch user roles with permissions
             const { data: userRoles } = await supabase
                 .from('user_roles')
                 .select(`

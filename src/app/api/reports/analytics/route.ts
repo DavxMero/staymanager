@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
 
     console.log('Fetching analytics data for:', { startDate, endDate, roomType })
 
-    // 1. Revenue Data
     let revenueQuery = supabase
       .from('invoices')
       .select(`
@@ -44,7 +43,6 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching invoices:', invoicesError)
     }
 
-    // 2. Reservations Data
     let reservationsQuery = supabase
       .from('reservations')
       .select(`
@@ -65,7 +63,6 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching reservations:', reservationsError)
     }
 
-    // 3. Room Data
     const { data: roomsData, error: roomsError } = await supabase
       .from('rooms')
       .select('*')
@@ -75,7 +72,6 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching rooms:', roomsError)
     }
 
-    // 4. Room Service Requests
     const { data: roomServiceData, error: roomServiceError } = await supabase
       .from('room_service_requests')
       .select('*')
@@ -87,7 +83,6 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching room service requests:', roomServiceError)
     }
 
-    // 5. Housekeeping Tasks
     const { data: housekeepingData, error: housekeepingError } = await supabase
       .from('housekeeping_tasks')
       .select('*')
@@ -99,7 +94,6 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching housekeeping tasks:', housekeepingError)
     }
 
-    // 6. Get billing items/POS data if exists
     const { data: billingItemsData, error: billingItemsError } = await supabase
       .from('billing_items')
       .select('*')
@@ -110,7 +104,6 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching billing items:', billingItemsError)
     }
 
-    // Calculate analytics
     const analytics = calculateAnalytics({
       invoices: invoicesData || [],
       reservations: reservationsData || [],
@@ -145,7 +138,6 @@ export async function GET(request: NextRequest) {
 function calculateAnalytics(data: any) {
   const { invoices, reservations, rooms, roomService, housekeeping, billingItems, startDate, endDate } = data
 
-  // Revenue calculations
   const totalRevenue = invoices.reduce((sum: number, invoice: any) => {
     return sum + (invoice.status === 'paid' ? (invoice.amount || 0) : 0)
   }, 0)
@@ -153,17 +145,14 @@ function calculateAnalytics(data: any) {
   const totalBookings = reservations.length
   const totalRooms = rooms.length
 
-  // Occupancy calculations
   const occupiedRooms = rooms.filter((room: any) => room.status === 'occupied').length
   const currentOccupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0
 
-  // Revenue by room type
   const revenueByRoomType = rooms.reduce((acc: any, room: any) => {
     if (!acc[room.type]) {
       acc[room.type] = { revenue: 0, bookings: 0 }
     }
 
-    // Find reservations for this room
     const roomReservations = reservations.filter((res: any) => res.room_id === room.id)
     const roomRevenue = roomReservations.reduce((sum: number, res: any) => sum + (res.total_amount || 0), 0)
 
@@ -173,7 +162,6 @@ function calculateAnalytics(data: any) {
     return acc
   }, {})
 
-  // Monthly revenue trend (last 6 months)
   const monthlyRevenue = []
   for (let i = 5; i >= 0; i--) {
     const monthStart = format(subMonths(new Date(), i), 'yyyy-MM-01')
@@ -196,11 +184,10 @@ function calculateAnalytics(data: any) {
       adr: monthBookings.length > 0
         ? monthInvoices.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) / monthBookings.length
         : 0,
-      occupancy: Math.min(95, 60 + Math.random() * 35) // Simulated occupancy for now
+      occupancy: Math.min(95, 60 + Math.random() * 35)
     })
   }
 
-  // Check-in/out trends (last 7 days)
   const checkInOutData = []
   for (let i = 6; i >= 0; i--) {
     const date = new Date()
@@ -222,7 +209,6 @@ function calculateAnalytics(data: any) {
     })
   }
 
-  // Room service statistics
   const roomServiceStats = {
     total: roomService.length,
     pending: roomService.filter((req: any) => req.status === 'pending').length,
@@ -238,7 +224,6 @@ function calculateAnalytics(data: any) {
     }, {})
   }
 
-  // Housekeeping statistics
   const housekeepingStats = {
     total: housekeeping.length,
     pending: housekeeping.filter((task: any) => task.status === 'pending').length,
@@ -250,13 +235,10 @@ function calculateAnalytics(data: any) {
       Math.max(1, housekeeping.filter((task: any) => task.actual_duration).length)
   }
 
-  // Guest reviews simulation (can be enhanced with real review system)
   const guestReviews = generateSampleReviews(reservations)
 
-  // Room issues simulation (can be enhanced with real maintenance system)
   const roomIssues = generateSampleRoomIssues(rooms, housekeeping)
 
-  // Financial metrics
   const adr = totalBookings > 0 ? totalRevenue / totalBookings : 0
   const revpar = totalRooms > 0 ? totalRevenue / totalRooms : 0
 
@@ -297,7 +279,6 @@ function getColorForRoomType(type: string): string {
 }
 
 function generateSampleReviews(reservations: any[]) {
-  // Generate sample reviews based on recent reservations
   return reservations
     .filter(res => res.status === 'checked-out')
     .slice(0, 10)
@@ -305,7 +286,7 @@ function generateSampleReviews(reservations: any[]) {
       id: res.id,
       guest: res.guests?.full_name || `Guest ${res.id}`,
       room: res.rooms?.number || 'Unknown',
-      rating: Math.floor(Math.random() * 2) + 4, // 4-5 stars mostly
+      rating: Math.floor(Math.random() * 2) + 4,
       comment: getRandomReviewComment(),
       date: res.check_out,
       category: Math.floor(Math.random() * 2) + 4 >= 4 ? 'Excellent' : 'Good'
@@ -327,12 +308,11 @@ function getRandomReviewComment(): string {
 }
 
 function generateSampleRoomIssues(rooms: any[], housekeeping: any[]) {
-  // Generate issues based on maintenance housekeeping tasks
   const maintenanceTasks = housekeeping.filter(task => task.task_type === 'maintenance')
 
   return maintenanceTasks.slice(0, 10).map(task => ({
     id: task.id,
-    room: `Room ${task.room_id}`, // This would need room lookup in real implementation
+    room: `Room ${task.room_id}`,
     issue: task.description || task.title || "Maintenance required",
     priority: task.priority || 'medium',
     status: task.status,

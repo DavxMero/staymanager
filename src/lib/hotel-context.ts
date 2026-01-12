@@ -1,4 +1,3 @@
-// src/lib/hotel-context.ts
 export const hotelContext = {
   name: "StayManager Hotel",
   address: "123 Hospitality Street, Hotel City",

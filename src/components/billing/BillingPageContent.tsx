@@ -104,7 +104,6 @@ export function BillingPageContent({
   setSelectedReservation,
   fetchBillingItems
 }: BillingPageContentProps) {
-  // Calculate financial summary
   const totalRevenue = invoices.reduce((sum, invoice) => sum + (invoice.status === 'paid' ? invoice.amount : 0), 0)
   const pendingPayments = invoices.reduce((sum, invoice) => sum + (invoice.status === 'pending' ? invoice.amount : 0), 0)
   const overdueAmount = invoices.reduce((sum, invoice) => sum + (invoice.status === 'overdue' ? invoice.amount : 0), 0)

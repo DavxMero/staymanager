@@ -73,9 +73,7 @@ export function EnhancedInvoicesTable({
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' })
 
-  // Filter and sort invoices
   const filteredAndSortedInvoices = useMemo(() => {
-    // Filter invoices
     const filtered = invoices.filter(invoice => {
       const matchesSearch =
         invoice.id.toString().includes(searchTerm) ||
@@ -87,7 +85,6 @@ export function EnhancedInvoicesTable({
       return matchesSearch && matchesStatus
     })
 
-    // Sort invoices
     if (sortConfig.key) {
       const sortKey = sortConfig.key
       filtered.sort((a, b) => {

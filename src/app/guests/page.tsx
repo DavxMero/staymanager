@@ -42,21 +42,21 @@ import { GuestReservationDialog } from "@/components/dialogs"
 import { PhoneInput } from "@/components/ui/phone-input"
 
 interface Booking {
-  id: string  // UUID in unified schema
+  id: string
   booking_id?: string
-  check_in: string  // DATE column from unified schema
-  check_out: string  // DATE column from unified schema
+  check_in: string
+  check_out: string
   status: string
   payment_status?: string
   total_amount?: number
-  total_price?: number  // Legacy column for backward compatibility
+  total_price?: number
   room_rate?: number
   room_total?: number
   guest_name?: string
   guest_phone?: string
   guest_email?: string
   guest_id?: number
-  room_id: string  // UUID in unified schema
+  room_id: string
   adults?: number
   children?: number
   breakfast_included?: boolean
@@ -72,8 +72,8 @@ interface Booking {
 }
 
 interface Payment {
-  id: string  // UUID in unified schema
-  reservation_id: string  // UUID reference to reservations
+  id: string
+  reservation_id: string
   amount: number
   payment_method: string
   payment_date: string
@@ -98,7 +98,6 @@ export default function GuestsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'history'>('all')
 
-  // Payment Dialog State
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [paymentType, setPaymentType] = useState<'checkin' | 'checkout'>('checkin')
   const [paymentAmount, setPaymentAmount] = useState(0)
@@ -114,7 +113,6 @@ export default function GuestsPage() {
 
   const fetchGuests = async () => {
     try {
-      // First, fetch all guests
       const { data: guestsData, error: guestsError } = await supabase
         .from('guests')
         .select('*')
@@ -123,7 +121,6 @@ export default function GuestsPage() {
       if (guestsError) {
         console.error('Error fetching guests table:', guestsError)
 
-        // Provide helpful error message based on common issues
         let errorMessage = `Database error: ${guestsError.message}. `;
 
         if (guestsError.code === 'PGRST116') {
@@ -146,12 +143,9 @@ export default function GuestsPage() {
 
       console.log(`Found ${guestsData.length} guests, fetching bookings...`)
 
-      // Fetch bookings and payments for each guest
       const guestsWithBookings = await Promise.all(
         guestsData.map(async (guest) => {
           try {
-            // Get latest active or recent reservation for this guest
-            // We use guest_id to link reservations to guests correctly
             const { data: reservationsData, error: reservationsError } = await supabase
               .from('reservations')
               .select(`
@@ -178,18 +172,13 @@ export default function GuestsPage() {
 
             if (reservationsError) {
               console.error('Error fetching reservation for guest:', guest.full_name, reservationsError)
-              // Don't throw error, just continue without reservation data
-              // This allows guests to show even if reservations table doesn't exist yet
             }
 
             const currentBooking = reservationsData?.[0] ? {
               ...reservationsData[0]
-              // Data is already in correct format from unified schema
             } : null
 
-            // If booking exists, get room details and payments
             if (currentBooking) {
-              // Get room details
               const { data: roomData, error: roomError } = await supabase
                 .from('rooms')
                 .select('number, type')
@@ -200,13 +189,11 @@ export default function GuestsPage() {
                 console.error('Error fetching room for booking:', currentBooking.id, roomError)
               }
 
-              // Map room number field
               const mappedRoomData = roomData ? {
                 room_number: roomData.number,
                 type: roomData.type
               } : null
 
-              // Get payments
               const { data: paymentsData, error: paymentsError } = await supabase
                 .from('payments')
                 .select('*')
@@ -240,7 +227,6 @@ export default function GuestsPage() {
     } catch (err: unknown) {
       console.error('Error fetching guests:', err)
 
-      // Provide helpful error message
       let errorMessage = 'Failed to fetch guests. '
       if (err instanceof Error) {
         errorMessage += err.message + '. '
@@ -256,7 +242,6 @@ export default function GuestsPage() {
   }
 
   const handleAddGuest = () => {
-    // Open new modular reservation dialog
     setIsReservationDialogOpen(true)
   }
 
@@ -281,7 +266,6 @@ export default function GuestsPage() {
   const handleSaveGuest = async () => {
     try {
       if (currentGuest) {
-        // Edit existing guest
         const { error } = await supabase
           .from('guests')
           .update({
@@ -293,7 +277,6 @@ export default function GuestsPage() {
 
         if (error) throw error
       } else {
-        // Add new guest
         const { error } = await supabase
           .from('guests')
           .insert({
@@ -305,7 +288,6 @@ export default function GuestsPage() {
         if (error) throw error
       }
 
-      // Refresh the guest list
       await fetchGuests()
       setIsDialogOpen(false)
     } catch (err) {
@@ -341,7 +323,7 @@ export default function GuestsPage() {
     if (!guest.currentBooking) return
     setCurrentGuest(guest)
     setPaymentType('checkin')
-    setPaymentAmount(guest.currentBooking.total_amount || 0) // Default full payment
+    setPaymentAmount(guest.currentBooking.total_amount || 0)
     setPaymentMethod('cash')
     setIsPaymentDialogOpen(true)
   }
@@ -351,7 +333,6 @@ export default function GuestsPage() {
     setCurrentGuest(guest)
     setPaymentType('checkout')
 
-    // Calculate remaining amount
     const totalPaid = guest.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
     const remaining = Math.max(0, (guest.currentBooking.total_amount || 0) - totalPaid)
 
@@ -367,8 +348,6 @@ export default function GuestsPage() {
 
     setProcessingPayment(true)
     try {
-      // 1. Process Payment if amount > 0
-      // For checkout, calculate net amount including deposit logic
       let finalPaymentAmount = paymentAmount
       if (paymentType === 'checkout') {
         finalPaymentAmount = Math.max(0, paymentAmount - (depositRefund ? DEPOSIT_AMOUNT : 0) + penaltyAmount)
@@ -388,9 +367,7 @@ export default function GuestsPage() {
         if (paymentError) throw paymentError
       }
 
-      // 2. Update Status based on type
       if (paymentType === 'checkin') {
-        // Check In Action
         const { error: reservationError } = await supabase
           .from('reservations')
           .update({
@@ -410,19 +387,17 @@ export default function GuestsPage() {
         if (roomError) throw roomError
 
       } else {
-        // Check Out Action
         const { error: reservationError } = await supabase
           .from('reservations')
           .update({
             status: 'checked-out',
             actual_check_out: new Date().toISOString(),
-            payment_status: 'paid' // Assuming checkout means paid off
+            payment_status: 'paid'
           })
           .eq('id', currentGuest.currentBooking.id)
 
         if (reservationError) throw reservationError
 
-        // Set room to cleaning instead of available directly
         const { error: roomError } = await supabase
           .from('rooms')
           .update({ status: 'cleaning' })
@@ -431,7 +406,6 @@ export default function GuestsPage() {
         if (roomError) throw roomError
       }
 
-      // Success
       await fetchGuests()
       setIsPaymentDialogOpen(false)
 
@@ -698,7 +672,6 @@ export default function GuestsPage() {
           </DialogHeader>
 
           {isViewMode && currentGuest ? (
-            // View Mode with Tabs
             <Tabs defaultValue="guest" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="guest">
@@ -940,7 +913,6 @@ export default function GuestsPage() {
               </TabsContent>
             </Tabs>
           ) : (
-            // Edit/Add Mode
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Nama Lengkap</Label>
@@ -1099,7 +1071,7 @@ export default function GuestsPage() {
                   : paymentAmount
                 }
                 onChange={(e) => setPaymentAmount(parseInt(e.target.value) || 0)}
-                disabled={paymentType === 'checkout'} // Auto-calculated for checkout
+                disabled={paymentType === 'checkout'}
               />
             </div>
 
@@ -1141,7 +1113,7 @@ export default function GuestsPage() {
         open={isReservationDialogOpen}
         onOpenChange={setIsReservationDialogOpen}
         onSuccess={() => {
-          fetchGuests() // Refresh guest list
+          fetchGuests()
         }}
         mode="reservation"
       />

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// For API routes, we need the service role key for full database access
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -13,7 +12,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   })
 }
 
-// Create admin client for server-side operations
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -21,7 +19,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
-// GET - Fetch all expenses with filtering
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -35,7 +32,6 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('expense_date', { ascending: false })
 
-    // Apply filters
     if (category && category !== 'all') {
       query = query.eq('category', category)
     }
@@ -67,7 +63,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new expense
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -86,7 +81,6 @@ export async function POST(request: NextRequest) {
       recurring_period
     } = body
 
-    // Validation
     if (!description || !amount || !category || !payment_method || !date) {
       return NextResponse.json({ 
         error: 'Missing required fields: description, amount, category, payment_method, date' 
@@ -137,7 +131,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update existing expense
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
@@ -147,7 +140,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 })
     }
 
-    // Add updated timestamp
     updateData.updated_at = new Date().toISOString()
 
     const { data, error } = await supabase
@@ -176,7 +168,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete expense
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

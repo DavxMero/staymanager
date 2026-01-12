@@ -70,7 +70,6 @@ export function POSTransaction({
   const [notes, setNotes] = useState<string>('')
   const [isProcessing, setIsProcessing] = useState(false)
 
-  // New item form
   const [newItemName, setNewItemName] = useState('')
   const [newItemQuantity, setNewItemQuantity] = useState('1')
   const [newItemUnitPrice, setNewItemUnitPrice] = useState('')
@@ -82,7 +81,6 @@ export function POSTransaction({
     : 0
 
   const addItem = () => {
-    // Validation before adding item
     if (!newItemName.trim()) {
       alert('❌ Nama item tidak boleh kosong\n\nSilakan masukkan nama item.')
       return
@@ -102,7 +100,6 @@ export function POSTransaction({
     const unitPrice = parseFloat(newItemUnitPrice) || 0
     const totalPrice = quantity * unitPrice
 
-    // Final validation
     if (quantity <= 0) {
       alert('❌ Jumlah quantity tidak valid\n\nQuantity harus lebih dari 0.')
       return
@@ -123,7 +120,6 @@ export function POSTransaction({
 
     setItems([...items, newItem])
 
-    // Reset form
     setNewItemName('')
     setNewItemQuantity('1')
     setNewItemUnitPrice('')
@@ -146,7 +142,6 @@ export function POSTransaction({
   }
 
   const processTransaction = async () => {
-    // Comprehensive validation with user-friendly messages
     if (items.length === 0) {
       alert('❌ Tidak ada item dalam transaksi.\n\nSilakan tambahkan setidaknya satu item terlebih dahulu.')
       return
@@ -162,7 +157,6 @@ export function POSTransaction({
       return
     }
 
-    // Validate individual items
     const invalidItems = items.filter(item =>
       !item.item_name ||
       item.quantity <= 0 ||
@@ -228,7 +222,6 @@ export function POSTransaction({
       console.error('Error processing transaction:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
 
-      // User-friendly error messages
       if (errorMessage.includes('Total amount must be greater than 0')) {
         alert('❌ Error: Total amount tidak valid\n\nTotal pembayaran harus lebih dari Rp 0. Silakan periksa kembali item dan harga yang diinput.')
       } else if (errorMessage.includes('Payment method is required')) {
@@ -293,13 +286,11 @@ export function POSTransaction({
                 value={newItemQuantity}
                 onChange={(e) => {
                   const value = e.target.value
-                  // Only allow positive integers
                   if (value === '' || (parseInt(value) >= 1 && !isNaN(parseInt(value)))) {
                     setNewItemQuantity(value)
                   }
                 }}
                 onBlur={(e) => {
-                  // Ensure minimum value of 1
                   if (!e.target.value || parseInt(e.target.value) < 1) {
                     setNewItemQuantity('1')
                   }
@@ -316,22 +307,19 @@ export function POSTransaction({
                 value={newItemUnitPrice}
                 onChange={(e) => {
                   const value = e.target.value
-                  // Only allow non-negative numbers
                   if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
                     setNewItemUnitPrice(value)
                   }
                 }}
                 onBlur={(e) => {
-                  // Show warning for 0 or negative values
                   const value = parseFloat(e.target.value)
                   if (isNaN(value) || value <= 0) {
-                    // Don't auto-correct, let user know it's invalid
                     if (e.target.value !== '') {
-                      e.target.style.borderColor = '#ef4444' // red border
+                      e.target.style.borderColor = '#ef4444'
                       e.target.title = 'Harga harus lebih dari Rp 0'
                     }
                   } else {
-                    e.target.style.borderColor = '' // reset border
+                    e.target.style.borderColor = ''
                     e.target.title = ''
                   }
                 }}
@@ -442,7 +430,6 @@ export function POSTransaction({
                   value={cashReceived}
                   onChange={(e) => {
                     const value = e.target.value
-                    // Only allow non-negative numbers
                     if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
                       setCashReceived(value)
                     }
@@ -450,13 +437,13 @@ export function POSTransaction({
                   onBlur={(e) => {
                     const value = parseFloat(e.target.value)
                     if (value > 0 && value < totalAmount) {
-                      e.target.style.borderColor = '#f59e0b' // orange border for warning
+                      e.target.style.borderColor = '#f59e0b'
                       e.target.title = `Uang diterima kurang dari total (${formatCurrency(totalAmount)})`
                     } else if (value <= 0 && e.target.value !== '') {
-                      e.target.style.borderColor = '#ef4444' // red border for error
+                      e.target.style.borderColor = '#ef4444'
                       e.target.title = 'Jumlah uang harus lebih dari Rp 0'
                     } else {
-                      e.target.style.borderColor = '' // reset border
+                      e.target.style.borderColor = ''
                       e.target.title = ''
                     }
                   }}

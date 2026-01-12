@@ -98,7 +98,6 @@ export default function HealthPage() {
 
   const handleRunHealthCheck = async () => {
     setTesting(true)
-    // Simulate health check
     await new Promise(resolve => setTimeout(resolve, 3000))
     setLastHealthCheck('Just now')
     setTesting(false)

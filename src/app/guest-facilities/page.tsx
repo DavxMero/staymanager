@@ -48,7 +48,6 @@ import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
 import { usePermissions } from "@/lib/hooks/usePermissions"
 
-// Types based on DB Schema
 interface ServiceItem {
   id: number
   name: string
@@ -85,13 +84,11 @@ export default function GuestFacilitiesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
 
-  // Permissions
   const { permissions } = usePermissions()
   const canManageServices = permissions.includes('*') ||
     permissions.includes('operations') ||
     permissions.includes('staff')
 
-  // Order Dialog State
   const [isOrderOpen, setIsOrderOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null)
   const [selectedGuestId, setSelectedGuestId] = useState<string>("")
@@ -99,7 +96,6 @@ export default function GuestFacilitiesPage() {
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // CRUD Management State
   const [isManageOpen, setIsManageOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<Partial<ServiceItem>>({
@@ -118,7 +114,6 @@ export default function GuestFacilitiesPage() {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      // 1. Fetch Services (Show all, even unavailable ones for admin management purposes, or filter in UI)
       const { data: servicesData, error: servicesError } = await supabase
         .from('service_items')
         .select('*')
@@ -127,7 +122,6 @@ export default function GuestFacilitiesPage() {
       if (servicesError) throw servicesError
       setServices(servicesData || [])
 
-      // 2. Fetch Active Guests
       const { data: guestsData, error: guestsError } = await supabase
         .from('reservations')
         .select(`
@@ -158,7 +152,6 @@ export default function GuestFacilitiesPage() {
     }
   }
 
-  // --- ORDERING LOGIC ---
 
   const handleOrderClick = (service: ServiceItem) => {
     setSelectedService(service)
@@ -186,7 +179,6 @@ export default function GuestFacilitiesPage() {
       else if (cat.includes('room')) serviceType = 'room-service'
       else if (cat.includes('repair')) serviceType = 'maintenance'
 
-      // 1. Create Service Request
       const { data: requestData, error: requestError } = await supabase
         .from('guest_facility_requests')
         .insert({
@@ -205,7 +197,6 @@ export default function GuestFacilitiesPage() {
 
       if (requestError) throw new Error('Failed to create service request: ' + requestError.message)
 
-      // 2. Add to Billing
       const { error: billingError } = await supabase
         .from('billing_items')
         .insert({
@@ -237,7 +228,6 @@ export default function GuestFacilitiesPage() {
     }
   }
 
-  // --- CRUD LOGIC ---
 
   const handleAddService = () => {
     setFormData({
@@ -253,7 +243,7 @@ export default function GuestFacilitiesPage() {
   }
 
   const handleEditService = (e: React.MouseEvent, service: ServiceItem) => {
-    e.stopPropagation() // Prevent card click (order)
+    e.stopPropagation()
     setFormData({ ...service })
     setIsEditing(true)
     setIsManageOpen(true)
@@ -285,7 +275,6 @@ export default function GuestFacilitiesPage() {
 
     setIsSubmitting(true)
     try {
-      // Auto-generate code if empty
       const code = formData.service_code || formData.name?.toUpperCase().substring(0, 3) + '-' + Math.floor(Math.random() * 1000)
 
       const payload = {
@@ -298,7 +287,6 @@ export default function GuestFacilitiesPage() {
       }
 
       if (isEditing && formData.id) {
-        // UPDATE
         const { data, error } = await supabase
           .from('service_items')
           .update(payload)
@@ -309,7 +297,6 @@ export default function GuestFacilitiesPage() {
         if (error) throw error
         setServices(services.map(s => s.id === formData.id ? data : s))
       } else {
-        // INSERT
         const { data, error } = await supabase
           .from('service_items')
           .insert(payload)
@@ -329,8 +316,6 @@ export default function GuestFacilitiesPage() {
     }
   }
 
-
-  // --- FILTERING ---
 
   const filteredServices = services.filter(service => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase())

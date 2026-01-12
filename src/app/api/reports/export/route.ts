@@ -13,21 +13,18 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // For now, return a simulated response
-    // In a real implementation, you would generate actual PDF/Excel files
     const filename = `staymanager-report-${dateRange.startDate}-to-${dateRange.endDate}.${format}`
     
-    // Simulate file generation delay
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     return NextResponse.json({
       success: true,
       message: `${format.toUpperCase()} report generated successfully`,
       filename,
-      downloadUrl: `/api/reports/download/${filename}`, // This would be a real download URL
+      downloadUrl: `/api/reports/download/${filename}`,
       data: {
         totalRecords: Object.keys(data.summary).length,
-        fileSize: '2.5MB', // Simulated
+        fileSize: '2.5MB',
         generatedAt: new Date().toISOString()
       }
     })
@@ -45,10 +42,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Helper function to generate PDF report (placeholder)
 function generatePDFReport(data: any, options: any) {
-  // Implementation would use a library like jsPDF, puppeteer, or similar
-  // For now, return simulated result
   return {
     success: true,
     filename: `report-${Date.now()}.pdf`,
@@ -56,10 +50,7 @@ function generatePDFReport(data: any, options: any) {
   }
 }
 
-// Helper function to generate Excel report (placeholder)
 function generateExcelReport(data: any, options: any) {
-  // Implementation would use a library like exceljs or xlsx
-  // For now, return simulated result
   return {
     success: true,
     filename: `report-${Date.now()}.xlsx`,

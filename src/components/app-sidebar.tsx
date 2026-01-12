@@ -55,13 +55,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
-// Permission mapping for each menu item
 const PERMISSION_MAP: Record<string, string> = {
-  'Dashboard': 'dashboard',
   'Rooms': 'rooms',
   'Occupancy': 'occupancy',
-  'Guest Management': 'guests',   // Kept strictly for staff
-  'Guest Facilities': 'chatbot',  // Accessible to guests
+  'Guest Management': 'guests',
+  'Guest Facilities': 'chatbot',
   'Staff': 'staff',
   'Financial': 'billing',
   'Operations': 'operations',
@@ -145,7 +143,6 @@ export function AppSidebar() {
   const { permissions, loading, roles } = usePermissions()
   const supabase = createClient()
 
-  // Set mounted state and fetch user
   React.useEffect(() => {
     setMounted(true)
 
@@ -153,7 +150,6 @@ export function AppSidebar() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
 
-      // Get user roles
       if (user) {
         const { data: userRolesData } = await supabase
           .from('user_roles')
@@ -171,19 +167,15 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-      // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       if (error) throw error
 
-      // Clear local state
       setUser(null)
       setUserRoles([])
 
-      // Redirect to login
       window.location.href = '/login'
     } catch (error) {
       console.error('Logout error:', error)
-      // Force redirect anyway
       window.location.href = '/login'
     }
   }
@@ -195,7 +187,6 @@ export function AppSidebar() {
     }))
   }
 
-  // Filter items based on user permissions
   const visibleItems = React.useMemo(() => {
     if (loading) return []
     if (permissions.includes('*')) return items
@@ -204,17 +195,14 @@ export function AppSidebar() {
       const requiredPermission = PERMISSION_MAP[item.title]
       if (!requiredPermission) return true
 
-      // Check if user has permission for this item
       const hasAccess = hasPermission(permissions, requiredPermission)
 
-      // If item has subitems, filter them too
       if (item.items) {
         const filteredSubItems = item.items.filter(subItem => {
           const subPermission = PERMISSION_MAP[subItem.title]
           return !subPermission || hasPermission(permissions, subPermission)
         })
 
-        // Only show parent if it has accessible subitems
         if (filteredSubItems.length > 0) {
           return { ...item, items: filteredSubItems }
         }
@@ -225,12 +213,10 @@ export function AppSidebar() {
     })
   }, [loading, permissions])
 
-  // Check if current path matches any submenu item
   const isSubMenuActive = (subItems: any[]) => {
     return subItems.some((subItem: any) => pathname === subItem.url)
   }
 
-  // Initialize menu open states based on active submenu items
   React.useEffect(() => {
     if (!mounted) return
 
@@ -249,7 +235,6 @@ export function AppSidebar() {
     }
   }, [mounted, pathname, visibleItems])
 
-  // Show loading state
   if (loading) {
     return (
       <Sidebar>
@@ -368,7 +353,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleItems.map((item) => {
-                // If item has subitems, render collapsible menu
                 if (item.items) {
                   const hasActiveSubItem = isSubMenuActive(item.items)
                   const isMenuOpen = openMenus[item.title] || false
@@ -417,7 +401,6 @@ export function AppSidebar() {
                   )
                 }
 
-                // Regular menu item
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -439,7 +422,6 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="p-2 space-y-2">
-          {/* User Profile Card */}
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

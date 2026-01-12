@@ -112,7 +112,6 @@ export function ModernBillingDashboard({
   const totalOutstanding = pendingPayments + overdueAmount
   const collectionRate = totalRevenue > 0 ? ((totalRevenue / (totalRevenue + totalOutstanding)) * 100) : 0
 
-  // Mock data for charts
   const revenueData = [
     { name: 'Jan', value: 4000 },
     { name: 'Feb', value: 3000 },

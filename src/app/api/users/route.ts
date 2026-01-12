@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
     try {
-        // Create Supabase admin client with service role
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -15,7 +14,6 @@ export async function GET() {
             }
         );
 
-        // Create regular client to check current user permissions
         const { createClient: createServerClient } = await import('@/lib/supabase/server');
         const supabase = await createServerClient();
 
@@ -25,7 +23,6 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Check if user has admin permissions
         const { data: userRoles } = await supabase
             .from('user_roles')
             .select('role:roles(name)')
@@ -39,7 +36,6 @@ export async function GET() {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Fetch all users using admin API
         const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
 
         if (error) {
@@ -47,7 +43,6 @@ export async function GET() {
             return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
         }
 
-        // Map users to simpler format
         const mappedUsers = users.map(user => ({
             id: user.id,
             email: user.email,

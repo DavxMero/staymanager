@@ -1,4 +1,3 @@
-// src/lib/database-retrieval.ts
 import { supabase } from '@/lib/supabaseClient';
 
 interface Room {
@@ -47,46 +46,38 @@ interface RoomDetails {
 
 export async function getAvailableRooms(checkInDate: string, checkOutDate: string, floor?: number, roomType?: string): Promise<Room[]> {
   try {
-    // Build the query for rooms
     let query = supabase
       .from('rooms')
       .select('*')
       .order('number');
 
-    // Filter by floor if specified
     if (floor !== undefined) {
       query = query.eq('floor', floor);
     }
     
-    // Filter by room type if specified
     if (roomType) {
       query = query.eq('type', roomType);
     }
 
-    // Get rooms based on filters
     const { data: allRooms, error: roomsError } = await query;
 
     if (roomsError) throw roomsError;
     
-    // Then, get rooms that have conflicting reservations in the given date range
     const { data: conflictingReservations, error: reservationsError } = await supabase
       .from('reservations')
       .select('room_id')
-      .lt('check_in', checkOutDate)  // Reservation starts before requested checkout
-      .gt('check_out', checkInDate)  // Reservation ends after requested checkin
+      .lt('check_in', checkOutDate)
+      .gt('check_out', checkInDate)
       .in('status', ['pending', 'confirmed', 'checked-in']);
 
     if (reservationsError) throw reservationsError;
     
-    // Extract room IDs that have conflicts
     const conflictingRoomIds = conflictingReservations.map(res => res.room_id);
     
-    // Filter rooms to only include those that don't have conflicts and are available
     const availableRooms = allRooms.filter(room => 
       room.status === 'available' && !conflictingRoomIds.includes(room.id)
     );
     
-    // Simple validation - just ensure required fields exist
     return availableRooms.filter(room => 
       room.id && room.number && room.type && room.status && typeof room.price === 'number'
     ) as Room[];
@@ -98,7 +89,6 @@ export async function getAvailableRooms(checkInDate: string, checkOutDate: strin
 
 export async function searchGuests(query: string): Promise<Guest[]> {
   try {
-    // Query untuk mencari tamu berdasarkan nama atau email
     const { data, error } = await supabase
       .from('guests')
       .select('*')
@@ -107,7 +97,6 @@ export async function searchGuests(query: string): Promise<Guest[]> {
 
     if (error) throw error;
     
-    // Simple validation - just ensure required fields exist
     return data.filter(guest => 
       guest.id && guest.full_name
     ).map(guest => ({
@@ -124,7 +113,6 @@ export async function searchGuests(query: string): Promise<Guest[]> {
 
 export async function getUpcomingReservations(): Promise<Reservation[]> {
   try {
-    // Query untuk mendapatkan reservasi mendatang
     const { data, error } = await supabase
       .from('reservations')
       .select(`
@@ -138,7 +126,6 @@ export async function getUpcomingReservations(): Promise<Reservation[]> {
 
     if (error) throw error;
     
-    // Transform data to match expected format
     const transformedData = data.map(res => ({
       ...res,
       guest_name: res.guests?.full_name || 'Unknown Guest',
@@ -146,7 +133,6 @@ export async function getUpcomingReservations(): Promise<Reservation[]> {
       guest_phone: res.guests?.phone || null
     }));
     
-    // Simple validation - just ensure required fields exist
     return transformedData.filter(res => 
       res.id && res.guest_id && res.room_id && res.guest_name && res.check_in && res.check_out && res.status
     ) as Reservation[];
@@ -158,7 +144,6 @@ export async function getUpcomingReservations(): Promise<Reservation[]> {
 
 export async function getRoomDetails(roomId: number): Promise<RoomDetails | null> {
   try {
-    // Query untuk mendapatkan detail kamar
     const { data, error } = await supabase
       .from('rooms')
       .select('*')
@@ -167,7 +152,6 @@ export async function getRoomDetails(roomId: number): Promise<RoomDetails | null
 
     if (error) throw error;
     
-    // Simple validation - just ensure required fields exist
     if (data && data.id && data.number && data.type && data.status) {
       return data as RoomDetails;
     }
@@ -180,7 +164,6 @@ export async function getRoomDetails(roomId: number): Promise<RoomDetails | null
 
 export async function getGuestReservations(guestId: number): Promise<Reservation[]> {
   try {
-    // Query untuk mendapatkan riwayat reservasi tamu
     const { data, error } = await supabase
       .from('reservations')
       .select(`
@@ -193,7 +176,6 @@ export async function getGuestReservations(guestId: number): Promise<Reservation
 
     if (error) throw error;
     
-    // Transform data to match expected format
     const transformedData = data.map(res => ({
       ...res,
       guest_name: res.guests?.full_name || 'Unknown Guest',
@@ -201,7 +183,6 @@ export async function getGuestReservations(guestId: number): Promise<Reservation
       guest_phone: res.guests?.phone || null
     }));
     
-    // Simple validation - just ensure required fields exist
     return transformedData.filter(res => 
       res.id && res.guest_id && res.room_id && res.guest_name && res.check_in && res.check_out && res.status
     ) as Reservation[];

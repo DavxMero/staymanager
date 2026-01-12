@@ -54,7 +54,6 @@ export function InvoicesTable({
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
-  // Filter and sort invoices
   const filteredAndSortedInvoices = useMemo(() => {
     let filtered = invoices.filter(invoice => {
       const matchesSearch = searchTerm === '' || 
@@ -66,7 +65,6 @@ export function InvoicesTable({
       return matchesSearch && matchesStatus
     })
 
-    // Sort invoices
     filtered.sort((a, b) => {
       let comparison = 0
       

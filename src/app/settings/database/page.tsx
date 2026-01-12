@@ -83,7 +83,6 @@ export default function DatabasePage() {
 
   const handleRefreshStatus = async () => {
     setRefreshing(true)
-    // Simulate API call to check database status
     await new Promise(resolve => setTimeout(resolve, 2000))
     setRefreshing(false)
   }

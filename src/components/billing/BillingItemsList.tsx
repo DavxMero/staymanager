@@ -29,7 +29,6 @@ export function BillingItemsList({
   onViewItem,
   onDownloadItem
 }: BillingItemsListProps) {
-  // Group items by category
   const groupedItems = billingItems.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];

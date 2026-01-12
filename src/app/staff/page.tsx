@@ -115,16 +115,13 @@ export default function StaffPage() {
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
-  // Dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
 
-  // Filter states
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [departmentFilter, setDepartmentFilter] = useState("all")
 
-  // Form states
   const [formData, setFormData] = useState({
     employee_id: '',
     full_name: '',
@@ -145,7 +142,6 @@ export default function StaffPage() {
   const applyFilters = useCallback(() => {
     let result = [...staff]
 
-    // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       result = result.filter(member =>
@@ -157,12 +153,10 @@ export default function StaffPage() {
       )
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       result = result.filter(member => member.status === statusFilter)
     }
 
-    // Department filter
     if (departmentFilter !== 'all') {
       result = result.filter(member => member.department === departmentFilter)
     }
@@ -283,7 +277,6 @@ export default function StaffPage() {
       }
 
       if (editingStaff) {
-        // Update existing staff
         const { error } = await supabase
           .from('staff_members')
           .update(staffData)
@@ -296,7 +289,6 @@ export default function StaffPage() {
           description: "Staff member updated successfully",
         })
       } else {
-        // Create new staff
         const { error } = await supabase
           .from('staff_members')
           .insert(staffData)

@@ -26,17 +26,14 @@ export default function ModernBillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [error, setError] = useState<string | null>(null)
   
-  // Dialog states
   const [isAddInvoiceDialogOpen, setIsAddInvoiceDialogOpen] = useState(false)
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState(0)
   
-  // New invoice form states
   const [reservationId, setReservationId] = useState("")
   const [amount, setAmount] = useState("")
   const [status, setStatus] = useState<"paid" | "pending" | "overdue">("pending")
   
-  // Financial summary
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [pendingPayments, setPendingPayments] = useState(0)
   const [overdueAmount, setOverdueAmount] = useState(0)
@@ -56,7 +53,6 @@ export default function ModernBillingPage() {
       
       setInvoices(data)
       
-      // Calculate financial summary
       const totalRev = data.reduce((sum, invoice) => sum + (invoice.status === 'paid' ? invoice.amount : 0), 0)
       const pendingPay = data.reduce((sum, invoice) => sum + (invoice.status === 'pending' ? invoice.amount : 0), 0)
       const overdueAmt = data.reduce((sum, invoice) => sum + (invoice.status === 'overdue' ? invoice.amount : 0), 0)
@@ -90,7 +86,6 @@ export default function ModernBillingPage() {
       
       if (error) throw error
       
-      // Refresh the invoice list
       await fetchInvoices()
       setIsAddInvoiceDialogOpen(false)
     } catch (err) {
@@ -100,17 +95,14 @@ export default function ModernBillingPage() {
   }
 
   const handleViewInvoice = (invoice: Invoice) => {
-    // Open invoice view dialog/modal
     console.log("Viewing invoice:", invoice)
   }
 
   const handleDownloadInvoice = (invoice: Invoice) => {
-    // Download invoice as PDF
     console.log("Downloading invoice:", invoice)
   }
 
   const handleEditInvoice = (invoice: Invoice) => {
-    // Edit invoice
     console.log("Editing invoice:", invoice)
   }
 
@@ -120,9 +112,7 @@ export default function ModernBillingPage() {
   }
 
   const handlePaymentComplete = (method: string) => {
-    // Handle payment completion
     console.log(`Payment of ${formatCurrencyCompat(paymentAmount)} completed via ${method}`)
-    // Refresh invoices after payment
     fetchInvoices()
   }
 
@@ -176,7 +166,7 @@ export default function ModernBillingPage() {
         totalRevenue={totalRevenue}
         pendingPayments={pendingPayments}
         overdueAmount={overdueAmount}
-        invoices={invoices.slice(0, 5)} // Show only recent 5 invoices in dashboard
+        invoices={invoices.slice(0, 5)}
       />
       
       {/* Action Buttons */}
@@ -192,7 +182,7 @@ export default function ModernBillingPage() {
         <Button 
           variant="outline" 
           className="gap-2"
-          onClick={() => handleProcessPayment(1500000)} // Example amount
+          onClick={() => handleProcessPayment(1500000)}
         >
           <CreditCard className="h-4 w-4" />
           Process Payment

@@ -35,7 +35,6 @@ export function AddInvoiceDialog({ isOpen, onOpenChange, onAddInvoice }: AddInvo
       due_date: dueDate,
     });
     
-    // Reset form
     setAmount('');
     setStatus('pending');
     setReservationId('');

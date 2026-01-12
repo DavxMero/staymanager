@@ -3,9 +3,6 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { Message } from "ai";
 
-// =====================================================
-// Chat Functions
-// =====================================================
 
 export async function saveChat({
     id,
@@ -19,7 +16,6 @@ export async function saveChat({
     try {
         const supabase = await createClient();
 
-        // Check if chat exists
         const { data: existingChat } = await supabase
             .from("Chat")
             .select("id")
@@ -27,7 +23,6 @@ export async function saveChat({
             .single();
 
         if (existingChat) {
-            // Update existing chat
             const { error } = await supabase
                 .from("Chat")
                 .update({
@@ -37,7 +32,6 @@ export async function saveChat({
 
             if (error) throw error;
         } else {
-            // Insert new chat
             const { error } = await supabase.from("Chat").insert({
                 id,
                 created_at: new Date().toISOString(),
@@ -104,9 +98,6 @@ export async function getChatById({ id }: { id: string }) {
     }
 }
 
-// =====================================================
-// Reservation Functions
-// =====================================================
 
 export async function createReservation({
     id,
@@ -178,9 +169,6 @@ export async function updateReservation({
     }
 }
 
-// =====================================================
-// Type Definitions
-// =====================================================
 
 export type Chat = {
     id: string;

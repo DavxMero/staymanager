@@ -30,8 +30,8 @@ interface GuestReservationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
-  mode?: 'guest' | 'reservation' | 'walkin' // Mode determines initial focus
-  preselectedRoomId?: string | number // For quick booking from rooms page
+  mode?: 'guest' | 'reservation' | 'walkin'
+  preselectedRoomId?: string | number
 }
 
 export function GuestReservationDialog({
@@ -41,16 +41,13 @@ export function GuestReservationDialog({
   mode = 'guest',
   preselectedRoomId
 }: GuestReservationDialogProps) {
-  // Loading states
   const [loading, setLoading] = useState(false)
   const [roomsLoading, setRoomsLoading] = useState(false)
 
-  // Guest data
   const [guestName, setGuestName] = useState("")
   const [guestEmail, setGuestEmail] = useState("")
   const [guestPhone, setGuestPhone] = useState("")
 
-  // Reservation data
   const [rooms, setRooms] = useState<Room[]>([])
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null)
   const [checkInDate, setCheckInDate] = useState<Date>()
@@ -61,11 +58,9 @@ export function GuestReservationDialog({
   const [breakfastPax, setBreakfastPax] = useState(0)
   const [notes, setNotes] = useState("")
 
-  // Payment data
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'transfer' | 'credit-card'>('cash')
   const [paymentAmount, setPaymentAmount] = useState(0)
 
-  // Calculated values
   const [totalAmount, setTotalAmount] = useState(0)
   const [roomTotal, setRoomTotal] = useState(0)
   const [breakfastTotal, setBreakfastTotal] = useState(0)
@@ -74,18 +69,15 @@ export function GuestReservationDialog({
   const BREAKFAST_RATE = 50000
   const DEPOSIT_AMOUNT = 100000
 
-  // Fetch available rooms
   useEffect(() => {
     if (open) {
       fetchRooms()
-      // Pre-select room if provided
       if (preselectedRoomId) {
         setSelectedRoom(String(preselectedRoomId))
       }
     }
   }, [open, preselectedRoomId])
 
-  // Calculate totals when relevant data changes
   useEffect(() => {
     if (checkInDate && checkOutDate && selectedRoom) {
       const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -102,7 +94,6 @@ export function GuestReservationDialog({
         const total = roomCost + breakfastCost + DEPOSIT_AMOUNT
         setTotalAmount(total)
 
-        // Default payment amount to total
         if (paymentAmount === 0) {
           setPaymentAmount(total)
         }
@@ -136,15 +127,12 @@ export function GuestReservationDialog({
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      // Sanitize inputs
       const finalGuestName = guestName.trim()
       const finalGuestEmail = guestEmail.trim() || null
       const finalGuestPhone = guestPhone.trim() || null
 
-      // Step 1: Create or get guest
       let guestId: number
 
-      // Build the search query dynamically to avoid empty filters
       const orFilter = [
         finalGuestEmail ? `email.eq.${finalGuestEmail}` : '',
         finalGuestPhone ? `phone.eq.${finalGuestPhone}` : '',
@@ -171,7 +159,6 @@ export function GuestReservationDialog({
       if (existingGuest) {
         guestId = existingGuest.id
 
-        // Update guest info
         const { error: guestUpdateError } = await supabase
           .from('guests')
           .update({
@@ -187,7 +174,6 @@ export function GuestReservationDialog({
           throw new Error(`Error updating guest: ${guestUpdateError.message}`)
         }
       } else {
-        // Create new guest
         const { data: newGuest, error: guestError } = await supabase
           .from('guests')
           .insert({
@@ -205,7 +191,6 @@ export function GuestReservationDialog({
         guestId = newGuest.id
       }
 
-      // Step 2: Create reservation with unified schema
       const bookingId = `BK-${Date.now()}`
       const reservationData = {
         booking_id: bookingId,
@@ -214,13 +199,13 @@ export function GuestReservationDialog({
         guest_name: finalGuestName,
         guest_phone: finalGuestPhone,
         guest_email: finalGuestEmail,
-        check_in: checkInDate?.toISOString().split('T')[0], // DATE format YYYY-MM-DD
-        check_out: checkOutDate?.toISOString().split('T')[0], // DATE format YYYY-MM-DD
+        check_in: checkInDate?.toISOString().split('T')[0],
+        check_out: checkOutDate?.toISOString().split('T')[0],
         room_rate: roomTotal / numberOfNights,
         room_total: roomTotal,
         total_amount: totalAmount,
-        total_price: totalAmount, // Legacy field for backward compatibility
-        guest_count: adults + children, // Legacy field for backward compatibility
+        total_price: totalAmount,
+        guest_count: adults + children,
         status: mode === 'walkin' ? 'checked-in' : 'confirmed',
         payment_status: paymentAmount >= totalAmount ? 'paid' : (paymentAmount > 0 ? 'partial' : 'pending'),
         breakfast_included: breakfastIncluded,
@@ -244,7 +229,6 @@ export function GuestReservationDialog({
         throw new Error(`Error creating reservation: ${reservationError.message}`)
       }
 
-      // Step 3: Create payment if amount > 0
       if (paymentAmount > 0) {
         const { error: paymentError } = await supabase
           .from('payments')
@@ -262,7 +246,6 @@ export function GuestReservationDialog({
         }
       }
 
-      // Step 4: Update room status
       const newRoomStatus = mode === 'walkin' ? 'occupied' : 'occupied'
       const { error: roomUpdateError } = await supabase
         .from('rooms')
@@ -274,7 +257,6 @@ export function GuestReservationDialog({
         throw new Error(`Error updating room status: ${roomUpdateError.message}`)
       }
 
-      // Success!
       resetForm()
       onOpenChange(false)
       if (onSuccess) onSuccess()

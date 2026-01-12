@@ -29,12 +29,10 @@ export async function saveMessages(chatId: string, messages: CoreMessage[]) {
     if (!messages.length) return;
 
     const rows = messages.map(msg => {
-        // Handle content - can be string or array of parts
         let content: string;
         if (typeof msg.content === 'string') {
             content = msg.content;
         } else if (Array.isArray(msg.content)) {
-            // For array content (parts), extract text from text parts
             content = msg.content
                 .filter((part: any) => part.type === 'text')
                 .map((part: any) => part.text)
@@ -43,7 +41,6 @@ export async function saveMessages(chatId: string, messages: CoreMessage[]) {
             content = JSON.stringify(msg.content);
         }
 
-        // Get message ID - validate if UUID, otherwise generate new one
         const messageId = (msg as any).id;
         const validUUID = messageId && messageId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
@@ -52,7 +49,6 @@ export async function saveMessages(chatId: string, messages: CoreMessage[]) {
             chat_id: chatId,
             role: msg.role,
             content: content,
-            // @ts-ignore
             created_at: (msg as any).createdAt ? new Date((msg as any).createdAt).toISOString() : new Date().toISOString(),
         };
     });

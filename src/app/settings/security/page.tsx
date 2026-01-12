@@ -83,7 +83,6 @@ export default function SecurityPage() {
 
   const handleSecurityCheck = async () => {
     setChecking(true)
-    // Simulate security check
     await new Promise(resolve => setTimeout(resolve, 3000))
     setChecking(false)
   }

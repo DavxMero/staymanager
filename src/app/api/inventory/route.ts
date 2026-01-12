@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// For API routes, we need the service role key for full database access
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -13,7 +12,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   })
 }
 
-// Create admin client for server-side operations
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -21,7 +19,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
-// GET - Fetch all inventory items with filtering
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -34,7 +31,6 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('name', { ascending: true })
 
-    // Apply filters
     if (category && category !== 'all') {
       query = query.eq('category', category)
     }
@@ -42,7 +38,6 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', status)
     }
     if (lowStock === 'true') {
-      // Use raw SQL to compare current_stock with min_stock
       query = query.filter('current_stock', 'lte', 'min_stock')
     }
 
@@ -53,7 +48,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Process data to add computed fields
     const processedData = data?.map(item => ({
       ...item,
       stock_percentage: item.max_stock > 0 ? (item.current_stock / item.max_stock) * 100 : 0,
@@ -72,7 +66,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new inventory item
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -90,7 +83,6 @@ export async function POST(request: NextRequest) {
       status = 'in-stock'
     } = body
 
-    // Validation
     if (!name || !category || current_stock === undefined || !unit || unit_cost === undefined) {
       return NextResponse.json({ 
         error: 'Missing required fields: name, category, current_stock, unit, unit_cost' 
@@ -103,7 +95,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Determine status based on stock levels
     let computedStatus = status
     if (current_stock === 0) {
       computedStatus = 'out-of-stock'
@@ -150,7 +141,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update existing inventory item
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
@@ -160,9 +150,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Inventory item ID is required' }, { status: 400 })
     }
 
-    // Update last_restocked if current_stock is being increased
     if (updateData.current_stock !== undefined) {
-      // Get current item to compare stock levels
       const { data: currentItem } = await supabase
         .from('inventory_items')
         .select('current_stock')
@@ -173,7 +161,6 @@ export async function PUT(request: NextRequest) {
         updateData.last_restocked = new Date().toISOString()
       }
 
-      // Update status based on stock levels
       if (updateData.current_stock === 0) {
         updateData.status = 'out-of-stock'
       } else if (updateData.min_stock && updateData.current_stock <= updateData.min_stock) {
@@ -183,7 +170,6 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Add updated timestamp
     updateData.updated_at = new Date().toISOString()
 
     const { data, error } = await supabase
@@ -212,7 +198,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete inventory item
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

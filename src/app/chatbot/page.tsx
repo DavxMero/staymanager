@@ -40,6 +40,7 @@ export default function ChatbotPage() {
   const [selectedDates, setSelectedDates] = useState({ checkIn: '', checkOut: '' });
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [user, setUser] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -57,7 +58,6 @@ export default function ChatbotPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load chat from URL on mount
   useEffect(() => {
     const loadChatFromUrl = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -85,30 +85,52 @@ export default function ChatbotPage() {
 
     loadChatFromUrl();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, []);
 
   useEffect(() => {
     setMounted(true);
 
-    // Check auth status
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
-      // Load chat history if user is logged in
       if (user) {
         loadChatHistory(user.id);
+
+        const { data: userRoles } = await supabase
+          .from('user_roles')
+          .select(`
+            role:roles(name)
+          `)
+          .eq('user_id', user.id);
+
+        const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
+        const isGuestOnly = hasGuestRole && userRoles?.length === 1;
+
+        setUserRole(isGuestOnly ? 'guest' : 'staff');
       }
     };
     checkUser();
 
-    // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadChatHistory(session.user.id);
+
+        const { data: userRoles } = await supabase
+          .from('user_roles')
+          .select(`
+            role:roles(name)
+          `)
+          .eq('user_id', session.user.id);
+
+        const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
+        const isGuestOnly = hasGuestRole && userRoles?.length === 1;
+
+        setUserRole(isGuestOnly ? 'guest' : 'staff');
       } else {
         setChatHistory([]);
+        setUserRole(null);
       }
     });
 
@@ -119,12 +141,10 @@ export default function ChatbotPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Save chat history to database
   useEffect(() => {
     if (messages.length > 0 && user) {
       const saveChat = async () => {
         try {
-          // Use existing chat ID or create new one
           const chatId = currentChatId || crypto.randomUUID();
 
           await supabase
@@ -135,7 +155,6 @@ export default function ChatbotPage() {
               messages: messages,
             });
 
-          // Set current chat ID if new
           if (!currentChatId) {
             setCurrentChatId(chatId);
           }
@@ -147,31 +166,24 @@ export default function ChatbotPage() {
     }
   }, [messages, user, currentChatId, supabase]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      // Reset to single row height first
       textareaRef.current.style.height = 'auto';
 
-      // If empty, set to minimum
       if (!input || input.trim() === '') {
         textareaRef.current.style.height = '56px';
         textareaRef.current.style.overflowY = 'hidden';
       } else {
-        // Calculate and set new height based on content
         const scrollHeight = textareaRef.current.scrollHeight;
         const newHeight = Math.min(Math.max(scrollHeight, 56), 200);
         textareaRef.current.style.height = `${newHeight}px`;
 
-        // Only show scrollbar if content exceeds max height
         textareaRef.current.style.overflowY = scrollHeight > 200 ? 'auto' : 'hidden';
       }
     }
   }, [input]);
 
-  // Extract guest information from conversation
   const extractGuestInfo = () => {
-    // Look through user messages for name, email, phone
     let name = '';
     let email = '';
     let phone = '';
@@ -179,29 +191,23 @@ export default function ChatbotPage() {
     const userMessages = messages.filter(m => m.role === 'user').map(m => m.content);
     const conversationText = userMessages.join(' ');
 
-    // Extract email (look for email pattern)
     const emailMatch = conversationText.match(/[\w\.-]+@[\w\.-]+\.\w+/);
     if (emailMatch) email = emailMatch[0];
 
-    // Extract phone (look for phone patterns)
     const phoneMatch = conversationText.match(/[\+]?[\d\s\-\(\)]{10,}/);
     if (phoneMatch) phone = phoneMatch[0].trim();
 
-    // Extract name - Try multiple strategies
 
-    // Strategy 0: Look for explicit "Name: ..." pattern (from form submission)
-    // We reverse the messages to find the LATEST submission first
     const reversedMessages = [...userMessages].reverse();
     for (const msg of reversedMessages) {
       const explicitNameMatch = msg.match(/Name:\s*([^\n]+)/i);
       if (explicitNameMatch && explicitNameMatch[1]) {
         name = explicitNameMatch[1].trim();
-        break; // Found the most recent explicit name, stop looking
+        break;
       }
     }
 
     if (!name) {
-      // Strategy 1: Look for name after keywords (case insensitive)
       const nameKeywordPatterns = [
         /(?:nama\s+(?:saya\s+)?(?:adalah\s+)?)([a-z]+(?:\s+[a-z]+)*)/i,
         /(?:name\s+(?:is\s+)?(?:i'?m\s+)?)([a-z]+(?:\s+[a-z]+)*)/i,
@@ -212,7 +218,6 @@ export default function ChatbotPage() {
       for (const pattern of nameKeywordPatterns) {
         const match = conversationText.match(pattern);
         if (match && match[1] && match[1].trim().length > 1) {
-          // Capitalize each word
           name = match[1]
             .trim()
             .split(/\s+/)
@@ -223,19 +228,15 @@ export default function ChatbotPage() {
       }
     }
 
-    // Strategy 2: If no name found, look for standalone capitalized words (at least 2 words)
     if (!name) {
-      // Find messages that don't contain email or phone
       const nameOnlyMessages = userMessages.filter(msg =>
         !msg.match(/[\w\.-]+@[\w\.-]+\.\w+/) &&
         !msg.match(/[\+]?[\d\s\-\(\)]{10,}/)
       );
 
       for (const msg of nameOnlyMessages) {
-        // Look for 2+ words that look like names
         const words = msg.trim().split(/\s+/);
         if (words.length >= 2 && words.length <= 4) {
-          // Check if all words are relatively short (typical name length)
           const allWordsValid = words.every(w => w.length >= 2 && w.length <= 15 && /^[a-zA-Z]+$/.test(w));
           if (allWordsValid) {
             name = words
@@ -251,19 +252,15 @@ export default function ChatbotPage() {
   };
 
   const handleBookRoom = async (room: Room) => {
-    // Check if user is logged in
     if (!user) {
-      // Show login prompt
       if (confirm('Anda perlu login untuk membuat reservasi. Login sekarang?')) {
         window.location.href = `/login?returnUrl=${encodeURIComponent('/chatbot')}`;
       }
       return;
     }
 
-    // Get guest info - prioritize from database (if logged in) or extract from chat
     let guestInfo = { name: '', email: '', phone: '' };
 
-    // Try to get from guests table using user email
     try {
       const { data: guestData, error } = await supabase
         .from('guests')
@@ -278,7 +275,6 @@ export default function ChatbotPage() {
           phone: guestData.phone || ''
         };
       } else {
-        // Fallback: use user email and extract from chat
         const extracted = extractGuestInfo();
         guestInfo = {
           name: extracted.name || user.user_metadata?.full_name || '',
@@ -288,7 +284,6 @@ export default function ChatbotPage() {
       }
     } catch (err) {
       console.error('Error fetching guest data:', err);
-      // Fallback to extraction
       const extracted = extractGuestInfo();
       guestInfo = {
         name: extracted.name || user.user_metadata?.full_name || '',
@@ -329,7 +324,6 @@ Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).
 
   const parseRoomsFromMessage = (content: string): Room[] | null => {
     try {
-      // Try to extract JSON from message
       const jsonMatch = content.match(/\{[\s\S]*"rooms"[\s\S]*\}/);
       if (jsonMatch) {
         const data = JSON.parse(jsonMatch[0]);
@@ -354,9 +348,7 @@ Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).
     return null;
   };
 
-  // Sync dates from tool invocations
   useEffect(() => {
-    // Find the last 'cekKetersediaan' call to get the most recent dates discussed
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
       if (m.toolInvocations) {
@@ -368,7 +360,7 @@ Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).
               checkIn: args.checkIn,
               checkOut: args.checkOut
             });
-            break; // Found the latest dates, stop searching
+            break;
           }
         }
       }
@@ -386,7 +378,6 @@ Phone: ${info.guestPhone}`
   };
 
   const handleDateUpdate = async (data: any) => {
-    // Only send if complete
     if (data.checkIn && data.checkOut) {
       await append({
         role: 'user',
@@ -402,35 +393,26 @@ Phone: ${info.guestPhone}`
     });
   };
 
-  // Helper function to clean JSON from message content
   const cleanMessageContent = (content: string): string => {
     let cleanContent = content;
-    // Remove ROOM_CARDS_JSON: format
     cleanContent = cleanContent.replace(/ROOM_CARDS_JSON:\s*\{[\s\S]*?\}/g, '');
-    // Remove any standalone JSON objects (including pretty-printed)
     cleanContent = cleanContent.replace(/\{\s*"(id|rooms)"[\s\S]*?\}\s*(?=\n|$)/g, '');
-    // Remove array of objects
     cleanContent = cleanContent.replace(/\[\s*\{[\s\S]*?\}\s*\]/g, '');
-    // Remove partial JSON being streamed (incomplete objects)
     cleanContent = cleanContent.replace(/\{\s*"id":\s*"[^}]*$/g, ''); // Partial JSON at end
-    cleanContent = cleanContent.replace(/,\s*\{[\s\S]*$/g, ''); // Partial array element
+    cleanContent = cleanContent.replace(/,\s*\{[\s\S]*$/g, '');
 
-    // Remove stray JSON artifacts like ]} or }
     cleanContent = cleanContent.replace(/\]\}/g, '');
     cleanContent = cleanContent.replace(/^\s*\}\s*$/gm, '');
 
-    // Remove new JSON markers
     cleanContent = cleanContent.replace(/UPDATE_TRACKER_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/SHOW_GUEST_FORM_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/SHOW_DATE_SELECTOR_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/SHOW_PAYMENT_OPTIONS_JSON:\s*\{[\s\S]*?\}/g, '');
 
-    // Clean up extra whitespace
     cleanContent = cleanContent.replace(/\n{3,}/g, '\n\n').trim();
     return cleanContent;
   };
 
-  // Load chat history from database
   const loadChatHistory = async (userId: string) => {
     try {
       console.log('Loading chat history for user:', userId);
@@ -453,7 +435,6 @@ Phone: ${info.guestPhone}`
     }
   };
 
-  // Load specific chat
   const handleSelectChat = async (chatId: string) => {
     try {
       const { data, error } = await supabase
@@ -465,21 +446,17 @@ Phone: ${info.guestPhone}`
       if (error) throw error;
 
       setCurrentChatId(chatId);
-      // Note: We need setMessages from useChat, but it's not exposed
-      // Workaround: reload page with chat id or use router
       window.location.href = `/chatbot?chat=${chatId}`;
     } catch (error) {
       console.error('Error loading chat:', error);
     }
   };
 
-  // Start new chat
   const handleNewChat = () => {
     setCurrentChatId(null);
     window.location.href = '/chatbot';
   };
 
-  // Delete chat
   const handleDeleteChat = async (chatId: string) => {
     if (!confirm('Delete this conversation?')) return;
 
@@ -491,12 +468,10 @@ Phone: ${info.guestPhone}`
 
       if (error) throw error;
 
-      // Reload history
       if (user) {
         loadChatHistory(user.id);
       }
 
-      // If deleting current chat, start new
       if (chatId === currentChatId) {
         handleNewChat();
       }
@@ -547,16 +522,21 @@ Phone: ${info.guestPhone}`
 
             {/* Auth Buttons */}
             {user ? (
-              <Link href="/dashboard">
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-                </Button>
-              </Link>
+              <>
+                {/* Dashboard Button - Only for non-guest users */}
+                {userRole !== 'guest' && (
+                  <Link href="/dashboard">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                )}
+              </>
             ) : (
               <>
                 <Link href="/login">
@@ -631,7 +611,6 @@ Phone: ${info.guestPhone}`
         <div className="max-w-4xl mx-auto space-y-6">
 
 
-
           {/* Welcome Message */}
           {messages.length === 0 && (
             <motion.div
@@ -691,7 +670,6 @@ Phone: ${info.guestPhone}`
               const dateSelector = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_DATE_SELECTOR_JSON') : null;
               const paymentOptions = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_PAYMENT_OPTIONS_JSON') : null;
 
-              // Check if message should be hidden (empty assistant message with no active tools)
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
               const cleanedContent = cleanMessageContent(m.content);
 
@@ -785,7 +763,6 @@ Phone: ${info.guestPhone}`
                           bookingInfo={guestForm}
                           stage="info"
                           onUpdate={(info) => {
-                            // We only send if user clicks save, which triggers this
                             handleGuestInfoUpdate(info);
                           }}
                         />
@@ -885,7 +862,6 @@ Phone: ${info.guestPhone}`
   );
 }
 
-// Wrapper for DateSelection to handle state and submission
 function DateSelectorWrapper({ initialData, onConfirm }: { initialData: any, onConfirm: (data: any) => void }) {
   const [data, setData] = useState(initialData);
 

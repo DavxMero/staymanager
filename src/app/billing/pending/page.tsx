@@ -63,7 +63,7 @@ export default function PendingPaymentsPage() {
       const { data, error } = await supabase
         .from('invoices')
         .select('*')
-        .eq('status', 'pending') // Only fetch pending invoices
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -133,17 +133,14 @@ export default function PendingPaymentsPage() {
   const handleViewInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice)
     setIsDialogOpen(true)
-    // Fetch unpaid billings for this invoice's reservation
     fetchUnpaidBillings(invoice.reservation_id)
   }
 
   const handleAddBillingItem = async (billingItems: Omit<BillingItem, 'id' | 'created_at'>[]) => {
     try {
-      // Add all billing items
       for (const item of billingItems) {
         await billingItemsApi.create(item)
       }
-      // Refresh unpaid billings
       await fetchUnpaidBillings(selectedInvoice?.reservation_id || 0)
       setIsAddingBillingItem(false)
     } catch (err) {
@@ -155,7 +152,6 @@ export default function PendingPaymentsPage() {
   const handleUpdateBillingItem = async (id: number, updates: Partial<BillingItem>) => {
     try {
       await billingItemsApi.update(id, updates)
-      // Refresh unpaid billings
       await fetchUnpaidBillings(selectedInvoice?.reservation_id || 0)
     } catch (err) {
       console.error('Error updating billing item:', err)

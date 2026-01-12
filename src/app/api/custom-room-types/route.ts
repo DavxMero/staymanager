@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// For API routes, we need the service role key for full database access
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -13,7 +12,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   })
 }
 
-// Create admin client for server-side operations
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -21,7 +19,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
-// GET - Fetch all custom room types
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -44,7 +41,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Parse JSON fields
     const processedData = data?.map(roomType => ({
       ...roomType,
       amenities: Array.isArray(roomType.amenities) ? roomType.amenities : JSON.parse(roomType.amenities || '[]'),
@@ -63,7 +59,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new custom room type
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -83,7 +78,6 @@ export async function POST(request: NextRequest) {
       sort_order
     } = body
 
-    // Validation
     if (!name || !base_price || !capacity || !max_adults) {
       return NextResponse.json({ 
         error: 'Missing required fields: name, base_price, capacity, max_adults' 
@@ -96,7 +90,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Check for duplicate name
     const { data: existingTypes, error: checkError } = await supabase
       .from('custom_room_types')
       .select('id')
@@ -142,7 +135,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Process the response data
     const processedData = data?.[0] ? {
       ...data[0],
       amenities: JSON.parse(data[0].amenities || '[]'),
@@ -161,7 +153,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update existing custom room type
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
@@ -171,7 +162,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Room type ID is required' }, { status: 400 })
     }
 
-    // Check if room type exists
     const { data: existingType, error: checkError } = await supabase
       .from('custom_room_types')
       .select('id')
@@ -187,7 +177,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Room type not found' }, { status: 404 })
     }
 
-    // Process array fields to JSON strings
     if (updateData.amenities && Array.isArray(updateData.amenities)) {
       updateData.amenities = JSON.stringify(updateData.amenities)
     }
@@ -198,7 +187,6 @@ export async function PUT(request: NextRequest) {
       updateData.default_images = JSON.stringify(updateData.default_images)
     }
 
-    // Add updated timestamp
     updateData.updated_at = new Date().toISOString()
 
     const { data, error } = await supabase
@@ -216,7 +204,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Room type not found' }, { status: 404 })
     }
 
-    // Process the response data
     const processedData = {
       ...data[0],
       amenities: JSON.parse(data[0].amenities || '[]'),
@@ -235,7 +222,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete custom room type
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -245,7 +231,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Room type ID is required' }, { status: 400 })
     }
 
-    // Check if any rooms are using this custom type
     const { data: roomsUsingType, error: roomsError } = await supabase
       .from('rooms')
       .select('id')

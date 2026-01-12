@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// For API routes, we need the service role key for full database access
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -13,7 +12,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   })
 }
 
-// Create admin client for server-side operations
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -40,27 +38,22 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('number', { ascending: true })
 
-    // Apply search filter
     if (search) {
       query = query.or(`number.ilike.%${search}%,type.ilike.%${search}%`)
     }
 
-    // Apply status filter
     if (status && status !== 'all') {
       query = query.eq('status', status)
     }
 
-    // Apply type filter
     if (type && type !== 'all') {
       query = query.eq('type', type)
     }
 
-    // Apply floor filter
     if (floor && floor !== 'all') {
       query = query.eq('floor', parseInt(floor))
     }
 
-    // Apply availability filter
     if (availability && availability !== 'all') {
       const availableStatuses = ['available', 'clean']
       if (availability === 'available') {
@@ -72,7 +65,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Apply limit
     if (limit) {
       query = query.limit(parseInt(limit))
     }
@@ -105,7 +97,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Validate required fields
     if (!body.number || !body.type) {
       return NextResponse.json(
         { success: false, error: 'Room number and type are required' },
@@ -113,7 +104,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if room number already exists
     const { data: existingRoom } = await supabase
       .from('rooms')
       .select('id')
@@ -241,7 +231,6 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Check if room has active reservations
     const { data: reservations } = await supabase
       .from('reservations')
       .select('id')

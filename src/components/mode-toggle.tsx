@@ -16,7 +16,6 @@ export function ModeToggle() {
   const { setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
-  // Prevent hydration mismatch
   React.useEffect(() => {
     setMounted(true)
   }, [])

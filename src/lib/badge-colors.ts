@@ -1,4 +1,3 @@
-// Utility functions for consistent badge colors in light and dark mode
 
 export const getBadgeColor = (variant: string): string => {
   switch (variant) {

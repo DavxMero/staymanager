@@ -60,7 +60,6 @@ export default function SignUpPage() {
 
             if (error) throw error;
 
-            // Auto-assign guest role to new user
             if (data.user) {
                 const { data: guestRole } = await supabase
                     .from('roles')
@@ -85,7 +84,6 @@ export default function SignUpPage() {
                 description: 'Account created successfully! Redirecting to chatbot...',
             });
 
-            // Redirect to chatbot after 2 seconds
             setTimeout(() => {
                 window.location.href = '/chatbot';
             }, 2000);

@@ -51,7 +51,6 @@ import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { Expense } from "@/types"
 
-// Expense categories with colors
 const EXPENSE_CATEGORIES = [
   { value: 'utilities', label: 'Utilities', color: 'bg-blue-100 text-blue-800' },
   { value: 'maintenance', label: 'Maintenance', color: 'bg-orange-100 text-orange-800' },
@@ -97,7 +96,6 @@ export default function ExpensesPage() {
 
   const { toast } = useToast()
 
-  // Form state for new/edit expense
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
@@ -113,7 +111,6 @@ export default function ExpensesPage() {
     recurring_period: 'monthly'
   })
 
-  // Fetch expenses from API
   const fetchExpenses = async () => {
     try {
       setLoading(true)
@@ -152,12 +149,10 @@ export default function ExpensesPage() {
     }
   }
 
-  // Calculate statistics
   const calculateStats = (expenseData: Expense[]) => {
     const total = expenseData.reduce((sum, expense) => sum + expense.amount, 0)
     const pending = expenseData.filter(e => e.status === 'pending').length
 
-    // Calculate monthly total (current month)
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
     const monthlyExpenses = expenseData.filter(expense => {
@@ -166,13 +161,11 @@ export default function ExpensesPage() {
     })
     const monthlyTotal = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0)
 
-    // Find top category
     const categoryTotals = expenseData.reduce((acc, expense) => {
       acc[expense.category] = (acc[expense.category] || 0) + expense.amount
       return acc
     }, {} as Record<string, number>)
 
-    // Safe reduce with check for empty array
     const categoryEntries = Object.entries(categoryTotals)
     const topCategory = categoryEntries.length > 0
       ? categoryEntries.reduce((a, b) =>
@@ -188,7 +181,6 @@ export default function ExpensesPage() {
     })
   }
 
-  // Handle form submission
   const handleSubmit = async () => {
     try {
       if (!formData.description || !formData.amount || !formData.category || !formData.payment_method) {
@@ -225,12 +217,10 @@ export default function ExpensesPage() {
           description: result.message,
         })
 
-        // Reset form and close dialog
         resetForm()
         setIsAddDialogOpen(false)
         setEditingExpense(null)
 
-        // Refresh data
         fetchExpenses()
       } else {
         throw new Error(result.error)
@@ -245,7 +235,6 @@ export default function ExpensesPage() {
     }
   }
 
-  // Handle delete
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(`/api/expenses?id=${id}`, {
@@ -277,7 +266,6 @@ export default function ExpensesPage() {
     }
   }
 
-  // Reset form
   const resetForm = () => {
     setFormData({
       description: '',
@@ -295,7 +283,6 @@ export default function ExpensesPage() {
     })
   }
 
-  // Handle edit
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense)
     setFormData({
@@ -315,17 +302,14 @@ export default function ExpensesPage() {
     setIsAddDialogOpen(true)
   }
 
-  // Get category info
   const getCategoryInfo = (category: string) => {
     return EXPENSE_CATEGORIES.find(cat => cat.value === category) || EXPENSE_CATEGORIES[EXPENSE_CATEGORIES.length - 1]
   }
 
-  // Get status info
   const getStatusInfo = (status: string) => {
     return STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0]
   }
 
-  // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -335,7 +319,6 @@ export default function ExpensesPage() {
     }).format(amount)
   }
 
-  // Load data on component mount and filter changes
   useEffect(() => {
     fetchExpenses()
   }, [filters])

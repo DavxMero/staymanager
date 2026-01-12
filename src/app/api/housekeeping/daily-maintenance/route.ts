@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabaseClient'
 
 export async function POST(request: NextRequest) {
   try {
-    // Call the daily housekeeping tasks function
     const { data, error } = await supabase.rpc('run_daily_housekeeping_tasks')
     
     if (error) {
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get detailed housekeeping task summary
     const { data, error } = await supabase.rpc('get_housekeeping_task_summary')
     
     if (error) {

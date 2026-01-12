@@ -57,7 +57,6 @@ export function AddInvoiceForm({
   useEffect(() => {
     if (isOpen) {
       fetchData()
-      // Set default due date to 7 days from now
       const defaultDueDate = format(addDays(new Date(), 7), 'yyyy-MM-dd')
       setFormData(prev => ({ ...prev, due_date: defaultDueDate }))
     }
@@ -117,7 +116,6 @@ export function AddInvoiceForm({
 
       await onAddInvoice(invoiceData)
 
-      // Reset form
       setFormData({
         reservation_id: '',
         amount: '',

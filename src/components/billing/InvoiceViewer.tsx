@@ -60,7 +60,6 @@ export function InvoiceViewer({
 
     setLoading(true)
     try {
-      // Fetch reservation
       const { data: reservationData } = await supabase
         .from('reservations')
         .select('*')
@@ -70,7 +69,6 @@ export function InvoiceViewer({
       if (reservationData) {
         setReservation(reservationData)
 
-        // Fetch guest and room data
         const [guestRes, roomRes] = await Promise.all([
           supabase.from('guests').select('*').eq('id', reservationData.guest_id).single(),
           supabase.from('rooms').select('*').eq('id', reservationData.room_id).single()

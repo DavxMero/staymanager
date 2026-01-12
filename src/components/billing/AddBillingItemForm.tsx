@@ -72,7 +72,6 @@ export function AddBillingItemForm({ reservationId, onAddItem, onCancel }: AddBi
   const handleCategoryChange = (id: number, value: 'food' | 'beverage' | 'service' | 'misc') => {
     setBillingItems(prev => prev.map(item => {
       if (item.id === id) {
-        // Set default price based on selected category
         let defaultPrice = 0;
         if (value === 'food') defaultPrice = 75000;
         else if (value === 'beverage') defaultPrice = 25000;
@@ -93,7 +92,6 @@ export function AddBillingItemForm({ reservationId, onAddItem, onCancel }: AddBi
   const handleDescriptionChange = (id: number, value: string) => {
     setBillingItems(prev => prev.map(item => {
       if (item.id === id) {
-        // Find the item in defaultItems and set the price
         const defaultItem = defaultItems[item.category].find(i => i.name === value);
         return {
           ...item,

@@ -91,7 +91,6 @@ const logs = [
   }
 ]
 
-// Import missing icon
 import { Utensils } from 'lucide-react'
 
 export default function DevelopmentPage() {
@@ -100,7 +99,6 @@ export default function DevelopmentPage() {
 
   const handleClearLogs = async () => {
     setClearing(true)
-    // Simulate clearing logs
     await new Promise(resolve => setTimeout(resolve, 1500))
     setClearing(false)
   }

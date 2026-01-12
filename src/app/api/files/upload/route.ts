@@ -54,7 +54,6 @@ export async function POST(request: Request) {
         const fileBuffer = await file.arrayBuffer();
 
         try {
-            // Upload to Supabase Storage
             const filepath = `${user.id}/${Date.now()}-${filename}`;
 
             const { data, error } = await supabase.storage
@@ -69,7 +68,6 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: "Upload failed" }, { status: 500 });
             }
 
-            // Get public URL
             const {
                 data: { publicUrl },
             } = supabase.storage.from("chat-attachments").getPublicUrl(filepath);

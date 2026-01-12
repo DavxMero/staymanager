@@ -37,14 +37,12 @@ export function DepositForm({ reservationId, onAddDeposit, onCancel, defaultAmou
     });
   };
 
-  // Effect to set default amount when component mounts
   React.useEffect(() => {
     if (defaultAmount > 0) {
       setAmount(defaultAmount);
     }
   }, [defaultAmount]);
 
-  // If form is locked, ensure the amount stays as default
   React.useEffect(() => {
     if (isLocked && defaultAmount > 0) {
       setAmount(defaultAmount);

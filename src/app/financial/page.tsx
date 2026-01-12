@@ -50,7 +50,6 @@ import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
 
-// Types based on your schema
 interface Expense {
     id: number
     expense_date: string
@@ -94,17 +93,14 @@ export default function FinancialPage() {
     const [activeTab, setActiveTab] = useState("overview")
     const [isLoading, setIsLoading] = useState(true)
 
-    // Data States
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [payments, setPayments] = useState<Payment[]>([])
     const [posTransactions, setPosTransactions] = useState<POSTransaction[]>([])
 
-    // Summary States
     const [totalIncome, setTotalIncome] = useState(0)
     const [totalExpenses, setTotalExpenses] = useState(0)
     const [netProfit, setNetProfit] = useState(0)
 
-    // Expense Form State
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false)
     const [newExpense, setNewExpense] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -123,7 +119,6 @@ export default function FinancialPage() {
     const fetchFinancialData = async () => {
         setIsLoading(true)
         try {
-            // 1. Fetch Expenses
             const { data: expensesData, error: expensesError } = await supabase
                 .from('expenses')
                 .select('*')
@@ -131,7 +126,6 @@ export default function FinancialPage() {
 
             if (expensesError) console.error('Error fetching expenses:', expensesError)
 
-            // 2. Fetch Payments (Reservations)
             const { data: paymentsData, error: paymentsError } = await supabase
                 .from('payments')
                 .select(`
@@ -143,7 +137,6 @@ export default function FinancialPage() {
 
             if (paymentsError) console.error('Error fetching payments:', paymentsError)
 
-            // 3. Fetch POS Transactions
             const { data: posData, error: posError } = await supabase
                 .from('pos_transactions')
                 .select('*')
@@ -152,7 +145,6 @@ export default function FinancialPage() {
 
             if (posError) console.error('Error fetching POS transactions:', posError)
 
-            // Set Data
             const loadedExpenses = expensesData || []
             const loadedPayments = paymentsData || []
             const loadedPos = posData || []
@@ -161,7 +153,6 @@ export default function FinancialPage() {
             setPayments(loadedPayments)
             setPosTransactions(loadedPos)
 
-            // Calculate Totals
             const expTotal = loadedExpenses.reduce((sum, item) => sum + Number(item.amount), 0)
             const payTotal = loadedPayments.reduce((sum, item) => sum + Number(item.amount), 0)
             const posTotal = loadedPos.reduce((sum, item) => sum + Number(item.total_amount), 0)
@@ -190,7 +181,7 @@ export default function FinancialPage() {
                     description: newExpense.description,
                     vendor: newExpense.vendor,
                     payment_method: newExpense.payment_method,
-                    status: 'paid', // Default to paid for now
+                    status: 'paid',
                     notes: newExpense.notes
                 })
 
@@ -207,7 +198,6 @@ export default function FinancialPage() {
                 notes: ''
             })
 
-            // Refresh data
             fetchFinancialData()
 
         } catch (error: any) {

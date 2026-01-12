@@ -62,14 +62,12 @@ export default function RolesManagementPage() {
 
     const fetchData = async () => {
         try {
-            // Fetch all users from API route (server-side)
             const usersResponse = await fetch('/api/users');
             if (!usersResponse.ok) {
                 throw new Error('Failed to fetch users');
             }
             const { users: allUsers } = await usersResponse.json();
 
-            // Fetch all users with their roles
             const { data: usersData, error: usersError } = await supabase
                 .from('user_roles')
                 .select(`
@@ -79,7 +77,6 @@ export default function RolesManagementPage() {
 
             if (usersError) throw usersError;
 
-            // Fetch all available roles
             const { data: rolesData, error: rolesError } = await supabase
                 .from('roles')
                 .select('*')
@@ -87,7 +84,6 @@ export default function RolesManagementPage() {
 
             if (rolesError) throw rolesError;
 
-            // Create a map of user roles
             const userRolesMap: Record<string, Array<{ role: Role }>> = {};
             usersData?.forEach((ur: any) => {
                 if (!userRolesMap[ur.user_id]) {
@@ -96,7 +92,6 @@ export default function RolesManagementPage() {
                 userRolesMap[ur.user_id].push({ role: ur.role });
             });
 
-            // Combine all users with their roles
             const usersWithRoles = allUsers.map((user: any) => ({
                 id: user.id,
                 email: user.email,

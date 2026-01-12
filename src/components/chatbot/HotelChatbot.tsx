@@ -73,7 +73,6 @@ export default function HotelChatbot({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Welcome message based on user type
   const getWelcomeMessage = (): string => {
     switch (userContext.type) {
       case 'guest':
@@ -85,7 +84,6 @@ export default function HotelChatbot({
     }
   }
 
-  // Quick reply options based on user type
   const getQuickReplies = (): QuickReply[] => {
     switch (userContext.type) {
       case 'guest':
@@ -115,7 +113,6 @@ export default function HotelChatbot({
     }
   }
 
-  // Initialize chat with welcome message
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       const welcomeMessage: ChatMessage = {
@@ -130,7 +127,6 @@ export default function HotelChatbot({
     }
   }, [isOpen, messages.length, getWelcomeMessage, getQuickReplies])
 
-  // Auto scroll to bottom
   useEffect(() => {
     scrollToBottom()
   }, [messages])
@@ -155,7 +151,6 @@ export default function HotelChatbot({
     setIsTyping(true)
 
     try {
-      // Send to n8n webhook
       const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
@@ -164,7 +159,7 @@ export default function HotelChatbot({
         body: JSON.stringify({
           message: inputValue,
           userContext,
-          conversationHistory: messages.slice(-5), // Send last 5 messages for context
+          conversationHistory: messages.slice(-5),
           timestamp: new Date().toISOString()
         })
       })

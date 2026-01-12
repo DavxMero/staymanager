@@ -72,7 +72,6 @@ export function PaymentProcessing({
 
   const handleProcessPayment = () => {
     setIsProcessing(true)
-    // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false)
       setPaymentComplete(true)

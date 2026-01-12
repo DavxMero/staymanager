@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// For API routes, we need the service role key for full database access
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -13,7 +12,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   })
 }
 
-// Create admin client for server-side operations
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -33,17 +31,14 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // Apply search filter
     if (search) {
       query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`)
     }
 
-    // Apply status filter
     if (status && status !== 'all') {
       query = query.eq('status', status)
     }
 
-    // Apply limit
     if (limit) {
       query = query.limit(parseInt(limit))
     }
@@ -76,7 +71,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Validate required fields
     if (!body.name || !body.email) {
       return NextResponse.json(
         { success: false, error: 'Name and email are required' },
@@ -84,7 +78,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if guest with email already exists
     const { data: existingGuest } = await supabase
       .from('guests')
       .select('id')
@@ -208,7 +201,6 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Check if guest has active reservations
     const { data: reservations } = await supabase
       .from('reservations')
       .select('id')

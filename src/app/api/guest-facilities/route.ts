@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// For API routes, we need the service role key for full database access
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -13,7 +12,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   })
 }
 
-// Create admin client for server-side operations
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -21,7 +19,6 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
-// GET - Fetch guest facility requests with filtering
 export async function GET(request: NextRequest) {
   try {
     console.log('Guest Facilities API - GET called')
@@ -40,7 +37,6 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // Apply filters
     if (guest_id) {
       query = query.eq('guest_id', guest_id)
     }
@@ -75,7 +71,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new guest facility request
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -91,14 +86,12 @@ export async function POST(request: NextRequest) {
       notes
     } = body
 
-    // Validation
     if (!guest_id || !room_id || !service_type || !description) {
       return NextResponse.json({ 
         error: 'Missing required fields: guest_id, room_id, service_type, description' 
       }, { status: 400 })
     }
 
-    // Calculate total cost from items if provided
     const total_cost = items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0)
 
     const requestData = {
@@ -128,7 +121,6 @@ export async function POST(request: NextRequest) {
 
     const requestId = data?.[0]?.id
 
-    // Insert items if provided
     if (items.length > 0 && requestId) {
       const itemsData = items.map((item: any) => ({
         request_id: requestId,
@@ -145,7 +137,6 @@ export async function POST(request: NextRequest) {
 
       if (itemsError) {
         console.error('Error creating facility request items:', itemsError)
-        // Note: We don't return error here to avoid leaving orphaned request
       }
     }
 
@@ -160,7 +151,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update existing guest facility request
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
@@ -170,10 +160,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Request ID is required' }, { status: 400 })
     }
 
-    // Add updated timestamp
     updateData.updated_at = new Date().toISOString()
 
-    // Set actual completion time if status is being changed to completed
     if (updateData.status === 'completed' && updateData.actual_completion === undefined) {
       updateData.actual_completion = new Date().toISOString()
     }
@@ -204,7 +192,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete guest facility request
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -214,7 +201,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Request ID is required' }, { status: 400 })
     }
 
-    // Delete associated items first
     const { error: itemsError } = await supabaseAdmin
       .from('guest_facility_items')
       .delete()
@@ -224,7 +210,6 @@ export async function DELETE(request: NextRequest) {
       console.error('Error deleting facility request items:', itemsError)
     }
 
-    // Delete the main request
     const { error } = await supabaseAdmin
       .from('guest_facility_requests')
       .delete()

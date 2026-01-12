@@ -21,7 +21,6 @@ export function ScrollableDialogContent({
   return (
     <BaseDialogContent
       className={cn(
-        // Add invisible-scrollbar class unless showScrollbar is true
         !showScrollbar && "invisible-scrollbar",
         className
       )}

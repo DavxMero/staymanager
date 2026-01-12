@@ -2,9 +2,7 @@ import { supabase } from './supabaseClient';
 import { BillingItem, Deposit, POSTransaction, POSTransactionItem } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 
-// Billing Items API
 export const billingItemsApi = {
-  // Get all billing items for a reservation
   getByReservationId: async (reservationId: number) => {
     try {
       const { data, error } = await supabase
@@ -21,7 +19,6 @@ export const billingItemsApi = {
     }
   },
 
-  // Create a new billing item
   create: async (billingItem: Omit<BillingItem, 'id' | 'created_at'>) => {
     try {
       console.log('Creating billing item with data:', billingItem);
@@ -41,7 +38,6 @@ export const billingItemsApi = {
     }
   },
 
-  // Update a billing item
   update: async (id: number, updates: Partial<BillingItem>) => {
     try {
       console.log(`Updating billing item ${id} with data:`, updates);
@@ -62,7 +58,6 @@ export const billingItemsApi = {
     }
   },
 
-  // Delete a billing item
   delete: async (id: number) => {
     try {
       const { error } = await supabase
@@ -77,7 +72,6 @@ export const billingItemsApi = {
     }
   },
 
-  // Get unpaid billing items for a reservation
   getUnpaidByReservationId: async (reservationId: number) => {
     try {
       const { data, error } = await supabase
@@ -96,9 +90,7 @@ export const billingItemsApi = {
   },
 };
 
-// Deposits API
 export const depositsApi = {
-  // Get all deposits for a reservation
   getByReservationId: async (reservationId: number) => {
     try {
       const { data, error } = await supabase
@@ -115,7 +107,6 @@ export const depositsApi = {
     }
   },
 
-  // Create a new deposit
   create: async (deposit: Omit<Deposit, 'id' | 'created_at'>) => {
     try {
       const { data, error } = await supabase
@@ -133,7 +124,6 @@ export const depositsApi = {
     }
   },
 
-  // Update a deposit
   update: async (id: number, updates: Partial<Deposit>) => {
     try {
       console.log(`Updating deposit ${id} with data:`, updates);
@@ -154,7 +144,6 @@ export const depositsApi = {
     }
   },
 
-  // Delete a deposit
   delete: async (id: number) => {
     try {
       const { error } = await supabase
@@ -170,14 +159,11 @@ export const depositsApi = {
   },
 };
 
-// POS Transactions API
 export const posTransactionsApi = {
-  // Create a new POS transaction with items
   create: async (transaction: Omit<POSTransaction, 'id' | 'created_at'>) => {
     try {
       console.log('Creating POS transaction with data:', transaction);
       
-      // Validate required fields with detailed error messages
       if (!transaction.total_amount || transaction.total_amount <= 0) {
         console.warn('Invalid total amount:', transaction.total_amount);
         throw new Error('Total amount must be greater than 0');
@@ -191,7 +177,6 @@ export const posTransactionsApi = {
         throw new Error('Transaction type is required');
       }
       
-      // Additional validation for items
       if (transaction.items && transaction.items.length > 0) {
         const invalidItems = transaction.items.filter(item => 
           !item.item_name || 
@@ -206,7 +191,6 @@ export const posTransactionsApi = {
         }
       }
       
-      // Create the transaction first
       const { data: transactionData, error: transactionError } = await supabase
         .from('pos_transactions')
         .insert({
@@ -230,7 +214,6 @@ export const posTransactionsApi = {
       
       console.log('Transaction created successfully:', transactionData);
       
-      // Create transaction items if any
       if (transaction.items && transaction.items.length > 0) {
         console.log('Creating transaction items:', transaction.items);
         
@@ -252,7 +235,6 @@ export const posTransactionsApi = {
         
         if (itemsError) {
           console.error('Items creation error:', itemsError);
-          // Try to clean up the transaction if items failed
           await supabase.from('pos_transactions').delete().eq('id', transactionData.id);
           throw new Error(`Database error creating transaction items: ${itemsError.message}`);
         }
@@ -281,7 +263,6 @@ export const posTransactionsApi = {
     }
   },
 
-  // Get POS transaction by ID with items
   getById: async (id: number) => {
     try {
       const { data: transactionData, error: transactionError } = await supabase
@@ -310,7 +291,6 @@ export const posTransactionsApi = {
     }
   },
 
-  // Get POS transactions by reservation ID
   getByReservationId: async (reservationId: number) => {
     try {
       const { data, error } = await supabase
@@ -334,7 +314,6 @@ export const posTransactionsApi = {
     }
   },
 
-  // Update POS transaction status
   updateStatus: async (id: number, status: POSTransaction['status']) => {
     try {
       const { data, error } = await supabase
@@ -352,7 +331,6 @@ export const posTransactionsApi = {
     }
   },
 
-  // Get daily transactions summary
   getDailySummary: async (date: string) => {
     try {
       const { data, error } = await supabase

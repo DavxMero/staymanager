@@ -62,7 +62,6 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
     setCategory(value);
     setDescription('');
     setCustomDescription(false);
-    // Set default price based on selected category
     if (value === 'food') setUnitPrice(75000);
     else if (value === 'beverage') setUnitPrice(25000);
     else if (value === 'service') setUnitPrice(100000);
@@ -71,7 +70,6 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
 
   const handleDescriptionChange = (value: string) => {
     setDescription(value);
-    // Find the item in defaultItems and set the price
     const item = defaultItems[category].find(item => item.name === value);
     if (item) {
       setUnitPrice(item.price);
@@ -94,7 +92,6 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
       category
     });
     
-    // Reset form
     setCategory('food');
     setDescription('');
     setQuantity(1);

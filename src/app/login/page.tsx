@@ -32,7 +32,6 @@ export default function LoginPage() {
 
             if (error) throw error;
 
-            // Check user role to determine redirect
             if (data.user) {
                 const { data: userRoles } = await supabase
                     .from('user_roles')
@@ -43,7 +42,6 @@ export default function LoginPage() {
 
                 const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
 
-                // Debug logging
                 console.log('User roles:', userRoles);
                 console.log('Has guest role:', hasGuestRole);
                 console.log('Roles length:', userRoles?.length);
@@ -53,13 +51,10 @@ export default function LoginPage() {
                     description: 'Logged in successfully!',
                 });
 
-                // Redirect based on role
                 if (hasGuestRole && userRoles?.length === 1) {
-                    // Only guest role - redirect to chatbot
                     console.log('Redirecting to /chatbot');
                     window.location.href = '/chatbot';
                 } else {
-                    // Has other roles - redirect to dashboard
                     console.log('Redirecting to /dashboard');
                     window.location.href = '/dashboard';
                 }

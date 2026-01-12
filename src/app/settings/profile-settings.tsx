@@ -40,13 +40,8 @@ export function ProfileSettings() {
             if (user) {
                 setUser(user)
                 setFullName(user.user_metadata?.full_name || '')
-                // Try to parse phone number if it exists
                 const savedPhone = user.user_metadata?.phone || ''
                 if (savedPhone) {
-                    // Simple logic to split code and number if possible, 
-                    // otherwise just set number and default code
-                    // For now, we assume saved phone might not have the format we want perfectly
-                    // so we just set the number part if it matches our current code, or just raw
                     setPhone(savedPhone)
                 }
             }
@@ -58,15 +53,13 @@ export function ProfileSettings() {
         if (!user) return
         setLoading(true)
         try {
-            // Combine code and phone for saving, or save separately if schema allows.
-            // Standard practice: save E.164 format or just the full string
             const fullPhoneNumber = `${countryCode} ${phone}`
 
             const { error } = await supabase.auth.updateUser({
                 data: {
                     full_name: fullName,
-                    phone: phone, // Saving just the number part for display simplicity in this demo
-                    phone_full: fullPhoneNumber // Optional: save full format
+                    phone: phone,
+                    phone_full: fullPhoneNumber
                 }
             })
 
@@ -141,17 +134,13 @@ export function ProfileSettings() {
                             id="phone"
                             value={phone}
                             onChange={(e) => {
-                                // Remove non-digits
                                 let value = e.target.value.replace(/\D/g, '')
 
-                                // Handle paste with 62 or 0 prefix
                                 if (value.startsWith('62')) value = value.slice(2)
                                 if (value.startsWith('0')) value = value.slice(1)
 
-                                // Limit length
                                 if (value.length > 13) value = value.slice(0, 13)
 
-                                // Add dashes
                                 let formatted = value
                                 if (value.length > 3) {
                                     formatted = `${value.slice(0, 3)}-${value.slice(3)}`

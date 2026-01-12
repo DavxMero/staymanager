@@ -1,9 +1,8 @@
-// src/lib/groq-service.ts
 import { hotelContext } from './hotel-context';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = 'llama-3.1-8b-instant'; // Groq's fastest Llama 3.1 model
+const GROQ_MODEL = 'llama-3.1-8b-instant';
 
 interface GroqMessage {
   role: 'system' | 'user' | 'assistant';
@@ -32,7 +31,6 @@ export async function getGroqAIResponse(
       throw new Error('GROQ_API_KEY is not configured');
     }
 
-    // Format hotel information
     const hotelInfo = [
       "Hotel Information:",
       `Name: ${hotelContext.name}`,
@@ -51,7 +49,6 @@ export async function getGroqAIResponse(
       ...hotelContext.policies.map(policy => `- ${policy}`)
     ].join('\n');
 
-    // Create system message based on user context
     let systemMessage = "You are a helpful hotel assistant for StayManager Hotel.";
     
     switch (userContext?.type) {
@@ -82,7 +79,7 @@ ${userContext.staffRole ? `The user is a ${userContext.staffRole}.` : ''}
 Provide concise, action-oriented responses with specific data when available.`;
         break;
         
-      default: // visitor
+      default:
         systemMessage = `You are a hotel information assistant for StayManager Hotel. You help visitors with:
 - Room availability and booking information
 - Hotel facilities and amenities
@@ -94,7 +91,6 @@ Provide concise, action-oriented responses with specific data when available.`;
 Be welcoming and informative to encourage bookings.`;
     }
 
-    // Prepare messages for Groq
     const systemMessages: GroqMessage[] = [
       {
         role: 'system',
@@ -112,7 +108,7 @@ Be welcoming and informative to encourage bookings.`;
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: systemMessages,
-        temperature: 0.3, // Lower temperature for more consistent responses
+        temperature: 0.3,
         max_tokens: 1024,
         top_p: 0.9,
         stream: false
@@ -134,7 +130,6 @@ Be welcoming and informative to encourage bookings.`;
   }
 }
 
-// Streaming version for real-time responses
 export async function getGroqAIResponseStream(
   messages: GroqMessage[],
   userContext?: { type: 'guest' | 'staff' | 'visitor', roomNumber?: string, staffRole?: string }
@@ -143,7 +138,6 @@ export async function getGroqAIResponseStream(
     throw new Error('GROQ_API_KEY is not configured');
   }
 
-  // Same system message setup as above
   const hotelInfo = [
     "Hotel Information:",
     `Name: ${hotelContext.name}`,
@@ -210,7 +204,6 @@ Provide concise, action-oriented responses.`;
   return response.body!;
 }
 
-// Simple chat function for quick testing
 export async function sendGroqChatMessage(
   userMessage: string,
   userContext?: { type: 'guest' | 'staff' | 'visitor', roomNumber?: string, staffRole?: string }

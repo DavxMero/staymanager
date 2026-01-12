@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
             }
         )
 
-        // 1. Exchange Code for Session (Set Cookies)
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (error) {
@@ -37,7 +36,6 @@ export async function GET(request: NextRequest) {
         if (data.session) {
             console.log('✅ OAuth Success! User:', data.session.user.email)
 
-            // 2. Check & Assign Guest Role
             const { data: existingRoles } = await supabase
                 .from('user_roles')
                 .select('id')
@@ -66,6 +64,5 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    // 3. Redirect to Chatbot
     return NextResponse.redirect(`${origin}/chatbot`)
 }

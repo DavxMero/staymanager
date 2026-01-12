@@ -38,7 +38,6 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
 
     const handleConfirm = async () => {
         setIsSubmitting(true);
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
         onConfirm();
     };

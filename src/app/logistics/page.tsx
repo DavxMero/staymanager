@@ -59,7 +59,6 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { InventoryItem, InventorySupplier, PurchaseOrder } from "@/types"
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -89,12 +88,10 @@ export default function LogisticsPage() {
   const [activeTab, setActiveTab] = useState("inventory")
   const [loading, setLoading] = useState(true)
 
-  // Data States
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [suppliers, setSuppliers] = useState<InventorySupplier[]>([])
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
 
-  // Filter & Search States
   const [searchTerm, setSearchTerm] = useState("")
   const [filters, setFilters] = useState({
     category: 'all',
@@ -102,19 +99,15 @@ export default function LogisticsPage() {
     lowStock: false
   })
 
-  // Dialog States
   const [isAddItemOpen, setIsAddItemOpen] = useState(false)
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false)
   const [isCreatePOOpen, setIsCreatePOOpen] = useState(false)
 
-  // Edit States
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
 
-  // PO Items State
   const [poItems, setPoItems] = useState<{ item_id: string, quantity_ordered: number, unit_cost: number }[]>([])
   const [newPoItem, setNewPoItem] = useState({ item_id: '', quantity_ordered: 1, unit_cost: 0 })
 
-  // Form Data
   const [itemFormData, setItemFormData] = useState({
     name: '',
     description: '',
@@ -143,7 +136,6 @@ export default function LogisticsPage() {
     notes: ''
   })
 
-  // Stats
   const stats = {
     totalItems: inventory.length,
     totalValue: inventory.reduce((acc, item) => acc + (item.current_stock * item.unit_cost), 0),
@@ -152,7 +144,6 @@ export default function LogisticsPage() {
     categoriesCount: new Set(inventory.map(i => i.category)).size
   }
 
-  // Fetch Data
   const fetchInventory = async () => {
     try {
       const response = await fetch('/api/inventory')
@@ -198,7 +189,6 @@ export default function LogisticsPage() {
     loadData()
   }, [])
 
-  // Handlers
   const handleSaveItem = async () => {
     try {
       const url = '/api/inventory'
@@ -250,7 +240,6 @@ export default function LogisticsPage() {
   const handleAddPOItem = () => {
     if (!newPoItem.item_id || newPoItem.quantity_ordered <= 0) return
 
-    // Find item to get cost if not set
     const item = inventory.find(i => i.id.toString() === newPoItem.item_id)
     const cost = newPoItem.unit_cost || item?.unit_cost || 0
 
@@ -301,7 +290,7 @@ export default function LogisticsPage() {
       if (result.success) {
         toast({ title: "Success", description: "Goods received successfully" })
         fetchPurchaseOrders()
-        fetchInventory() // Update stock levels
+        fetchInventory()
       } else {
         throw new Error(result.error)
       }
@@ -329,7 +318,6 @@ export default function LogisticsPage() {
   const getStatusInfo = (status: string) =>
     STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0]
 
-  // Filtered Inventory
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchTerm.toLowerCase())

@@ -65,12 +65,10 @@ export async function hasAnyRole(userId: string, roleNames: RoleName[]): Promise
 export async function hasPermission(userId: string, permission: string): Promise<boolean> {
     const roles = await getUserRoles(userId);
 
-    // Super admin has all permissions
     if (roles.some(ur => ur.role.name === 'super_admin')) {
         return true;
     }
 
-    // Check if any role has the permission
     return roles.some(ur => {
         const permissions = ur.role.permissions || [];
         return permissions.includes('*') || permissions.includes(permission);
@@ -83,7 +81,6 @@ export async function hasPermission(userId: string, permission: string): Promise
 export async function getUserPermissions(userId: string): Promise<string[]> {
     const roles = await getUserRoles(userId);
 
-    // Super admin has all permissions
     if (roles.some(ur => ur.role.name === 'super_admin')) {
         return ['*'];
     }
@@ -103,7 +100,6 @@ export async function getUserPermissions(userId: string): Promise<string[]> {
 export async function assignRole(userId: string, roleName: RoleName, assignedBy?: string): Promise<{ success: boolean; error?: string }> {
     const supabase = await createClient();
 
-    // Get role by name
     const { data: role, error: roleError } = await supabase
         .from('roles')
         .select('id')
@@ -114,7 +110,6 @@ export async function assignRole(userId: string, roleName: RoleName, assignedBy?
         return { success: false, error: 'Role not found' };
     }
 
-    // Assign role
     const { error } = await supabase
         .from('user_roles')
         .insert({
@@ -136,7 +131,6 @@ export async function assignRole(userId: string, roleName: RoleName, assignedBy?
 export async function removeRole(userId: string, roleName: RoleName): Promise<{ success: boolean; error?: string }> {
     const supabase = await createClient();
 
-    // Get role by name
     const { data: role, error: roleError } = await supabase
         .from('roles')
         .select('id')
@@ -147,7 +141,6 @@ export async function removeRole(userId: string, roleName: RoleName): Promise<{ 
         return { success: false, error: 'Role not found' };
     }
 
-    // Remove role
     const { error } = await supabase
         .from('user_roles')
         .delete()

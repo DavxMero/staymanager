@@ -88,10 +88,8 @@ import {
   getPeriodComparisonText
 } from "@/lib/reportingUtils"
 
-// Chart colors
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#0088fe']
 
-// Interface for analytics data
 interface AnalyticsData {
   summary: {
     totalRevenue: number
@@ -123,7 +121,6 @@ export default function ReportsPage() {
   const [roomTypeFilter, setRoomTypeFilter] = useState('all')
   const { toast } = useToast()
 
-  // Fetch analytics data from API
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true)
@@ -161,17 +158,14 @@ export default function ReportsPage() {
     }
   }
 
-  // Load data on component mount and when filters change
   useEffect(() => {
     fetchAnalyticsData()
   }, [dateRange, roomTypeFilter])
 
-  // Handle date range changes
   const handleDateRangeChange = (field: 'startDate' | 'endDate', value: string) => {
     setDateRange(prev => ({ ...prev, [field]: value }))
   }
 
-  // Handle export functionality
   const handleExport = async (type: 'pdf' | 'excel') => {
     try {
       toast({

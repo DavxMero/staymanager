@@ -1,4 +1,3 @@
-// src/lib/ollama-service.ts
 import { hotelContext } from './hotel-context';
 
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/generate';
@@ -20,7 +19,6 @@ interface OllamaResponse {
 
 export async function getAIResponse(prompt: string, systemMessage?: string): Promise<string> {
   try {
-    // Format prompt dengan system message dan context hotel jika ada
     const hotelInfo = [
       "Hotel Information:",
       "Name: " + hotelContext.name,
@@ -53,7 +51,7 @@ export async function getAIResponse(prompt: string, systemMessage?: string): Pro
         prompt: fullPrompt,
         stream: false,
         options: {
-          temperature: 0.3, // Reduced temperature for more factual responses
+          temperature: 0.3,
           top_p: 0.9,
         }
       })
@@ -71,10 +69,8 @@ export async function getAIResponse(prompt: string, systemMessage?: string): Pro
   }
 }
 
-// New function to support streaming responses
 export async function getAIResponseStream(prompt: string, systemMessage?: string) {
   try {
-    // Format prompt dengan system message dan context hotel jika ada
     const hotelInfo = [
       "Hotel Information:",
       "Name: " + hotelContext.name,
@@ -105,7 +101,7 @@ export async function getAIResponseStream(prompt: string, systemMessage?: string
       body: JSON.stringify({
         model: OLLAMA_MODEL,
         prompt: fullPrompt,
-        stream: true, // Enable streaming
+        stream: true,
         options: {
           temperature: 0.3,
           top_p: 0.9,
@@ -124,10 +120,8 @@ export async function getAIResponseStream(prompt: string, systemMessage?: string
   }
 }
 
-// Fungsi untuk mengirim pesan ke endpoint API Next.js (jika diperlukan nanti)
 export async function sendChatMessage(messages: Array<{role: string, content: string}>) {
   try {
-    // Gabungkan pesan untuk model completion
     const prompt = messages.map(m => `${m.role}: ${m.content}`).join('\n');
     
     return await getAIResponse(prompt);

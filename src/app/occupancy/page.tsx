@@ -59,7 +59,6 @@ const statusVariants = {
   'out-of-order': "bg-red-200 text-red-900 dark:bg-red-900/30 dark:text-red-200 border border-red-300 dark:border-red-700",
 }
 
-// Checkout Dialog Component
 interface CheckoutDialogProps {
   room: Room | null
   open: boolean
@@ -84,24 +83,20 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Security deposit management
-  const [depositRefund, setDepositRefund] = useState(true) // Default: refund deposit
+  const [depositRefund, setDepositRefund] = useState(true)
   const [depositAmount, setDepositAmount] = useState<number>(0)
 
-  // Payment states for unpaid bills
   const [paymentMethod, setPaymentMethod] = useState<string>('')
   const [paymentAmount, setPaymentAmount] = useState<number>(0)
   const [paymentLoading, setPaymentLoading] = useState(false)
 
-  // Cash POS states
   const [cashReceived, setCashReceived] = useState<number>(0)
   const [changeAmount, setChangeAmount] = useState<number>(0)
 
-  // Success states
   const [checkoutSuccess, setCheckoutSuccess] = useState(false)
   const [checkoutInvoice, setCheckoutInvoice] = useState<any>(null)
 
-  const DEPOSIT_AMOUNT = 100000 // Standard deposit amount
+  const DEPOSIT_AMOUNT = 100000
 
   useEffect(() => {
     if (open && room) {
@@ -109,7 +104,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     }
   }, [open, room]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Calculate change for cash payments
   useEffect(() => {
     if (paymentMethod === 'cash' && cashReceived > 0) {
       const change = Math.max(0, cashReceived - paymentAmount)
@@ -126,7 +120,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     setError("")
 
     try {
-      // Fetch current reservation for this room
       const { data: reservationData, error: reservationError } = await supabase
         .from('reservations')
         .select('*')
@@ -142,9 +135,8 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
       }
 
       setReservation(reservationData)
-      setDepositAmount(DEPOSIT_AMOUNT) // Set standard deposit amount
+      setDepositAmount(DEPOSIT_AMOUNT)
 
-      // Fetch unpaid billing items for this reservation
       const { data: billingData, error: billingError } = await supabase
         .from('billing_items')
         .select('*')
@@ -154,13 +146,11 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
 
       if (billingError) {
         console.error('Error fetching billing items:', billingError)
-        // Continue even if billing fetch fails
       }
 
       const bills = billingData || []
       setUnpaidBills(bills)
 
-      // Calculate total unpaid amount
       const totalUnpaid = bills.reduce((sum, bill) => sum + bill.total_price, 0)
       setPaymentAmount(totalUnpaid)
 
@@ -178,7 +168,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     }
   }
 
-  // Create checkout invoice
   const createCheckoutInvoice = async (paymentData: any) => {
     try {
       const invoiceNumber = `INV-OUT-${Date.now()}`
@@ -192,7 +181,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
         subtotal: paymentAmount,
         tax_amount: 0,
         service_charge: 0,
-        discount_amount: refundAmount, // Deposit refund as "discount"
+        discount_amount: refundAmount,
         total_amount: Math.max(0, paymentAmount - refundAmount + depositForfeit),
         status: 'paid',
         payment_method: paymentData.method || 'no_payment',
@@ -231,7 +220,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     }
   }
 
-  // Print checkout invoice
   const printCheckoutInvoice = (invoiceData: any) => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
@@ -363,18 +351,15 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     }, 500)
   }
 
-  // Process checkout payment
   const processCheckoutPayment = async (method: string, amount: number) => {
     setPaymentLoading(true)
     try {
-      // Validate cash payment
       if (method === 'cash' && cashReceived < amount) {
         throw new Error(`Insufficient cash. Received: ${formatCurrencyCompat(cashReceived)}, Required: ${formatCurrencyCompat(amount)}`)
       }
 
       console.log(`Processing checkout payment: ${formatCurrencyCompat(amount)} via ${method}`)
 
-      // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000))
 
       return {
@@ -394,7 +379,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     }
   }
 
-  // Handle checkout process
   const handleCheckout = async () => {
     if (!reservation || !room) return
 
@@ -404,7 +388,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     try {
       let paymentResult = null
 
-      // Process payment only if there are unpaid bills AND amount > 0 after deposit calculation
       const finalAmount = paymentAmount - (depositRefund ? depositAmount : 0)
       if (unpaidBills.length > 0 && finalAmount > 0) {
         if (!paymentMethod) {
@@ -415,7 +398,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
         paymentResult = await processCheckoutPayment(paymentMethod, finalAmount)
       }
 
-      // Update unpaid bills to paid
       if (unpaidBills.length > 0) {
         const { error: billingError } = await supabase
           .from('billing_items')
@@ -425,7 +407,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
         if (billingError) throw billingError
       }
 
-      // Update reservation to completed
       const { error: reservationError } = await supabase
         .from('reservations')
         .update({
@@ -436,7 +417,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
 
       if (reservationError) throw reservationError
 
-      // Update room status to cleaning
       const { error: roomError } = await supabase
         .from('rooms')
         .update({ status: 'cleaning' })
@@ -444,11 +424,9 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
 
       if (roomError) throw roomError
 
-      // Create checkout invoice
       const invoice = await createCheckoutInvoice(paymentResult || { method: 'no_payment', transaction_id: null })
       setCheckoutInvoice(invoice)
 
-      // Show success screen
       setCheckoutSuccess(true)
 
     } catch (err) {
@@ -459,7 +437,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     }
   }
 
-  // Loading state
   if (loading && !checkoutSuccess) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -475,12 +452,10 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     )
   }
 
-  // Success screen
   if (checkoutSuccess && checkoutInvoice) {
     return (
       <Dialog open={open} onOpenChange={(openState) => {
         if (!openState) {
-          // Reset states
           setCheckoutSuccess(false)
           setCheckoutInvoice(null)
           onCheckoutComplete()
@@ -578,7 +553,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     )
   }
 
-  // Main checkout dialog continues...
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
@@ -923,7 +897,6 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
   )
 }
 
-// Check-in Dialog Component  
 interface CheckinDialogProps {
   room: Room | null
   open: boolean
@@ -938,44 +911,37 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Track existing payments for selected reservation
   const [existingPayments, setExistingPayments] = useState<any[]>([])
   const [totalPaidAmount, setTotalPaidAmount] = useState(0)
 
-  // Payment processing states
   const [showPayment, setShowPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<string>('')
 
   const [paymentLoading, setPaymentLoading] = useState(false)
 
-  // POS system states for cash payments
   const [cashReceived, setCashReceived] = useState<number>(0)
   const [changeAmount, setChangeAmount] = useState<number>(0)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [invoiceData, setInvoiceData] = useState<any>(null)
 
-  // Deposit requirement - 100k IDR
   const DEPOSIT_AMOUNT = 100000
 
-  // Calculate nights for walk-in guests
   const calculateWalkInNights = (checkoutDate: Date) => {
     const today = new Date()
     const diffTime = checkoutDate.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return Math.max(1, diffDays) // Minimum 1 night
+    return Math.max(1, diffDays)
   }
 
-  // Walk-in guest details
   const [walkInName, setWalkInName] = useState("")
   const [walkInPhone, setWalkInPhone] = useState("")
   const [walkInEmail, setWalkInEmail] = useState("")
   const [walkInCheckoutDate, setWalkInCheckoutDate] = useState<Date>(addDays(new Date(), 1))
   const [walkInNights, setWalkInNights] = useState(1)
 
-  // Breakfast options for walk-in
   const [walkInIncludeBreakfast, setWalkInIncludeBreakfast] = useState(false)
   const [walkInBreakfastQuantity, setWalkInBreakfastQuantity] = useState(1)
-  const BREAKFAST_PRICE = 50000 // IDR per breakfast
+  const BREAKFAST_PRICE = 50000
 
   useEffect(() => {
     if (open && room) {
@@ -983,7 +949,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }
   }, [open, room])
 
-  // Calculate total payment dynamically to avoid state sync issues
   const currentTotal = useMemo(() => {
     if (!room) return 0
 
@@ -993,7 +958,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
       return roomTotal + breakfastTotal + DEPOSIT_AMOUNT
     } else if (selectedReservation) {
       const reservationTotal = (selectedReservation.total_amount || room.price) + DEPOSIT_AMOUNT
-      // Subtract any payments already made (e.g., from chatbot bookings)
       const remainingAmount = Math.max(0, reservationTotal - totalPaidAmount)
       return remainingAmount
     }
@@ -1001,7 +965,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     return 0
   }, [isWalkIn, room, walkInNights, walkInIncludeBreakfast, walkInBreakfastQuantity, selectedReservation, DEPOSIT_AMOUNT, totalPaidAmount])
 
-  // Update nights when walk-in checkout date changes
   useEffect(() => {
     if (isWalkIn && room && walkInCheckoutDate) {
       const nights = calculateWalkInNights(walkInCheckoutDate)
@@ -1009,7 +972,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }
   }, [walkInCheckoutDate, isWalkIn, room])
 
-  // Calculate change when cash received changes
   useEffect(() => {
     if (paymentMethod === 'cash' && cashReceived > 0) {
       const change = Math.max(0, cashReceived - currentTotal)
@@ -1019,7 +981,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }
   }, [cashReceived, currentTotal, paymentMethod])
 
-  // Fetch existing payments for a reservation
   const fetchExistingPayments = async (reservationId: string) => {
     try {
       const { data: paymentsData, error: paymentsError } = await supabase
@@ -1073,20 +1034,17 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
       setReservations(data || [])
       if (data && data.length > 0) {
-        // Auto-select first reservation
         const firstReservation = data[0]
         setSelectedReservation(firstReservation)
         setIsWalkIn(false)
 
-        // Fetch existing payments for this reservation
         await fetchExistingPayments(firstReservation.id)
       } else {
-        // Only allow walk-in if no reservations exist
         setIsWalkIn(true)
         setExistingPayments([])
         setTotalPaidAmount(0)
       }
-      setError('') // Clear any previous errors
+      setError('')
     } catch (err) {
       console.error('Error fetching reservations:', err)
       console.error('Error details:', {
@@ -1102,8 +1060,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
   }
 
 
-
-  // Create invoice and save to database
   const createInvoice = async (paymentData: any) => {
     try {
       const invoiceNumber = `INV-${Date.now()}`
@@ -1123,7 +1079,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         reservation_id: paymentData.reservationId,
         guest_id: isWalkIn ? paymentData.guestId : selectedReservation?.guest_id,
         subtotal: roomTotal + breakfastTotal,
-        tax_amount: 0, // Add tax calculation if needed
+        tax_amount: 0,
         service_charge: 0,
         discount_amount: 0,
         total_amount: roomTotal + breakfastTotal + DEPOSIT_AMOUNT,
@@ -1134,7 +1090,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         due_date: new Date().toISOString().split('T')[0],
         paid_at: new Date().toISOString(),
         notes: `Check-in payment - Room ${room?.number}`,
-        created_by: null // Add user ID when auth is implemented
+        created_by: null
       }
 
       const { data: invoice, error } = await supabase
@@ -1169,7 +1125,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }
   }
 
-  // Print invoice function
   const printInvoice = (invoiceData: any) => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
@@ -1291,22 +1246,17 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }, 500)
   }
 
-  // Payment processing API
   const processPayment = async (method: string, amount: number) => {
     setPaymentLoading(true)
     try {
-      // Validate cash payment
       if (method === 'cash' && cashReceived < amount) {
         throw new Error(`Insufficient cash. Received: ${formatCurrencyCompat(cashReceived)}, Required: ${formatCurrencyCompat(amount)}`)
       }
 
-      // Simulate payment API call
       console.log(`Processing payment: ${formatCurrencyCompat(amount)} via ${method}`)
 
-      // Mock payment API response
       await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // In real implementation, call your payment gateway API here
       const paymentResponse = {
         success: true,
         transaction_id: `PAY-${Date.now()}`,
@@ -1315,7 +1265,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         timestamp: new Date().toISOString(),
         cash_received: method === 'cash' ? cashReceived : null,
         change_amount: method === 'cash' ? changeAmount : null,
-        reservationId: null // Will be set after check-in
+        reservationId: null
       }
 
       console.log('Payment successful:', paymentResponse)
@@ -1340,20 +1290,16 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     setError("")
 
     try {
-      // 1. Process Payment
       const paymentResponse = await processPayment(paymentMethod, currentTotal)
 
-      // 2. Perform Check-in
       let reservationId = null
       let guestId = null
 
       if (isWalkIn) {
-        // Create walk-in reservation and check-in
         if (!walkInName.trim() || !walkInPhone.trim()) {
           throw new Error("Please fill in guest name and phone")
         }
 
-        // Check/Create Guest
         let existingGuestId = null
         const conditions = []
         if (walkInEmail.trim()) conditions.push(`email.eq.${walkInEmail.trim()}`)
@@ -1421,7 +1367,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         if (reservationError) throw reservationError
         reservationId = reservation.id
       } else {
-        // Check-in existing reservation
         if (!selectedReservation) {
           throw new Error("Please select a reservation")
         }
@@ -1440,7 +1385,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         guestId = selectedReservation.guest_id
       }
 
-      // Update room status
       const { error: roomError } = await supabase
         .from('rooms')
         .update({ status: 'occupied' })
@@ -1448,14 +1392,12 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
       if (roomError) throw roomError
 
-      // 3. Create Invoice
       const invoice = await createInvoice({
         ...paymentResponse,
         reservationId,
         guestId
       })
 
-      // 4. Create Payment Record (for Guests Page)
       const { error: paymentError } = await supabase
         .from('payments')
         .insert({
@@ -1468,10 +1410,8 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
       if (paymentError) {
         console.error('Error creating payment record:', paymentError)
-        // Don't throw here, as the main flow (reservation + invoice) succeeded
       }
 
-      // 4. Show Success
       setInvoiceData(invoice)
       setPaymentSuccess(true)
 
@@ -1486,7 +1426,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
   const handleCheckin = async () => {
     if (!room) return
 
-    // Show payment dialog first
     if (!showPayment) {
       setShowPayment(true)
       return
@@ -1497,13 +1436,11 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
     try {
       if (isWalkIn) {
-        // Create walk-in reservation and check-in
         if (!walkInName.trim() || !walkInPhone.trim()) {
           setError("Please fill in guest name and phone")
           return
         }
 
-        // 1. Check/Create Guest
         let guestId = null
         const conditions = []
         if (walkInEmail.trim()) conditions.push(`email.eq.${walkInEmail.trim()}`)
@@ -1548,8 +1485,8 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
             guest_name: walkInName.trim(),
             guest_phone: walkInPhone.trim(),
             guest_email: walkInEmail.trim() || null,
-            check_in: checkInDate.toISOString().split('T')[0], // DATE format
-            check_out: walkInCheckoutDate.toISOString().split('T')[0], // DATE format
+            check_in: checkInDate.toISOString().split('T')[0],
+            check_out: walkInCheckoutDate.toISOString().split('T')[0],
             room_rate: room.price,
             room_total: roomTotal,
             total_amount: currentTotal,
@@ -1568,7 +1505,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
         if (reservationError) throw reservationError
       } else {
-        // Check-in existing reservation
         if (!selectedReservation) {
           setError("Please select a reservation")
           return
@@ -1585,7 +1521,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         if (updateError) throw updateError
       }
 
-      // Update room status to occupied
       const { error: roomError } = await supabase
         .from('rooms')
         .update({ status: 'occupied' })
@@ -1604,12 +1539,10 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }
   }
 
-  // Payment success screen
   if (paymentSuccess && invoiceData) {
     return (
       <Dialog open={open} onOpenChange={(openState) => {
         if (!openState) {
-          // Reset all states when closing
           setPaymentSuccess(false)
           setInvoiceData(null)
           setShowPayment(false)
@@ -1756,7 +1689,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                     variant={isWalkIn ? "default" : "outline"}
                     size="sm"
                     onClick={() => setIsWalkIn(true)}
-                    disabled={reservations.length > 0} // Disable walk-in if reservation exists
+                    disabled={reservations.length > 0}
                   >
                     Walk-in Guest
                   </Button>
@@ -1764,7 +1697,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               </div>
 
               {!isWalkIn ? (
-                // Existing reservation
                 <div className="space-y-4">
                   {reservations.length > 0 ? (
                     <div className="space-y-4">
@@ -1819,7 +1751,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                   )}
                 </div>
               ) : (
-                // Walk-in guest
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -2083,7 +2014,6 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       <Label>Payment Method</Label>
                       <Select value={paymentMethod} onValueChange={(value) => {
                         setPaymentMethod(value)
-                        // Reset cash values when changing payment method
                         if (value !== 'cash') {
                           setCashReceived(0)
                           setChangeAmount(0)
@@ -2138,9 +2068,9 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                               <Label>Quick Amounts</Label>
                               <div className="grid grid-cols-3 gap-2">
                                 {Array.from(new Set([
-                                  Math.ceil(currentTotal / 50000) * 50000, // Round up to nearest 50k
-                                  Math.ceil(currentTotal / 100000) * 100000, // Round up to nearest 100k
-                                  Math.ceil(currentTotal / 500000) * 500000, // Round up to nearest 500k
+                                  Math.ceil(currentTotal / 50000) * 50000,
+                                  Math.ceil(currentTotal / 100000) * 100000,
+                                  Math.ceil(currentTotal / 500000) * 500000,
                                 ])).map((amount) => (
                                   <Button
                                     key={amount}
@@ -2262,13 +2192,11 @@ export default function OccupancyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Filter states
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [floorFilter, setFloorFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [showFilters, setShowFilters] = useState(false)
 
-  // Dialog states
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
 
   const [checkinDialogOpen, setCheckinDialogOpen] = useState(false)
@@ -2302,7 +2230,6 @@ export default function OccupancyPage() {
 
       if (roomsError) throw roomsError
 
-      // Update room status based on current reservations
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('reservations')
         .select('room_id, status')
@@ -2336,13 +2263,11 @@ export default function OccupancyPage() {
     }
   }
 
-  // Open checkout dialog for occupied rooms
   const handleCheckout = (room: Room) => {
     setSelectedRoom(room)
     setCheckoutDialogOpen(true)
   }
 
-  // Handle checkout completion
   const handleCheckoutComplete = async () => {
     await fetchRooms()
   }
@@ -2355,7 +2280,6 @@ export default function OccupancyPage() {
     applyFilters()
   }, [applyFilters])
 
-  // Get unique room types and floors for filters
   const roomTypes = [...new Set(rooms.map(room => room.type))]
   const floors = [...new Set(rooms.map(room => room.floor))].filter(f => f !== undefined && f !== null).sort((a, b) => (a as number) - (b as number))
 
@@ -2368,7 +2292,6 @@ export default function OccupancyPage() {
     }).format(amount)
   }
 
-  // Calculate statistics
   const stats = {
     totalRooms: rooms.length,
     availableRooms: rooms.filter(r => r.status === 'available').length,
@@ -2665,7 +2588,6 @@ export default function OccupancyPage() {
           </Card>
         ))}
       </div>
-
 
 
       {/* Check-in Dialog */}

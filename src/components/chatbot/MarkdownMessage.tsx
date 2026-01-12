@@ -14,14 +14,13 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
     const [displayedContent, setDisplayedContent] = useState('');
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    // Streaming animation effect
     useEffect(() => {
         if (isLatestMessage && isStreaming) {
             if (currentIndex < content.length) {
                 const timeout = setTimeout(() => {
                     setDisplayedContent(content.slice(0, currentIndex + 1));
                     setCurrentIndex(currentIndex + 1);
-                }, 3); // Faster streaming for smoother effect
+                }, 3);
 
                 return () => clearTimeout(timeout);
             }
@@ -35,7 +34,6 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
         <div className="markdown-content prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown
                 components={{
-                    // Headings
                     h1: ({ node, ...props }) => (
                         <h1 className="text-2xl font-bold mb-3 mt-4 text-gray-900 dark:text-white" {...props} />
                     ),
@@ -46,12 +44,10 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
                         <h3 className="text-lg font-semibold mb-2 mt-2 text-gray-800 dark:text-gray-100" {...props} />
                     ),
 
-                    // Paragraphs
                     p: ({ node, ...props }) => (
                         <p className="mb-2 leading-relaxed text-gray-800 dark:text-gray-200" {...props} />
                     ),
 
-                    // Lists
                     ul: ({ node, ...props }) => (
                         <ul className="list-disc list-inside mb-3 space-y-1.5 ml-2" {...props} />
                     ),
@@ -62,17 +58,14 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
                         <li className="text-gray-800 dark:text-gray-200 leading-relaxed" {...props} />
                     ),
 
-                    // Strong/Bold
                     strong: ({ node, ...props }) => (
                         <strong className="font-bold text-gray-900 dark:text-white" {...props} />
                     ),
 
-                    // Emphasis/Italic
                     em: ({ node, ...props }) => (
                         <em className="italic text-gray-800 dark:text-gray-200" {...props} />
                     ),
 
-                    // Code blocks
                     code: ({ node, inline, ...props }: any) => {
                         if (inline) {
                             return (
@@ -90,7 +83,6 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
                         );
                     },
 
-                    // Blockquotes
                     blockquote: ({ node, ...props }) => (
                         <blockquote
                             className="border-l-4 border-blue-500 dark:border-blue-400 pl-4 py-2 my-3 bg-blue-50 dark:bg-blue-950/30 text-gray-700 dark:text-gray-300 italic"
@@ -98,7 +90,6 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
                         />
                     ),
 
-                    // Links
                     a: ({ node, ...props }) => (
                         <a
                             className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
@@ -108,7 +99,6 @@ export function MarkdownMessage({ content, isStreaming = false, isLatestMessage 
                         />
                     ),
 
-                    // Horizontal Rule
                     hr: ({ node, ...props }) => (
                         <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />
                     ),

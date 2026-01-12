@@ -5,8 +5,8 @@ export interface ReportingData {
   totalRevenue: number
   totalBookings: number
   currentOccupancyRate: number
-  adr: number // Average Daily Rate
-  revpar: number // Revenue per Available Room
+  adr: number
+  revpar: number
   totalRooms: number
   occupiedRooms: number
 }
@@ -67,28 +67,28 @@ export interface RoomIssue {
  * Calculates occupancy rate for a given period
  */
 export function calculateOccupancyRate(
-  reservations: any[], 
-  totalRooms: number, 
-  startDate: string, 
+  reservations: any[],
+  totalRooms: number,
+  startDate: string,
   endDate: string
 ): number {
   if (totalRooms === 0) return 0
-  
+
   const days = differenceInDays(new Date(endDate), new Date(startDate)) + 1
   const totalRoomNights = totalRooms * days
-  
+
   const occupiedNights = reservations.reduce((sum, reservation) => {
     const checkIn = new Date(reservation.check_in)
     const checkOut = new Date(reservation.check_out)
     const start = new Date(Math.max(checkIn.getTime(), new Date(startDate).getTime()))
     const end = new Date(Math.min(checkOut.getTime(), new Date(endDate).getTime()))
-    
+
     if (start < end) {
       return sum + differenceInDays(end, start)
     }
     return sum
   }, 0)
-  
+
   return totalRoomNights > 0 ? (occupiedNights / totalRoomNights) * 100 : 0
 }
 
@@ -111,31 +111,31 @@ export function calculateRevPAR(revenue: number, availableRooms: number, days: n
  * Generates revenue trend data for charts
  */
 export function generateRevenueTrend(
-  invoices: any[], 
-  reservations: any[], 
+  invoices: any[],
+  reservations: any[],
   monthsBack: number = 6
 ): RevenueDataPoint[] {
   const trendData: RevenueDataPoint[] = []
-  
+
   for (let i = monthsBack - 1; i >= 0; i--) {
     const monthDate = subMonths(new Date(), i)
     const monthStart = format(startOfMonth(monthDate), 'yyyy-MM-dd')
     const monthEnd = format(endOfMonth(monthDate), 'yyyy-MM-dd')
-    
+
     const monthInvoices = invoices.filter((inv: any) => {
       const invDate = format(new Date(inv.created_at), 'yyyy-MM-dd')
       return invDate >= monthStart && invDate <= monthEnd && inv.status === 'paid'
     })
-    
+
     const monthReservations = reservations.filter((res: any) => {
       const resDate = format(new Date(res.check_in), 'yyyy-MM-dd')
       return resDate >= monthStart && resDate <= monthEnd
     })
-    
+
     const revenue = monthInvoices.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0)
     const bookings = monthReservations.length
     const adr = bookings > 0 ? revenue / bookings : 0
-    
+
     trendData.push({
       month: format(monthDate, 'MMM'),
       revenue,
@@ -144,7 +144,7 @@ export function generateRevenueTrend(
       occupancy: calculateOccupancyForMonth(monthReservations, monthStart, monthEnd)
     })
   }
-  
+
   return trendData
 }
 
@@ -152,9 +152,7 @@ export function generateRevenueTrend(
  * Calculates occupancy for a specific month (simplified version)
  */
 function calculateOccupancyForMonth(reservations: any[], monthStart: string, monthEnd: string): number {
-  // This is a simplified calculation
-  // In real implementation, you'd need total rooms and exact date calculations
-  const baseOccupancy = 60 + Math.random() * 35 // 60-95%
+  const baseOccupancy = 60 + Math.random() * 35
   return Math.min(95, Math.max(20, baseOccupancy))
 }
 
@@ -163,26 +161,26 @@ function calculateOccupancyForMonth(reservations: any[], monthStart: string, mon
  */
 export function generateCheckInOutTrend(reservations: any[], daysBack: number = 7): CheckInOutData[] {
   const trendData: CheckInOutData[] = []
-  
+
   for (let i = daysBack - 1; i >= 0; i--) {
     const date = subDays(new Date(), i)
     const dateStr = format(date, 'yyyy-MM-dd')
-    
-    const checkIns = reservations.filter((res: any) => 
+
+    const checkIns = reservations.filter((res: any) =>
       format(new Date(res.check_in), 'yyyy-MM-dd') === dateStr
     ).length
-    
-    const checkOuts = reservations.filter((res: any) => 
+
+    const checkOuts = reservations.filter((res: any) =>
       format(new Date(res.check_out), 'yyyy-MM-dd') === dateStr
     ).length
-    
+
     trendData.push({
       date: format(date, 'dd MMM'),
       checkIns,
       checkOuts
     })
   }
-  
+
   return trendData
 }
 
@@ -190,19 +188,17 @@ export function generateCheckInOutTrend(reservations: any[], daysBack: number = 
  * Calculates revenue breakdown by room type
  */
 export function calculateRoomTypeRevenue(
-  rooms: any[], 
+  rooms: any[],
   reservations: any[]
 ): RoomTypeRevenue[] {
   const roomTypeData: { [key: string]: { revenue: number; bookings: number } } = {}
-  
-  // Initialize room types
+
   rooms.forEach((room: any) => {
     if (!roomTypeData[room.type]) {
       roomTypeData[room.type] = { revenue: 0, bookings: 0 }
     }
   })
-  
-  // Calculate revenue and bookings per room type
+
   reservations.forEach((reservation: any) => {
     const roomType = reservation.rooms?.type
     if (roomType && roomTypeData[roomType]) {
@@ -210,7 +206,7 @@ export function calculateRoomTypeRevenue(
       roomTypeData[roomType].bookings += 1
     }
   })
-  
+
   return Object.keys(roomTypeData).map(type => ({
     name: type,
     value: roomTypeData[type].bookings,
@@ -232,7 +228,7 @@ export function getRoomTypeColor(roomType: string): string {
     'Economy': '#ff6b6b',
     'Family': '#4ecdc4'
   }
-  
+
   return colorMap[roomType] || '#0088fe'
 }
 
@@ -248,9 +244,8 @@ export function calculateServiceStats(serviceRequests: any[]): ServiceStats {
     byType: {},
     byPriority: {}
   }
-  
+
   serviceRequests.forEach((request: any) => {
-    // Count by status
     switch (request.status) {
       case 'pending':
         stats.pending++
@@ -262,16 +257,14 @@ export function calculateServiceStats(serviceRequests: any[]): ServiceStats {
         stats.completed++
         break
     }
-    
-    // Count by type
+
     const type = request.service_type || 'unknown'
     stats.byType![type] = (stats.byType![type] || 0) + 1
-    
-    // Count by priority
+
     const priority = request.priority || 'medium'
     stats.byPriority![priority] = (stats.byPriority![priority] || 0) + 1
   })
-  
+
   return stats
 }
 
@@ -284,32 +277,29 @@ export function calculateHousekeepingStats(housekeepingTasks: any[]): ServiceSta
   overdueTasks: number
 } {
   const baseStats = calculateServiceStats(housekeepingTasks)
-  
-  // Calculate average completion time
-  const completedTasksWithTime = housekeepingTasks.filter((task: any) => 
+
+  const completedTasksWithTime = housekeepingTasks.filter((task: any) =>
     task.status === 'completed' && task.actual_duration
   )
-  
+
   const averageTime = completedTasksWithTime.length > 0
     ? completedTasksWithTime.reduce((sum: number, task: any) => sum + (task.actual_duration || 0), 0) / completedTasksWithTime.length
     : 0
-  
-  // Calculate on-time completion rate
+
   const tasksWithDueDate = housekeepingTasks.filter((task: any) => task.due_date && task.completed_at)
-  const onTimeCompleted = tasksWithDueDate.filter((task: any) => 
+  const onTimeCompleted = tasksWithDueDate.filter((task: any) =>
     new Date(task.completed_at) <= new Date(task.due_date)
   ).length
-  
-  const onTimeCompletion = tasksWithDueDate.length > 0 
-    ? (onTimeCompleted / tasksWithDueDate.length) * 100 
+
+  const onTimeCompletion = tasksWithDueDate.length > 0
+    ? (onTimeCompleted / tasksWithDueDate.length) * 100
     : 0
-  
-  // Count overdue tasks
+
   const now = new Date()
-  const overdueTasks = housekeepingTasks.filter((task: any) => 
+  const overdueTasks = housekeepingTasks.filter((task: any) =>
     task.status !== 'completed' && task.due_date && new Date(task.due_date) < now
   ).length
-  
+
   return {
     ...baseStats,
     averageTime,
@@ -326,7 +316,7 @@ export function generateGuestReviews(reservations: any[], limit: number = 10): G
     .filter(res => res.status === 'checked-out')
     .sort((a, b) => new Date(b.check_out).getTime() - new Date(a.check_out).getTime())
     .slice(0, limit)
-  
+
   return checkedOutReservations.map((res, index) => ({
     id: res.id,
     guest: res.guests?.full_name || `Guest ${res.id}`,
@@ -342,18 +332,18 @@ export function generateGuestReviews(reservations: any[], limit: number = 10): G
  * Generates random rating (mostly positive)
  */
 function generateRandomRating(): number {
-  const weights = [0.05, 0.05, 0.1, 0.3, 0.5] // 5% for 1-star, 50% for 5-star
+  const weights = [0.05, 0.05, 0.1, 0.3, 0.5]
   const random = Math.random()
   let cumulative = 0
-  
+
   for (let i = 0; i < weights.length; i++) {
     cumulative += weights[i]
     if (random <= cumulative) {
       return i + 1
     }
   }
-  
-  return 5 // Default to 5 stars
+
+  return 5
 }
 
 /**
@@ -390,18 +380,18 @@ function getRandomReviewComment(): string {
  * Generates room issues from housekeeping data
  */
 export function generateRoomIssues(
-  rooms: any[], 
-  housekeepingTasks: any[], 
+  rooms: any[],
+  housekeepingTasks: any[],
   limit: number = 10
 ): RoomIssue[] {
   const maintenanceTasks = housekeepingTasks
     .filter(task => task.task_type === 'maintenance' || task.priority === 'high' || task.priority === 'urgent')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, limit)
-  
+
   return maintenanceTasks.map(task => {
     const room = rooms.find(r => r.id === task.room_id)
-    
+
     return {
       id: task.id,
       room: room ? room.number : `Room ${task.room_id}`,
@@ -460,10 +450,10 @@ export function calculateGrowthRate(current: number, previous: number): number {
 /**
  * Get period comparison text
  */
-export function getPeriodComparisonText(growthRate: number): { 
-  text: string; 
-  color: string; 
-  trend: 'up' | 'down' | 'neutral' 
+export function getPeriodComparisonText(growthRate: number): {
+  text: string;
+  color: string;
+  trend: 'up' | 'down' | 'neutral'
 } {
   if (Math.abs(growthRate) < 0.1) {
     return { text: `±${formatPercentage(Math.abs(growthRate))} vs last period`, color: 'text-gray-600', trend: 'neutral' }

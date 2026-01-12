@@ -6,7 +6,6 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// GET - Fetch single PO with items
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -40,7 +39,6 @@ export async function GET(
     }
 }
 
-// PUT - Update PO (Status or Details)
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -50,7 +48,6 @@ export async function PUT(
         const body = await request.json()
         const { status, items, ...updates } = body
 
-        // 1. Update Header
         const { error: headerError } = await supabase
             .from('inventory_purchase_orders')
             .update({ status, ...updates })
@@ -58,16 +55,12 @@ export async function PUT(
 
         if (headerError) throw headerError
 
-        // 2. Update Items (if provided)
-        // This is a simplified "replace all" approach for draft POs
         if (items && Array.isArray(items)) {
-            // Delete existing items
             await supabase
                 .from('inventory_purchase_order_items')
                 .delete()
                 .eq('po_id', id)
 
-            // Insert new items
             if (items.length > 0) {
                 const itemsToInsert = items.map((item: any) => ({
                     po_id: id,

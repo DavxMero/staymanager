@@ -13,7 +13,6 @@ export async function POST(
     try {
         const { id: poId } = await params
 
-        // 1. Fetch PO and its items
         const { data: po, error: poError } = await supabase
             .from('inventory_purchase_orders')
             .select(`
@@ -31,21 +30,16 @@ export async function POST(
             return NextResponse.json({ error: 'PO is already received' }, { status: 400 })
         }
 
-        // 2. Process each item
-        // Note: In a production app, this should be a database transaction (RPC)
         const items = po.items || []
         const errors = []
 
         for (const item of items) {
-            // A. Update Inventory Stock
             const { error: stockError } = await supabase.rpc('increment_stock', {
                 item_id: item.item_id,
                 quantity: item.quantity_ordered
             })
 
-            // Fallback if RPC doesn't exist (manual update - less safe but works for MVP)
             if (stockError) {
-                // Fetch current stock first
                 const { data: currentItem } = await supabase
                     .from('inventory_items')
                     .select('current_stock')
@@ -63,7 +57,6 @@ export async function POST(
                 }
             }
 
-            // B. Create Transaction Record
             await supabase
                 .from('inventory_transactions')
                 .insert({
@@ -76,14 +69,12 @@ export async function POST(
                     notes: `Received from PO #${po.po_number}`
                 })
 
-            // C. Update PO Item status
             await supabase
                 .from('inventory_purchase_order_items')
                 .update({ quantity_received: item.quantity_ordered })
                 .eq('id', item.id)
         }
 
-        // 3. Update PO Header Status
         const { error: updateError } = await supabase
             .from('inventory_purchase_orders')
             .update({

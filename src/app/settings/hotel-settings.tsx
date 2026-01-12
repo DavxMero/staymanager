@@ -13,7 +13,6 @@ import { Building, Clock, MapPin, Save, Loader2, Globe } from 'lucide-react'
 export function HotelSettings() {
     const [loading, setLoading] = useState(false)
 
-    // Mock initial data
     const [formData, setFormData] = useState({
         name: 'StayManager Hotel',
         address: '123 Hospitality Lane, Resort City',
@@ -26,7 +25,6 @@ export function HotelSettings() {
 
     const handleSave = async () => {
         setLoading(true)
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500))
         setLoading(false)
         toast.success('Hotel configuration saved')

@@ -3,7 +3,6 @@ import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
-// Init Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -235,7 +234,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
         execute: async ({ checkIn, checkOut, tipeKamar }) => {
           console.log(`🔎 Checking: ${checkIn} - ${checkOut}`);
 
-          // 1. Cari kamar yang SUDAH DIBOOKING
           const { data: busyBookings, error: busyError } = await supabase
             .from('reservations')
             .select('room_id')
@@ -253,7 +251,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
 
           const busyRoomIds = busyBookings?.map((b) => b.room_id) || [];
 
-          // 2. Cari kamar yang AVAILABLE di tabel rooms
           let query = supabase
             .from('rooms')
             .select('id, number, type, base_price')
@@ -302,23 +299,19 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
         }),
         execute: async (bookingData) => {
           try {
-            // Generate booking reference
             const bookingRef = `BK${Date.now().toString().slice(-8)}`;
             const bookingId = `BOOK-${Date.now()}`;
 
-            // Calculate stay duration
             const checkInDate = new Date(bookingData.checkIn);
             const checkOutDate = new Date(bookingData.checkOut);
             const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
 
-            // Calculate totals
             const roomTotal = bookingData.roomRate * nights;
-            const breakfastPrice = bookingData.breakfastIncluded ? 50000 : 0; // 50k per person
+            const breakfastPrice = bookingData.breakfastIncluded ? 50000 : 0;
             const breakfastPax = bookingData.breakfastIncluded ? (bookingData.adults + bookingData.children) : 0;
             const breakfastTotal = breakfastPrice * breakfastPax * nights;
             const totalAmount = roomTotal + breakfastTotal;
 
-            // First, create/get guest record
             const { data: existingGuest } = await supabase
               .from('guests')
               .select('id')
@@ -327,7 +320,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
 
             let guestId = existingGuest?.id;
 
-            // If guest doesn't exist, create new
             if (!guestId) {
               const { data: newGuest, error: guestError } = await supabase
                 .from('guests')
@@ -350,7 +342,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
               guestId = newGuest.id;
             }
 
-            // Now insert reservation with guest_id
             const { data: reservation, error } = await supabase
               .from('reservations')
               .insert({
@@ -393,9 +384,9 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
 
             return {
               success: true,
-              bookingReference: bookingRef, // Internal use only - AI should NOT reveal this yet
+              bookingReference: bookingRef,
               bookingId: bookingId,
-              reservationId: reservation.id, // For payment confirmation later
+              reservationId: reservation.id,
               guestName: bookingData.guestName,
               roomNumber: bookingData.roomNumber,
               roomType: bookingData.roomType,
@@ -404,7 +395,7 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
               nights: nights,
               totalAmount: totalAmount,
               status: 'confirmed',
-              paymentStatus: 'pending', // Important: Payment not yet confirmed
+              paymentStatus: 'pending',
               message: 'Reservation created successfully. Awaiting payment confirmation to provide booking reference.',
             };
           } catch (err: any) {
@@ -422,7 +413,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
         parameters: z.object({}),
         execute: async () => {
           try {
-            // Fetch all rooms to aggregate types
             const { data: rooms, error } = await supabase
               .from('rooms')
               .select('type, base_price')
@@ -443,7 +433,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
               };
             }
 
-            // Aggregate by type to find min price for each type
             const roomTypesMap = new Map();
 
             rooms.forEach(room => {
@@ -455,7 +444,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
                 });
               } else {
                 const current = roomTypesMap.get(room.type);
-                // Update min price if lower found
                 if (room.base_price < current.startPrice) {
                   current.startPrice = room.base_price;
                 }
@@ -488,7 +476,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
         }),
         execute: async ({ bookingReference, paymentMethod, paymentAmount }) => {
           try {
-            // First, get the reservation to get reservation ID and total amount
             const { data: reservation, error: fetchError } = await supabase
               .from('reservations')
               .select('*')
@@ -503,14 +490,13 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
               };
             }
 
-            // Create payment record in payments table
             const actualPaymentAmount = paymentAmount || reservation.total_amount;
             const actualPaymentMethod = paymentMethod || 'Bank Transfer';
 
             const { error: paymentError } = await supabase
               .from('payments')
               .insert({
-                reservation_id: reservation.id, // Link to reservation by ID
+                reservation_id: reservation.id,
                 amount: actualPaymentAmount,
                 payment_method: actualPaymentMethod,
                 payment_date: new Date().toISOString(),
@@ -525,7 +511,6 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
               };
             }
 
-            // Update reservation payment status to paid
             const { error: updateError } = await supabase
               .from('reservations')
               .update({
@@ -544,7 +529,7 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
 
             return {
               success: true,
-              bookingReference: reservation.booking_reference, // NOW reveal the booking code to guest
+              bookingReference: reservation.booking_reference,
               paymentStatus: 'paid',
               paymentMethod: actualPaymentMethod,
               amount: actualPaymentAmount,

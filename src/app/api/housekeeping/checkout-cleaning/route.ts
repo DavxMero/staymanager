@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Call the checkout cleaning function
     const { data, error } = await supabase.rpc('create_checkout_cleaning_task', {
       room_id_param: roomId
     })
@@ -62,7 +61,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all checkout cleaning tasks
     const { data: checkoutTasks, error } = await supabase
       .from('housekeeping_tasks')
       .select(`

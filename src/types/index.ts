@@ -15,7 +15,6 @@ export interface Room {
   notes?: string;
   price: number;
 
-  // Custom room type relation
   custom_room_types?: CustomRoomType;
 }
 
@@ -253,7 +252,6 @@ export interface PurchaseOrder {
   notes?: string;
   created_by?: string;
 
-  // Relations
   supplier?: InventorySupplier;
   items?: PurchaseOrderItem[];
 }
@@ -268,6 +266,5 @@ export interface PurchaseOrderItem {
   unit_cost: number;
   total_cost?: number;
 
-  // Relations
   item?: InventoryItem;
 }
