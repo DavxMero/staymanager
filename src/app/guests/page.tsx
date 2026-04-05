@@ -93,6 +93,7 @@ export default function GuestsPage() {
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
+  const [idNumber, setIdNumber] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isViewMode, setIsViewMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -250,6 +251,7 @@ export default function GuestsPage() {
     setFullName(guest.full_name)
     setEmail(guest.email || "")
     setPhone(guest.phone || "")
+    setIdNumber(guest.id_number || "")
     setIsViewMode(false)
     setIsDialogOpen(true)
   }
@@ -259,6 +261,7 @@ export default function GuestsPage() {
     setFullName(guest.full_name)
     setEmail(guest.email || "")
     setPhone(guest.phone || "")
+    setIdNumber(guest.id_number || "")
     setIsViewMode(true)
     setIsDialogOpen(true)
   }
@@ -271,7 +274,8 @@ export default function GuestsPage() {
           .update({
             full_name: fullName,
             email: email,
-            phone: phone
+            phone: phone,
+            id_number: idNumber
           })
           .eq('id', currentGuest.id)
 
@@ -282,7 +286,8 @@ export default function GuestsPage() {
           .insert({
             full_name: fullName,
             email: email,
-            phone: phone
+            phone: phone,
+            id_number: idNumber
           })
 
         if (error) throw error
@@ -717,9 +722,18 @@ export default function GuestsPage() {
 
                   <Separator />
 
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">ID Tamu</Label>
-                    <p className="text-sm mt-1 font-mono">#{currentGuest.id}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">ID Identitas (KTP/Passport)</Label>
+                      <div className="flex items-center mt-1">
+                        <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm">{currentGuest.id_number || "Tidak ada data identitas"}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">ID Tamu (Sistem)</Label>
+                      <p className="text-sm mt-1 font-mono">#{currentGuest.id}</p>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -949,6 +963,20 @@ export default function GuestsPage() {
                     value={phone}
                     onChange={setPhone}
                     placeholder="812-3456-7890"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="idNumber">No. Identitas (KTP/Paspor) <span className="text-red-500">*</span></Label>
+                <div className="relative">
+                  <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="idNumber"
+                    className="pl-10"
+                    value={idNumber}
+                    onChange={(e) => setIdNumber(e.target.value)}
+                    placeholder="Masukkan NIK KTP atau Nomor Paspor"
+                    required
                   />
                 </div>
               </div>

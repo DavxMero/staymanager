@@ -72,6 +72,8 @@ export interface Reservation {
   status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
   total_amount: number;
   notes?: string;
+  guests?: Pick<Guest, 'full_name'> | Guest;
+  rooms?: Pick<Room, 'number'> | Room;
 }
 
 export interface Invoice {
@@ -179,6 +181,7 @@ export interface GuestFacilityRequest {
   rating?: number;
   feedback?: string;
   updated_at?: string;
+  rooms?: Pick<Room, 'number'> | Room;
 }
 
 export interface GuestFacilityItem {

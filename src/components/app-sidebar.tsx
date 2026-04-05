@@ -41,6 +41,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { ModeToggle } from "@/components/mode-toggle"
 import { usePermissions, hasPermission } from "@/lib/hooks/usePermissions"
+import { useBranding } from "@/lib/hooks/useBranding"
 import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -54,6 +55,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 
 const PERMISSION_MAP: Record<string, string> = {
   'Rooms': 'rooms',
@@ -140,7 +142,9 @@ export function AppSidebar() {
   const [mounted, setMounted] = React.useState(false)
   const [user, setUser] = React.useState<any>(null)
   const [userRoles, setUserRoles] = React.useState<string[]>([])
+  const [isGuestCheckedIn, setIsGuestCheckedIn] = React.useState(false)
   const { permissions, loading, roles } = usePermissions()
+  const { branding } = useBranding()
   const supabase = createClient()
 
   React.useEffect(() => {
@@ -153,11 +157,34 @@ export function AppSidebar() {
       if (user) {
         const { data: userRolesData } = await supabase
           .from('user_roles')
-          .select('role:roles(display_name)')
+          .select('role:roles(name, display_name)')
           .eq('user_id', user.id)
 
         if (userRolesData) {
           setUserRoles(userRolesData.map((ur: any) => ur.role.display_name))
+
+          const isGuestOnly = userRolesData.length === 1 && (userRolesData[0]?.role as any)?.name === 'guest'
+          if (isGuestOnly) {
+            const { data: guestData } = await supabase
+              .from('guests')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle()
+
+            if (guestData) {
+              const { data: reservation } = await supabase
+                .from('reservations')
+                .select('id')
+                .eq('guest_id', guestData.id)
+                .eq('status', 'checked-in')
+                .limit(1)
+                .maybeSingle()
+
+              setIsGuestCheckedIn(!!reservation)
+            }
+          } else {
+            setIsGuestCheckedIn(true)
+          }
         }
       }
     }
@@ -192,6 +219,11 @@ export function AppSidebar() {
     if (permissions.includes('*')) return items
 
     return items.filter(item => {
+      // Guest Facilities: hide for guests who aren't checked-in
+      if (item.title === 'Guest Facilities' && !isGuestCheckedIn) {
+        return false
+      }
+
       const requiredPermission = PERMISSION_MAP[item.title]
       if (!requiredPermission) return true
 
@@ -211,7 +243,7 @@ export function AppSidebar() {
 
       return hasAccess
     })
-  }, [loading, permissions])
+  }, [loading, permissions, isGuestCheckedIn])
 
   const isSubMenuActive = (subItems: any[]) => {
     return subItems.some((subItem: any) => pathname === subItem.url)
@@ -239,9 +271,18 @@ export function AppSidebar() {
     return (
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2 py-2 text-lg font-semibold">
-            <Building className="size-6" />
-            <span>StayManager</span>
+          <div className="flex items-center gap-3 py-3 text-2xl font-bold">
+            {branding.brandLogoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={branding.brandLogoUrl}
+                alt={branding.brandName}
+                className="size-10 object-contain"
+              />
+            ) : (
+              <Building className="size-10" />
+            )}
+            <span>{branding.brandName}</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -329,7 +370,7 @@ export function AppSidebar() {
 
             {/* App Version & Theme Toggle */}
             <div className="flex items-center justify-between px-2 text-xs text-muted-foreground">
-              <span>StayManager v0.1.0</span>
+              <span>{branding.brandName} v0.1.0</span>
               <ModeToggle />
             </div>
           </div>
@@ -342,9 +383,18 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 py-2 text-lg font-semibold">
-          <Building className="size-6" />
-          <span>StayManager</span>
+        <div className="flex items-center gap-3 py-3 text-2xl font-bold">
+          {branding.brandLogoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={branding.brandLogoUrl}
+              alt={branding.brandName}
+              className="size-10 object-contain"
+            />
+          ) : (
+            <Building className="size-10" />
+          )}
+          <span>{branding.brandName}</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -502,7 +552,7 @@ export function AppSidebar() {
 
           {/* App Version & Theme Toggle */}
           <div className="flex items-center justify-between px-2 text-xs text-muted-foreground">
-            <span>StayManager v0.1.0</span>
+            <span>{branding.brandName} v0.1.0</span>
             <ModeToggle />
           </div>
         </div>

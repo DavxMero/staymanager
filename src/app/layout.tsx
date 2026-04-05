@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { GlobalSidebarTrigger } from "@/components/global-sidebar-trigger";
@@ -7,21 +7,40 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PageTransition } from "@/components/page-transition";
 import { Toaster } from "sonner";
+import { BrandingProvider } from "@/lib/hooks/useBranding";
+import { RouteGuard } from "@/components/route-guard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -47,7 +66,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${manrope.variable} ${plusJakarta.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -55,17 +74,21 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
-            <AppSidebar />
-            <main className="w-full">
-              <GlobalSidebarTrigger className="ml-4 mt-4" />
-              <div className="p-4">
-                <PageTransition>
-                  {children}
-                </PageTransition>
-              </div>
-            </main>
-          </SidebarProvider>
+          <BrandingProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <main className="w-full">
+                <GlobalSidebarTrigger className="ml-4 mt-4" />
+                <div className="p-4">
+                  <PageTransition>
+                    <RouteGuard>
+                      {children}
+                    </RouteGuard>
+                  </PageTransition>
+                </div>
+              </main>
+            </SidebarProvider>
+          </BrandingProvider>
         </ThemeProvider>
         <Toaster />
       </body>

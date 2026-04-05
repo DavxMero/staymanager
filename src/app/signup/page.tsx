@@ -76,6 +76,24 @@ export default function SignUpPage() {
                         });
                     console.log('✅ Assigned guest role to new user');
                 }
+
+                // Auto-create guest profile if not already linked
+                const { data: existingGuest } = await supabase
+                    .from('guests')
+                    .select('id')
+                    .eq('user_id', data.user.id)
+                    .maybeSingle();
+
+                if (!existingGuest) {
+                    await supabase
+                        .from('guests')
+                        .insert({
+                            full_name: fullName,
+                            email: email,
+                            user_id: data.user.id,
+                        });
+                    console.log('✅ Created guest profile for new user');
+                }
             }
 
             setSuccess(true);

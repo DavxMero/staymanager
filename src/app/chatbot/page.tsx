@@ -145,7 +145,7 @@ export default function ChatbotPage() {
     if (messages.length > 0 && user) {
       const saveChat = async () => {
         try {
-          const chatId = currentChatId || crypto.randomUUID();
+          const chatId = currentChatId || (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
           await supabase
             .from('Chat')

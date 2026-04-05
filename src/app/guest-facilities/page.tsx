@@ -47,6 +47,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
 import { usePermissions } from "@/lib/hooks/usePermissions"
+import { useGuestReservation } from "@/lib/hooks/useGuestReservation"
 
 interface ServiceItem {
   id: number
@@ -84,10 +85,12 @@ export default function GuestFacilitiesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
 
-  const { permissions } = usePermissions()
-  const canManageServices = permissions.includes('*') ||
+  const { permissions, roles } = usePermissions()
+  const isGuest = roles.includes('guest')
+  const guestReservation = useGuestReservation()
+  const canManageServices = !isGuest && (permissions.includes('*') ||
     permissions.includes('operations') ||
-    permissions.includes('staff')
+    permissions.includes('staff'))
 
   const [isOrderOpen, setIsOrderOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null)
@@ -157,17 +160,35 @@ export default function GuestFacilitiesPage() {
     setSelectedService(service)
     setQuantity(1)
     setNotes("")
-    setSelectedGuestId("")
+    if (isGuest && guestReservation.reservation_id) {
+      setSelectedGuestId(guestReservation.reservation_id.toString())
+    } else {
+      setSelectedGuestId("")
+    }
     setIsOrderOpen(true)
   }
 
   const handleSubmitOrder = async () => {
-    if (!selectedService || !selectedGuestId) return
+    if (!selectedService) return
+
+    let finalGuestId, finalReservationId, finalRoomId;
+    if (isGuest) {
+      if (guestReservation.error) { alert("Error: " + guestReservation.error); return; }
+      if (!guestReservation.reservation_id) { alert("No active reservation"); return; }
+      finalGuestId = guestReservation.guest_id;
+      finalReservationId = guestReservation.reservation_id;
+      finalRoomId = guestReservation.room_id;
+    } else {
+      if (!selectedGuestId) { alert("Pilih kamar dulu"); return; }
+      const guest = activeGuests.find(g => g.reservation_id === selectedGuestId || g.reservation_id.toString() === selectedGuestId);
+      if (!guest) { alert("Guest not found"); return; }
+      finalGuestId = guest.guest_id;
+      finalReservationId = guest.reservation_id;
+      finalRoomId = guest.room_id;
+    }
 
     setIsSubmitting(true)
     try {
-      const guest = activeGuests.find(g => g.reservation_id === selectedGuestId)
-      if (!guest) throw new Error("Guest not found")
 
       const totalPrice = selectedService.price * quantity
 
@@ -182,9 +203,9 @@ export default function GuestFacilitiesPage() {
       const { data: requestData, error: requestError } = await supabase
         .from('guest_facility_requests')
         .insert({
-          guest_id: guest.guest_id,
-          reservation_id: guest.reservation_id,
-          room_id: guest.room_id,
+          guest_id: finalGuestId,
+          reservation_id: finalReservationId,
+          room_id: finalRoomId,
           service_type: serviceType,
           description: `${selectedService.name} (Qty: ${quantity})`,
           priority: 'medium',
@@ -200,8 +221,8 @@ export default function GuestFacilitiesPage() {
       const { error: billingError } = await supabase
         .from('billing_items')
         .insert({
-          reservation_id: guest.reservation_id,
-          guest_id: guest.guest_id,
+          reservation_id: finalReservationId,
+          guest_id: finalGuestId,
           item_name: selectedService.name,
           category: selectedService.category,
           quantity: quantity,
@@ -461,7 +482,17 @@ export default function GuestFacilitiesPage() {
 
             <div className="space-y-2">
               <Label>Select Guest / Room *</Label>
-              <Select value={selectedGuestId} onValueChange={setSelectedGuestId}>
+              {isGuest ? (
+                <div className="p-3 border rounded-md bg-muted text-sm flex items-center">
+                  <div className="h-4 w-4 mr-2" />
+                  {guestReservation.loading 
+                    ? "Deteksi kamar aktif..." 
+                    : guestReservation.error 
+                      ? <span className="text-destructive">Gagal: {guestReservation.error}</span> 
+                      : <span className="font-medium text-blue-600">Terdeteksi: Kamar {guestReservation.room_number}</span>}
+                </div>
+              ) : (
+                <Select value={selectedGuestId} onValueChange={setSelectedGuestId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a room..." />
                 </SelectTrigger>
@@ -476,7 +507,8 @@ export default function GuestFacilitiesPage() {
                     ))
                   )}
                 </SelectContent>
-              </Select>
+                </Select>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -525,7 +557,7 @@ export default function GuestFacilitiesPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOrderOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmitOrder} disabled={!selectedGuestId || isSubmitting}>
+            <Button onClick={handleSubmitOrder} disabled={(!selectedGuestId && !isGuest) || isSubmitting || (isGuest && guestReservation.error !== null)}>
               {isSubmitting ? "Processing..." : "Confirm Order"}
             </Button>
           </DialogFooter>
