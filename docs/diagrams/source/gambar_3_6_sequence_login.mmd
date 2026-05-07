@@ -1,0 +1,50 @@
+sequenceDiagram
+    autonumber
+    actor Staff as Staf Hotel
+    participant UI as Login Page<br/>(/login/page.tsx)
+    participant SB as Supabase Client<br/>(@supabase/ssr)
+    participant Auth as Supabase Auth<br/>(GoTrue)
+    participant DB as PostgreSQL<br/>(public schema)
+    participant MW as Middleware<br/>(supabase/middleware.ts)
+    participant App as Halaman Tujuan
+
+    Staff->>UI: Input email + password
+    Staff->>UI: Klik "Sign In"
+
+    UI->>SB: createClient()
+    UI->>SB: supabase.auth.signInWithPassword({email, password})
+    SB->>Auth: POST /auth/v1/token?grant_type=password
+    Auth->>DB: SELECT auth.users WHERE email = ?
+    DB-->>Auth: user record + hashed password
+    Auth->>Auth: bcrypt verify password
+
+    alt Kredensial Invalid
+        Auth-->>SB: 400 invalid_grant
+        SB-->>UI: error
+        UI->>Staff: toast.error("Failed to login")
+    else Kredensial Valid
+        Auth->>Auth: generate JWT access_token + refresh_token
+        Auth-->>SB: { user, session }
+        SB-->>UI: { data: {user} }
+
+        UI->>SB: from('user_roles').select('role:roles(name)').eq('user_id', user.id)
+        SB->>DB: SELECT user_roles JOIN roles WHERE user_id = ?
+        DB-->>SB: [{role: {name}}, ...]
+        SB-->>UI: userRoles
+
+        UI->>UI: hasGuestRole = roles.includes('guest')
+
+        alt Hanya role 'guest'
+            UI->>App: window.location.href = '/chatbot'
+        else Role staff (admin/manager/dll)
+            UI->>App: window.location.href = '/dashboard'
+        end
+
+        App->>MW: GET /dashboard
+        MW->>SB: getSession() — verify JWT cookie
+        SB-->>MW: valid session
+        MW-->>App: 200 OK, render halaman
+        App-->>Staff: Tampilkan dashboard sesuai role
+    end
+
+    Note over UI,Auth: Login flow client-side<br/>tanpa custom /api/auth route<br/>(Supabase Auth handles directly)

@@ -1,0 +1,119 @@
+flowchart LR
+    subgraph Actors["Aktor Sistem StayManager"]
+        SA(("Super Admin"))
+        MG(("Manager"))
+        FD(("Front Desk"))
+        HK(("Housekeeping"))
+        FN(("Finance"))
+        GU(("Guest"))
+    end
+
+    subgraph SS["Sistem StayManager"]
+        direction TB
+
+        UC1[Login - Logout]
+        UC2[Kelola Akun & Roles]
+        UC3[Lihat Dashboard KPI]
+        UC4[Kelola Kamar - CRUD]
+        UC5[Kelola Tipe Kamar Custom]
+        UC6[Kelola Tugas Housekeeping]
+        UC7[Kelola Tamu - CRUD]
+        UC8[Lihat Kalender Occupancy]
+        UC9[Buat Reservasi Manual]
+        UC10[Proses Check-in]
+        UC11[Proses Check-out + Invoice]
+        UC12[Kelola Billing Items]
+        UC13[Kelola Invoice & Pembayaran]
+        UC14[Kelola Deposit]
+        UC15[Catat Pengeluaran]
+        UC16[Kelola Inventaris]
+        UC17[Kelola Supplier & PO]
+        UC18[Kelola Permintaan Layanan Tamu]
+        UC19[Generate Laporan Analitik]
+        UC20[Konfigurasi Hotel Settings]
+        UC21[Akses Chatbot Publik]
+        UC22[Cek Ketersediaan via Chatbot]
+        UC23[Buat Reservasi via Chatbot]
+        UC24[Konfirmasi Pembayaran via Chatbot]
+        UC25[Lihat Riwayat Chat]
+    end
+
+    SA --> UC1
+    SA --> UC2
+    SA --> UC3
+    SA --> UC4
+    SA --> UC5
+    SA --> UC6
+    SA --> UC7
+    SA --> UC8
+    SA --> UC9
+    SA --> UC10
+    SA --> UC11
+    SA --> UC12
+    SA --> UC13
+    SA --> UC14
+    SA --> UC15
+    SA --> UC16
+    SA --> UC17
+    SA --> UC18
+    SA --> UC19
+    SA --> UC20
+    SA --> UC25
+
+    MG --> UC1
+    MG --> UC3
+    MG --> UC4
+    MG --> UC6
+    MG --> UC7
+    MG --> UC8
+    MG --> UC9
+    MG --> UC10
+    MG --> UC11
+    MG --> UC12
+    MG --> UC13
+    MG --> UC15
+    MG --> UC16
+    MG --> UC18
+    MG --> UC19
+    MG --> UC25
+
+    FD --> UC1
+    FD --> UC3
+    FD --> UC7
+    FD --> UC8
+    FD --> UC9
+    FD --> UC10
+    FD --> UC11
+    FD --> UC12
+    FD --> UC13
+    FD --> UC18
+
+    HK --> UC1
+    HK --> UC3
+    HK --> UC4
+    HK --> UC6
+
+    FN --> UC1
+    FN --> UC3
+    FN --> UC12
+    FN --> UC13
+    FN --> UC14
+    FN --> UC15
+    FN --> UC19
+
+    GU --> UC1
+    GU --> UC21
+    GU --> UC22
+    GU --> UC23
+    GU --> UC24
+    GU --> UC25
+
+    UC10 -.->|include| UC8
+    UC11 -.->|include| UC13
+    UC23 -.->|include| UC22
+    UC24 -.->|include| UC23
+
+    classDef actor fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef usecase fill:#e0e7ff,stroke:#6366f1,stroke-width:1px
+    class SA,MG,FD,HK,FN,GU actor
+    class UC1,UC2,UC3,UC4,UC5,UC6,UC7,UC8,UC9,UC10,UC11,UC12,UC13,UC14,UC15,UC16,UC17,UC18,UC19,UC20,UC21,UC22,UC23,UC24,UC25 usecase

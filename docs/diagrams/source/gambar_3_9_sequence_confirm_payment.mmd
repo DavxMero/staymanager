@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    actor Tamu as Tamu Hotel
+    participant ChatUI as Chatbot UI<br/>(/chatbot/page.tsx)
+    participant ChatAPI as Chat Route<br/>(/api/chat/route.ts)
+    participant Gemini as Google Gemini<br/>(gemini-2.5-flash)
+    participant Tool as Tool: confirmPayment
+    participant DB as Supabase PostgreSQL
+
+    Tamu->>ChatUI: "Saya sudah transfer Rp X via BCA"
+    ChatUI->>ChatAPI: POST /api/chat<br/>{messages: [..., payment confirmation]}
+
+    ChatAPI->>Gemini: streamText({tools: {confirmPayment, ...}})
+
+    Gemini->>Gemini: Extract bookingReference dari<br/>conversation context
+
+    Gemini->>Tool: invoke confirmPayment({<br/>bookingReference,<br/>paymentMethod?,<br/>paymentAmount?<br/>})
+
+    Tool->>DB: SELECT * FROM reservations<br/>WHERE booking_reference = ?
+    DB-->>Tool: reservation (atau null)
+
+    alt Booking reference tidak ditemukan
+        Tool-->>Gemini: { success: false,<br/>error: 'Booking reference not found' }
+    else Reservasi ditemukan
+        Tool->>Tool: actualAmount = paymentAmount<br/>?? reservation.total_amount<br/>actualMethod = paymentMethod<br/>?? 'Bank Transfer'<br/>txId = "TRX-" + Date.now() + "-" + method
+
+        Tool->>DB: INSERT INTO payments (<br/>reservation_id,<br/>amount, payment_method,<br/>payment_date = NOW(),<br/>transaction_id<br/>)
+        DB-->>Tool: payment row
+
+        Tool->>DB: UPDATE reservations<br/>SET payment_status = 'paid',<br/>updated_at = NOW()<br/>WHERE booking_reference = ?
+        DB-->>Tool: updated row count
+
+        Tool-->>Gemini: { success: true,<br/>bookingReference,<br/>paymentStatus: 'paid',<br/>amount, paymentMethod,<br/>guestName, roomNumber,<br/>checkIn, checkOut,<br/>message: 'Payment confirmed!' }
+    end
+
+    Gemini->>Gemini: Generate konfirmasi lengkap<br/>+ REVEAL booking reference<br/>+ instruksi check-in
+
+    Gemini-->>ChatAPI: stream chunks (SSE)
+    ChatAPI-->>ChatUI: stream response
+
+    ChatUI-->>Tamu: Tampilkan booking reference,<br/>detail kamar, tanggal,<br/>total dibayar, instruksi check-in
+
+    Note over Tool,DB: Setelah payment_status='paid',<br/>reservasi siap untuk check-in<br/>fisik di front desk

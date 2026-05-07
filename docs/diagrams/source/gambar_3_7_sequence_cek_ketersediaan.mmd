@@ -1,0 +1,42 @@
+sequenceDiagram
+    autonumber
+    actor Tamu as Tamu Hotel
+    participant ChatUI as Chatbot UI<br/>(/chatbot/page.tsx)
+    participant ChatAPI as Chat Route<br/>(/api/chat/route.ts)
+    participant Gemini as Google Gemini<br/>(gemini-2.5-flash)
+    participant Tool as Tool: cekKetersediaan
+    participant DB as Supabase PostgreSQL
+
+    Tamu->>ChatUI: "Ada kamar tersedia 15-17 Juli?"
+    ChatUI->>ChatAPI: POST /api/chat<br/>{messages: [...]}
+
+    ChatAPI->>Gemini: streamText({model: gemini-2.5-flash,<br/>system: hotelConcierge,<br/>tools: {cekKetersediaan, ...},<br/>messages})
+
+    Gemini->>Gemini: Detect intent: cek ketersediaan<br/>Extract: checkIn=2024-07-15,<br/>checkOut=2024-07-17
+
+    Gemini->>Tool: invoke cekKetersediaan({<br/>checkIn, checkOut, tipeKamar?<br/>})
+
+    Tool->>DB: SELECT room_id FROM reservations<br/>WHERE status NOT IN ('cancelled','no_show')<br/>AND check_in < checkOut<br/>AND check_out > checkIn
+    DB-->>Tool: busyBookings (room_id list)
+
+    Tool->>Tool: busyRoomIds = bookings.map(b => b.room_id)
+
+    Tool->>DB: SELECT id, number, type, base_price<br/>FROM rooms<br/>WHERE status = 'available'<br/>AND id NOT IN (busyRoomIds)<br/>[AND type ILIKE %tipeKamar%]
+    DB-->>Tool: availableRooms
+
+    alt availableRooms kosong
+        Tool-->>Gemini: { status: 'unavailable',<br/>message: 'Tidak ada kamar...' }
+    else Ada kamar tersedia
+        Tool-->>Gemini: { status: 'available',<br/>rooms: [{id, number, type, base_price}, ...] }
+    end
+
+    Gemini->>Gemini: Generate response text +<br/>append ROOM_CARDS_JSON marker
+
+    Gemini-->>ChatAPI: stream chunks (SSE)
+    ChatAPI-->>ChatUI: stream response<br/>(useChat hook)
+
+    ChatUI->>ChatUI: Parse ROOM_CARDS_JSON marker<br/>render <RoomCard /> components
+
+    ChatUI-->>Tamu: Tampilkan teks respons +<br/>kartu kamar interaktif
+
+    Note over Tool,DB: Real-time query ke Supabase<br/>memastikan availability akurat<br/>tanpa caching

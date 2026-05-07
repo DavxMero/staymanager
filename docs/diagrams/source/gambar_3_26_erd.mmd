@@ -1,0 +1,259 @@
+erDiagram
+    rooms ||--o{ reservations : "booking"
+    rooms ||--o{ housekeeping_tasks : "task target"
+    rooms ||--o{ billing_items : "service line"
+    custom_room_types ||--o{ rooms : "categorizes"
+
+    guests ||--o{ reservations : "books"
+    guests ||--o{ billing_items : "billed to"
+
+    reservations ||--o{ payments : "settled by"
+    reservations ||--o{ billing_items : "items"
+    reservations ||--o{ deposits : "deposit"
+    reservations ||--o{ invoices : "invoiced"
+
+    profiles ||--o{ deposits : "collected/refunded by"
+    profiles ||--o{ invoices : "created by"
+
+    roles ||--o{ user_roles : "assigned"
+    user_roles }o--|| profiles : "user"
+
+    staff_members ||--o{ housekeeping_tasks : "assigned"
+
+    inventory_items ||--o{ inventory_transactions : "stock change"
+    inventory_items ||--o{ inventory_purchase_order_items : "ordered"
+    inventory_suppliers ||--o{ inventory_purchase_orders : "supplies"
+    inventory_purchase_orders ||--o{ inventory_purchase_order_items : "lines"
+
+    guest_facility_requests ||--o{ guest_facility_items : "items"
+
+    Chat ||--o{ ai_messages : "messages"
+
+    rooms {
+        uuid id PK
+        varchar number
+        varchar type
+        int floor
+        numeric base_price
+        varchar status
+        bigint custom_type_id FK
+        text image_url
+        timestamptz created_at
+    }
+
+    custom_room_types {
+        bigint id PK
+        text name
+        text description
+        numeric base_price
+        int max_occupancy
+        jsonb amenities
+        jsonb features
+        boolean is_active
+    }
+
+    guests {
+        uuid id PK
+        text full_name
+        text email
+        text phone
+        text address
+        text id_number
+        uuid user_id FK
+    }
+
+    reservations {
+        uuid id PK
+        text booking_id
+        text booking_reference
+        uuid guest_id FK
+        uuid room_id FK
+        date check_in
+        date check_out
+        int adults
+        int children
+        numeric room_rate
+        numeric total_amount
+        varchar status
+        varchar payment_status
+        timestamptz actual_check_in
+        timestamptz actual_check_out
+    }
+
+    invoices {
+        bigint id PK
+        text invoice_number
+        uuid reservation_id FK
+        uuid guest_id
+        numeric subtotal
+        numeric tax_amount
+        numeric total_amount
+        varchar status
+        varchar payment_method
+        uuid created_by FK
+    }
+
+    billing_items {
+        bigint id PK
+        uuid reservation_id FK
+        uuid room_id FK
+        uuid guest_id FK
+        text item_name
+        text category
+        int quantity
+        numeric unit_price
+        numeric total_price
+        varchar status
+    }
+
+    payments {
+        uuid id PK
+        uuid reservation_id FK
+        numeric amount
+        varchar payment_method
+        timestamptz payment_date
+        varchar status
+        text transaction_id
+    }
+
+    deposits {
+        bigint id PK
+        uuid reservation_id FK
+        numeric amount
+        varchar payment_method
+        varchar status
+        uuid collected_by FK
+        uuid refunded_by FK
+    }
+
+    profiles {
+        uuid id PK
+        uuid user_id
+        text employee_id
+        text full_name
+        text email
+        text role
+        text department
+        boolean is_active
+    }
+
+    roles {
+        uuid id PK
+        text name
+        text display_name
+        jsonb permissions
+    }
+
+    user_roles {
+        uuid id PK
+        uuid user_id FK
+        uuid role_id FK
+        uuid assigned_by
+    }
+
+    staff_members {
+        int id PK
+        varchar full_name
+        varchar employee_id
+        varchar role
+        boolean is_active
+    }
+
+    expenses {
+        bigint id PK
+        date expense_date
+        text category
+        numeric amount
+        text description
+        text vendor
+        varchar status
+    }
+
+    housekeeping_tasks {
+        int id PK
+        uuid room_id FK
+        int staff_id FK
+        varchar task_type
+        varchar status
+        varchar priority
+        timestamptz started_at
+        timestamptz completed_at
+    }
+
+    inventory_items {
+        bigint id PK
+        text name
+        text category
+        int current_stock
+        int min_stock
+        int max_stock
+        text unit
+        numeric unit_cost
+    }
+
+    inventory_suppliers {
+        bigint id PK
+        text name
+        text contact_person
+        text email
+        text phone
+    }
+
+    inventory_transactions {
+        bigint id PK
+        bigint item_id FK
+        varchar transaction_type
+        int quantity
+        numeric unit_cost
+    }
+
+    inventory_purchase_orders {
+        bigint id PK
+        text po_number
+        bigint supplier_id FK
+        text status
+        numeric total_amount
+    }
+
+    inventory_purchase_order_items {
+        bigint id PK
+        bigint po_id FK
+        bigint item_id FK
+        numeric quantity_ordered
+        numeric quantity_received
+        numeric unit_cost
+    }
+
+    guest_facility_requests {
+        bigint id PK
+        uuid guest_id
+        uuid reservation_id
+        uuid room_id
+        text service_type
+        varchar priority
+        varchar status
+        numeric total_cost
+    }
+
+    guest_facility_items {
+        bigint id PK
+        bigint request_id FK
+        text item_name
+        int quantity
+        numeric unit_price
+    }
+
+    Chat {
+        uuid id PK
+        uuid user_id
+        jsonb messages
+        timestamptz created_at
+    }
+
+    ai_messages {
+        uuid id PK
+        uuid chat_id FK
+        text role
+        jsonb content
+        timestamptz created_at
+    }
