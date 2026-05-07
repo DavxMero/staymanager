@@ -1,36 +1,38 @@
 export interface Room {
-  id: number;
-  created_at: string;
-  updated_at?: string;
+  id: string;
   number: string;
   type: string;
   floor: number;
   base_price: number;
-  max_occupancy: number;
-  status: 'available' | 'occupied' | 'maintenance' | 'cleaning' | 'out-of-order' | 'reserved';
-  amenities: string[];
+  status: 'available' | 'occupied' | 'maintenance' | 'cleaning' | 'out-of-order' | 'reserved' | string;
+  created_at?: string;
+  updated_at?: string;
+  image_url?: string;
+  
+  // Custom properties from legacy or joins
+  max_occupancy?: number;
+  amenities?: string[];
   description?: string;
   custom_type_id?: number;
-  images: string[];
+  images?: string[];
   notes?: string;
-  price: number;
-
+  price?: number;
   custom_room_types?: CustomRoomType;
 }
 
 export interface CustomRoomType {
   id: number;
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
   name: string;
   description?: string;
   base_price: number;
   max_occupancy: number;
-  amenities: string[];
-  features: string[];
-  color_theme: object;
-  images: string[];
-  is_active: boolean;
+  amenities?: any;
+  features?: any;
+  color_theme?: any;
+  images?: any;
+  is_active?: boolean;
   room_size?: number;
   bed_configuration?: string;
   view_type?: string;
@@ -42,98 +44,165 @@ export interface CustomRoomTypeFeature {
   name: string;
   icon?: string;
   description?: string;
-  category: 'comfort' | 'technology' | 'bathroom' | 'view' | 'accessibility' | 'service' | 'other';
+  category: 'comfort' | 'technology' | 'bathroom' | 'view' | 'accessibility' | 'service' | 'other' | string;
   is_premium?: boolean;
 }
 
 export interface Guest {
-  id: number;
-  created_at: string;
+  id: string;
   full_name: string;
   email?: string;
   phone?: string;
-  id_number?: string;
   address?: string;
+  id_number?: string;
   nationality?: string;
-  date_of_birth?: string;
-  status: 'active' | 'inactive' | 'blocked';
-  notes?: string;
+  created_at?: string;
   updated_at?: string;
+  user_id?: string;
+  
+  // Legacy
+  date_of_birth?: string;
+  status?: 'active' | 'inactive' | 'blocked' | string;
+  notes?: string;
 }
 
 export interface Reservation {
-  id: number;
-  created_at: string;
-  guest_id: number;
-  room_id: number;
+  id: string;
+  booking_id: string;
+  guest_id?: string;
+  guest_name: string;
+  guest_email?: string;
+  guest_phone?: string;
+  room_id?: string;
+  room_number?: string;
+  room_type?: string;
   check_in: string;
   check_out: string;
-  guests_count: number;
-  status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
+  adults: number;
+  children: number;
+  room_rate: number;
+  room_total: number;
   total_amount: number;
+  payment_status: string;
+  status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' | string;
+  breakfast_included: boolean;
+  breakfast_pax: number;
+  breakfast_price: number;
+  breakfast_total: number;
   notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  actual_check_in?: string;
+  actual_check_out?: string;
+  total_price: number;
+  guest_count: number;
+  booking_reference?: string;
+
   guests?: Pick<Guest, 'full_name'> | Guest;
   rooms?: Pick<Room, 'number'> | Room;
 }
 
 export interface Invoice {
   id: number;
-  created_at: string;
-  reservation_id: number;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
+  invoice_number?: string;
+  subtotal: number;
+  tax_amount: number;
+  service_charge?: number;
+  discount_amount: number;
+  total_amount: number;
+  amount: number; // Alias for UI
+  status: string;
   payment_method?: string;
+  payment_reference?: string;
+  issue_date?: string;
   due_date?: string;
+  paid_at?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  reservation_id: string;
+  guest_id?: string;
 }
 
 export interface BillingItem {
   id: number;
-  created_at: string;
-  reservation_id: number;
-  description: string;
+  reservation_id: string;
+  room_id?: string;
+  guest_id?: string;
+  item_name: string;
+  description?: string;
+  category: string;
   quantity: number;
   unit_price: number;
   total_price: number;
-  status: 'pending' | 'paid';
-  category: 'food' | 'beverage' | 'service' | 'misc';
+  tax_rate?: number;
+  tax_amount: number;
+  status: string;
+  billed_at?: string;
+  service_date: string;
+  added_by?: string;
+  notes?: string;
+  metadata?: any;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Deposit {
   id: number;
-  created_at: string;
   reservation_id: number;
   amount: number;
-  payment_method?: string;
-  status: 'collected' | 'refunded' | 'applied';
+  currency?: string;
+  payment_method: string;
+  payment_reference?: string;
+  status: string;
+  collected_at?: string;
+  refunded_at?: string;
+  collected_by?: string;
+  refunded_by?: string;
   notes?: string;
+  refund_reason?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Profile {
   id: string;
-  updated_at?: string;
+  user_id?: string;
+  employee_id?: string;
   username?: string;
-  full_name?: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
   avatar_url?: string;
-  role: 'admin' | 'manager' | 'staff';
+  role: string;
+  department?: string;
+  is_active?: boolean;
+  hire_date?: string;
+  salary?: number;
+  permissions?: any;
+  preferences?: any;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Expense {
   id: number;
-  created_at: string;
-  description: string;
-  amount: number;
-  category: 'utilities' | 'maintenance' | 'supplies' | 'staff' | 'marketing' | 'food' | 'cleaning' | 'other';
-  subcategory?: string;
-  payment_method: 'cash' | 'card' | 'transfer' | 'check';
-  receipt_url?: string;
-  supplier?: string;
+  created_at?: string;
+  updated_at?: string;
   expense_date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  category: string;
+  subcategory?: string;
+  amount: number;
+  description: string;
+  vendor?: string;
+  payment_method?: string;
+  receipt_number?: string;
+  status: string;
   approved_by?: string;
   notes?: string;
   recurring?: boolean;
-  recurring_period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  updated_at?: string;
+  recurring_period?: string;
 }
 
 export interface ExpenseCategory {
@@ -146,10 +215,11 @@ export interface ExpenseCategory {
 
 export interface InventoryItem {
   id: number;
-  created_at: string;
+  created_at?: string;
+  updated_at?: string;
   name: string;
   description?: string;
-  category: 'housekeeping' | 'maintenance' | 'food' | 'beverage' | 'amenities' | 'office' | 'other';
+  category: string;
   current_stock: number;
   min_stock: number;
   max_stock: number;
@@ -158,21 +228,20 @@ export interface InventoryItem {
   supplier?: string;
   last_restocked?: string;
   location?: string;
-  status: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
-  updated_at?: string;
+  status: string;
 }
 
 export interface GuestFacilityRequest {
   id: number;
-  created_at: string;
-  guest_id: number;
+  created_at?: string;
+  updated_at?: string;
+  guest_id?: number;
   reservation_id?: number;
-  room_id: number;
-  service_type: 'room-service' | 'housekeeping' | 'maintenance' | 'food-order' | 'amenities' | 'other';
+  room_id?: number;
+  service_type: string;
   description: string;
-  items?: GuestFacilityItem[];
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+  priority?: string;
+  status: string;
   assigned_to?: string;
   estimated_completion?: string;
   actual_completion?: string;
@@ -180,80 +249,55 @@ export interface GuestFacilityRequest {
   notes?: string;
   rating?: number;
   feedback?: string;
-  updated_at?: string;
+  items?: GuestFacilityItem[];
   rooms?: Pick<Room, 'number'> | Room;
 }
 
 export interface GuestFacilityItem {
   id: number;
-  request_id: number;
+  request_id?: number;
   item_name: string;
   quantity: number;
   unit_price: number;
   total_price: number;
-  category: 'food' | 'beverage' | 'amenity' | 'service';
-}
-
-export interface POSTransaction {
-  id: number;
-  created_at: string;
-  reservation_id?: number;
-  guest_id?: number;
-  total_amount: number;
-  payment_method: 'cash' | 'card' | 'transfer' | 'qris' | 'ewallet';
-  status: 'pending' | 'completed' | 'cancelled';
-  transaction_type: 'checkin' | 'checkout' | 'reservation' | 'deposit' | 'additional';
-  items: POSTransactionItem[];
-  notes?: string;
-  cash_received?: number;
-  change_amount?: number;
-}
-
-export interface POSTransactionItem {
-  id: number;
-  transaction_id: number;
-  item_name: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  category: 'room' | 'food' | 'beverage' | 'service' | 'deposit' | 'penalty' | 'misc';
+  category?: string;
 }
 
 export interface InventorySupplier {
   id: number;
-  created_at: string;
   name: string;
   contact_person?: string;
   email?: string;
   phone?: string;
   address?: string;
   rating?: number;
+  created_at?: string;
 }
 
 export interface InventoryTransaction {
   id: number;
-  created_at: string;
   item_id: number;
-  transaction_type: 'in' | 'out' | 'adjustment';
+  transaction_type: string;
   quantity: number;
   unit_cost?: number;
-  reference_type?: 'purchase_order' | 'usage' | 'spoilage' | 'initial';
+  reference_type?: string;
   reference_id?: string;
   notes?: string;
   created_by?: string;
+  created_at?: string;
 }
 
 export interface PurchaseOrder {
   id: number;
-  created_at: string;
-  updated_at?: string;
   po_number: string;
   supplier_id?: number;
-  status: 'draft' | 'pending_approval' | 'approved' | 'received' | 'cancelled';
+  status: string;
   total_amount: number;
   expected_delivery_date?: string;
   notes?: string;
   created_by?: string;
+  created_at?: string;
+  updated_at?: string;
 
   supplier?: InventorySupplier;
   items?: PurchaseOrderItem[];
@@ -261,13 +305,13 @@ export interface PurchaseOrder {
 
 export interface PurchaseOrderItem {
   id: number;
-  created_at: string;
   po_id: number;
   item_id: number;
   quantity_ordered: number;
-  quantity_received: number;
+  quantity_received?: number;
   unit_cost: number;
   total_cost?: number;
+  created_at?: string;
 
   item?: InventoryItem;
 }

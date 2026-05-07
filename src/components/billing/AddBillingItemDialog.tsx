@@ -12,12 +12,12 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { BillingItem } from '@/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, toLocalDateString } from '@/lib/utils';
 
 interface AddBillingItemDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  reservationId: number;
+  reservationId: string;
   onAddItem: (item: Omit<BillingItem, 'id' | 'created_at'>) => void;
   onCancel: () => void;
 }
@@ -84,12 +84,15 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
     
     onAddItem({
       reservation_id: reservationId,
+      item_name: description, // using description as item_name for now
       description,
       quantity,
       unit_price: unitPrice,
       total_price: total,
+      tax_amount: 0, // placeholder, can be calculated if tax_rate is provided
       status: 'pending',
-      category
+      category,
+      service_date: toLocalDateString(new Date()),
     });
     
     setCategory('food');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { ModernBillingDashboard } from "@/components/billing/ModernBillingDashboard"
 import { PaymentProcessing } from "@/components/billing/PaymentProcessing"
 import { EnhancedInvoicesTable } from "@/components/billing/EnhancedInvoicesTable"
@@ -21,8 +22,10 @@ import { Plus, Download, CreditCard } from "lucide-react"
 import { Invoice } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency as formatCurrencyCompat } from "@/lib/database-compatibility"
+import { toLocalDateString } from "@/lib/utils"
 
 export default function ModernBillingPage() {
+  const router = useRouter()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [error, setError] = useState<string | null>(null)
   
@@ -78,10 +81,10 @@ export default function ModernBillingPage() {
       const { error } = await supabase
         .from('invoices')
         .insert({
-          reservation_id: parseInt(reservationId),
+          reservation_id: reservationId,
           amount: parseFloat(amount),
           status: status,
-          due_date: new Date().toISOString().split('T')[0]
+          due_date: toLocalDateString(new Date())
         })
       
       if (error) throw error
@@ -95,7 +98,7 @@ export default function ModernBillingPage() {
   }
 
   const handleViewInvoice = (invoice: Invoice) => {
-    console.log("Viewing invoice:", invoice)
+    router.push(`/billing/${invoice.id}`)
   }
 
   const handleDownloadInvoice = (invoice: Invoice) => {

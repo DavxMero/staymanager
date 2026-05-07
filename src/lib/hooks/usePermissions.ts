@@ -26,7 +26,7 @@ export function usePermissions(): UserPermissions {
             const { data: { user } } = await supabase.auth.getUser();
 
             if (!user) {
-                setState({ permissions: [], roles: [], loading: false });
+                setState({ permissions: ['chatbot'], roles: ['guest'], loading: false });
                 return;
             }
 

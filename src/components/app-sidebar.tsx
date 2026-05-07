@@ -4,20 +4,15 @@ import * as React from "react"
 import {
   Bot,
   Building,
-  Calendar,
-  ChevronRight,
   CreditCard,
   Home,
   LineChart,
   Settings,
   Users,
   UserCog,
-  Utensils,
   ConciergeBell,
   BedDouble,
-  DollarSign,
   Package,
-  BrainCircuit,
 } from "lucide-react"
 
 import {
@@ -31,12 +26,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -65,7 +56,6 @@ const PERMISSION_MAP: Record<string, string> = {
   'Staff': 'staff',
   'Financial': 'billing',
   'Operations': 'operations',
-  'Logistics & Inventory': 'operations',
   'Reports': 'reports',
   'Chatbot': 'chatbot',
   'Settings': 'settings',
@@ -109,14 +99,8 @@ const items = [
   },
   {
     title: "Operations",
+    url: "/logistics",
     icon: Package,
-    items: [
-      {
-        title: "Logistics & Inventory",
-        url: "/logistics",
-        icon: Package,
-      },
-    ],
   },
   {
     title: "Reports",
@@ -138,7 +122,6 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const [openMenus, setOpenMenus] = React.useState<Record<string, boolean>>({})
   const [mounted, setMounted] = React.useState(false)
   const [user, setUser] = React.useState<any>(null)
   const [userRoles, setUserRoles] = React.useState<string[]>([])
@@ -207,19 +190,11 @@ export function AppSidebar() {
     }
   }
 
-  const toggleMenu = (title: string) => {
-    setOpenMenus(prev => ({
-      ...prev,
-      [title]: !prev[title]
-    }))
-  }
-
   const visibleItems = React.useMemo(() => {
     if (loading) return []
     if (permissions.includes('*')) return items
 
     return items.filter(item => {
-      // Guest Facilities: hide for guests who aren't checked-in
       if (item.title === 'Guest Facilities' && !isGuestCheckedIn) {
         return false
       }
@@ -227,45 +202,9 @@ export function AppSidebar() {
       const requiredPermission = PERMISSION_MAP[item.title]
       if (!requiredPermission) return true
 
-      const hasAccess = hasPermission(permissions, requiredPermission)
-
-      if (item.items) {
-        const filteredSubItems = item.items.filter(subItem => {
-          const subPermission = PERMISSION_MAP[subItem.title]
-          return !subPermission || hasPermission(permissions, subPermission)
-        })
-
-        if (filteredSubItems.length > 0) {
-          return { ...item, items: filteredSubItems }
-        }
-        return false
-      }
-
-      return hasAccess
+      return hasPermission(permissions, requiredPermission)
     })
   }, [loading, permissions, isGuestCheckedIn])
-
-  const isSubMenuActive = (subItems: any[]) => {
-    return subItems.some((subItem: any) => pathname === subItem.url)
-  }
-
-  React.useEffect(() => {
-    if (!mounted) return
-
-    const initialOpenMenus: Record<string, boolean> = {}
-    visibleItems.forEach(item => {
-      if (item.items && isSubMenuActive(item.items)) {
-        initialOpenMenus[item.title] = true
-      }
-    })
-
-    if (Object.keys(initialOpenMenus).length > 0) {
-      setOpenMenus(prev => ({
-        ...prev,
-        ...initialOpenMenus
-      }))
-    }
-  }, [mounted, pathname, visibleItems])
 
   if (loading) {
     return (
@@ -402,70 +341,20 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleItems.map((item) => {
-                if (item.items) {
-                  const hasActiveSubItem = isSubMenuActive(item.items)
-                  const isMenuOpen = openMenus[item.title] || false
-
-                  return (
-                    <Collapsible
-                      key={item.title}
-                      open={isMenuOpen}
-                      onOpenChange={() => toggleMenu(item.title)}
-                      className="group/collapsible"
-                    >
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton
-                            tooltip={item.title}
-                            isActive={hasActiveSubItem}
-                            className="w-full justify-between h-9 px-2 text-sm font-medium"
-                          >
-                            <div className="flex items-center gap-3">
-                              <item.icon className="h-5 w-5" />
-                              <span className="text-sm font-semibold">{item.title}</span>
-                            </div>
-                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.items.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={pathname === subItem.url}
-                                  className="h-8 px-4 ml-2 text-xs"
-                                >
-                                  <Link href={subItem.url} className="flex items-center gap-2">
-                                    <subItem.icon className="h-4 w-4 opacity-70" />
-                                    <span className="text-xs font-medium">{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </SidebarMenuItem>
-                    </Collapsible>
-                  )
-                }
-
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.url}
-                      className="h-9 px-2 text-sm font-medium"
-                    >
-                      <Link href={item.url} className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5" />
-                        <span className="text-sm font-semibold">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {visibleItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    className="h-9 px-2 text-sm font-medium"
+                  >
+                    <Link href={item.url} className="flex items-center gap-3">
+                      <item.icon className="h-5 w-5" />
+                      <span className="text-sm font-semibold">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -548,6 +437,18 @@ export function AppSidebar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+
+          {!user && !loading && (
+            <Link href="/login">
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+              >
+                <LogOut className="h-4 w-4 rotate-180" />
+                Login
+              </Button>
+            </Link>
           )}
 
           {/* App Version & Theme Toggle */}

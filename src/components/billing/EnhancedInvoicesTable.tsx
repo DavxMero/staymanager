@@ -38,21 +38,14 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 
-interface Invoice {
-  id: number
-  reservation_id: number
-  amount: number
-  status: 'paid' | 'pending' | 'overdue'
-  due_date?: string
-  created_at: string
-}
+import { Invoice } from '@/types'
 
 interface SortConfig {
   key: keyof Invoice | null
   direction: 'asc' | 'desc'
 }
 
-const statusVariants = {
+const statusVariants: Record<string, string> = {
   paid: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
   overdue: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
@@ -194,7 +187,7 @@ export function EnhancedInvoicesTable({
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium">#{invoice.id}</TableCell>
                     <TableCell>Reservation #{invoice.reservation_id}</TableCell>
-                    <TableCell>{new Date(invoice.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{invoice.created_at ? new Date(invoice.created_at).toLocaleDateString() : 'N/A'}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrencyCompat(invoice.amount)}</TableCell>
                     <TableCell>
                       <Badge className={statusVariants[invoice.status]}>

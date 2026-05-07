@@ -105,7 +105,7 @@ interface StaffMember {
   is_active: boolean
 }
 
-const statusVariants = {
+const statusVariants: Record<string, string> = {
   available: "bg-green-100 text-green-800",
   occupied: "bg-red-100 text-red-800",
   reserved: "bg-purple-100 text-purple-800",
@@ -294,7 +294,7 @@ export default function RoomsPage() {
   }
 
 
-  const handleRoomCheckout = async (roomId: number, roomNumber: string) => {
+  const handleRoomCheckout = async (roomId: string, roomNumber: string) => {
     if (!confirm(`Confirm checkout for Room ${roomNumber}?`)) return false
 
     try {
@@ -337,7 +337,7 @@ export default function RoomsPage() {
     }
   }
 
-  const handleRoomCheckin = async (roomId: number, roomNumber: string) => {
+  const handleRoomCheckin = async (roomId: string, roomNumber: string) => {
     try {
       const { data: roomData, error: roomStatusError } = await supabase
         .from('rooms')
@@ -401,7 +401,7 @@ export default function RoomsPage() {
     }
   }
 
-  const handleRoomBooking = async (roomId: number, roomNumber: string, roomPrice: number) => {
+  const handleRoomBooking = async (roomId: string, roomNumber: string, roomPrice: number) => {
     try {
       const { data: roomData, error: roomStatusError } = await supabase
         .from('rooms')
@@ -506,7 +506,7 @@ export default function RoomsPage() {
     }
   }
 
-  const handleMaintenanceComplete = async (roomId: number, roomNumber: string) => {
+  const handleMaintenanceComplete = async (roomId: string, roomNumber: string) => {
     if (!confirm(`Mark maintenance complete for Room ${roomNumber}?`)) return false
 
     try {
@@ -544,7 +544,7 @@ export default function RoomsPage() {
     setCurrentRoom(room)
     setRoomNumber(room.number)
     setRoomType(room.type)
-    setRoomPrice(room.price.toString())
+    setRoomPrice((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0).toString())
     setRoomStatus(room.status || "available")
     setIsAddingCustomType(false)
     setNewCustomType('')
@@ -611,7 +611,7 @@ export default function RoomsPage() {
     }
   }
 
-  const handleDeleteRoom = async (roomId: number) => {
+  const handleDeleteRoom = async (roomId: string) => {
     try {
       const { error } = await supabase
         .from('rooms')
@@ -819,7 +819,7 @@ export default function RoomsPage() {
     }
   }
 
-  const handleCreateCheckoutTask = async (roomId: number) => {
+  const handleCreateCheckoutTask = async (roomId: string) => {
     try {
       setLoading(true)
       console.log(`Creating checkout cleaning task for room ${roomId}...`)
@@ -897,8 +897,8 @@ export default function RoomsPage() {
             status: taskStatus,
             priority,
             task_type: taskType,
-            title: taskType.charAt(0).toUpperCase() + taskType.slice(1) + ` - Room ${rooms.find(r => r.id === taskRoomId)?.number}`,
-            description: notes || `${taskType} task for room ${rooms.find(r => r.id === taskRoomId)?.number}`,
+            title: taskType.charAt(0).toUpperCase() + taskType.slice(1) + ` - Room ${rooms.find(r => String(r.id) === String(taskRoomId))?.number}`,
+            description: notes || `${taskType} task for room ${rooms.find(r => String(r.id) === String(taskRoomId))?.number}`,
             notes,
             estimated_duration: estimatedDuration
           })
@@ -915,8 +915,8 @@ export default function RoomsPage() {
             status: taskStatus,
             priority,
             task_type: taskType,
-            title: taskType.charAt(0).toUpperCase() + taskType.slice(1) + ` - Room ${rooms.find(r => r.id === taskRoomId)?.number}`,
-            description: notes || `${taskType} task for room ${rooms.find(r => r.id === taskRoomId)?.number}`,
+            title: taskType.charAt(0).toUpperCase() + taskType.slice(1) + ` - Room ${rooms.find(r => String(r.id) === String(taskRoomId))?.number}`,
+            description: notes || `${taskType} task for room ${rooms.find(r => String(r.id) === String(taskRoomId))?.number}`,
             notes,
             estimated_duration: estimatedDuration,
             created_by: 'manual'
@@ -1373,14 +1373,14 @@ export default function RoomsPage() {
                       </span>
                     )}
                   </CardTitle>
-                  <Badge className={statusVariants[room.status || 'available']}>
+                  <Badge className={statusVariants[(room.status || "available") as "available"|"occupied"|"reserved"|"cleaning"|"maintenance"|"out-of-order"]}>
                     {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'}
                   </Badge>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{room.type}</div>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrencyCompat(room.price)} per night
+                    {formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0))} per night
                   </p>
                   <div className="mt-4 text-sm text-muted-foreground">
                     <span className="font-medium">Status:</span> {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'} (Auto-managed)
@@ -1398,7 +1398,7 @@ export default function RoomsPage() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteRoom(room.id)}
+                      onClick={() => handleDeleteRoom(String(room.id))}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -1411,7 +1411,7 @@ export default function RoomsPage() {
                         variant="secondary"
                         size="sm"
                         className="text-xs px-2 py-1 h-6 bg-blue-100 text-blue-800 hover:bg-blue-200"
-                        onClick={() => handleMaintenanceComplete(room.id, room.number)}
+                        onClick={() => handleMaintenanceComplete(String(room.id), room.number)}
                         disabled={loading}
                       >
                         ✅ Done Maintenance

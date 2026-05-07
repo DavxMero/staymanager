@@ -28,11 +28,26 @@ export function AddInvoiceDialog({ isOpen, onOpenChange, onAddInvoice }: AddInvo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const amountNum = parseFloat(amount);
     onAddInvoice({
-      reservation_id: parseInt(reservationId),
-      amount: parseFloat(amount),
+      reservation_id: reservationId,
+      amount: amountNum,
+      subtotal: amountNum,
+      tax_amount: 0,
+      discount_amount: 0,
+      total_amount: amountNum,
       status,
-      due_date: dueDate,
+      due_date: dueDate || undefined,
+      invoice_number: undefined,
+      service_charge: undefined,
+      payment_method: undefined,
+      payment_reference: undefined,
+      issue_date: undefined,
+      paid_at: undefined,
+      notes: undefined,
+      updated_at: undefined,
+      created_by: undefined,
+      guest_id: undefined,
     });
     
     setAmount('');

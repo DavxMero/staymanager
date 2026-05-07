@@ -42,15 +42,17 @@ import {
   AlertTriangle,
 
 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Info } from "lucide-react"
 import { Room } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
 import { transformRoomsQuery, formatCurrency as formatCurrencyCompat } from "@/lib/database-compatibility"
-import { format, addDays } from "date-fns"
+import { format, addDays, subDays, eachDayOfInterval, isSameDay, parseISO, differenceInDays } from "date-fns"
 import { id as localeId } from "date-fns/locale"
-import { cn } from "@/lib/utils"
+import { cn, toLocalDateString } from "@/lib/utils"
 import { PhoneInput } from "@/components/ui/phone-input"
+import { adminFetchCalendarReservations, adminFetchGuestHistory, adminFetchActiveReservations, adminFetchCheckoutData, adminFetchCheckinReservations, adminFetchHousekeepingStaff } from "./actions"
 
-const statusVariants = {
+const statusVariants: Record<string, string> = {
   available: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
   occupied: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300",
   reserved: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300",
@@ -120,35 +122,11 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     setError("")
 
     try {
-      const { data: reservationData, error: reservationError } = await supabase
-        .from('reservations')
-        .select('*')
-        .eq('room_id', room.id)
-        .eq('status', 'checked-in')
-        .single()
-
-      if (reservationError) {
-        if (reservationError.code === 'PGRST116') {
-          throw new Error('No active reservation found for this room')
-        }
-        throw reservationError
-      }
+      const { reservation: reservationData, unpaidBills: bills } = await adminFetchCheckoutData(String(room.id))
 
       setReservation(reservationData)
       setDepositAmount(DEPOSIT_AMOUNT)
 
-      const { data: billingData, error: billingError } = await supabase
-        .from('billing_items')
-        .select('*')
-        .eq('reservation_id', reservationData.id)
-        .eq('status', 'pending')
-        .order('service_date', { ascending: false })
-
-      if (billingError) {
-        console.error('Error fetching billing items:', billingError)
-      }
-
-      const bills = billingData || []
       setUnpaidBills(bills)
 
       const totalUnpaid = bills.reduce((sum, bill) => sum + bill.total_price, 0)
@@ -186,8 +164,8 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
         status: 'paid',
         payment_method: paymentData.method || 'no_payment',
         payment_reference: paymentData.transaction_id || null,
-        issue_date: new Date().toISOString().split('T')[0],
-        due_date: new Date().toISOString().split('T')[0],
+        issue_date: toLocalDateString(new Date()),
+        due_date: toLocalDateString(new Date()),
         paid_at: new Date().toISOString(),
         notes: `Checkout - Room ${room?.number} | Deposit ${depositRefund ? 'Refunded' : 'Forfeited'}`,
         created_by: null
@@ -388,6 +366,30 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     try {
       let paymentResult = null
 
+      
+      if (reservation.status === 'overdue') {
+        const hasLateFee = unpaidBills.some(b => b.category === 'late_fee');
+        if (!hasLateFee) {
+          const daysLate = Math.max(1, differenceInDays(new Date(), new Date(reservation.check_out)))
+          await supabase.from('billing_items').insert({
+            reservation_id: reservation.id,
+            room_id: room.id,
+            guest_id: reservation.guest_id,
+            item_name: 'Late Check-out Fee',
+            description: `Keterlambatan checkout ${daysLate} hari`,
+            category: 'late_fee',
+            quantity: daysLate,
+            unit_price: reservation.room_rate,
+            total_price: daysLate * reservation.room_rate,
+            service_date: new Date().toISOString(),
+            status: 'pending',
+            added_by: null
+          })
+          await fetchCheckoutData()
+          return 
+        }
+      }
+
       const finalAmount = paymentAmount - (depositRefund ? depositAmount : 0)
       if (unpaidBills.length > 0 && finalAmount > 0) {
         if (!paymentMethod) {
@@ -542,7 +544,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               </Button>
             </div>
 
-            <div className="text-center text-sm text-slate-600 dark:text-gray-400">
+            <div className="text-center text-sm text-slate-600 dark:text-gray-300">
               <p>🧹 Room status updated to &quot;Cleaning&quot;</p>
               <p>📋 Checkout invoice saved to billing records</p>
               <p>{checkoutInvoice.deposit_refund ? '💰 Please process deposit refund' : '⚠️ Security deposit has been forfeited'}</p>
@@ -568,9 +570,17 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
 
         <div className="overflow-y-auto max-h-[70vh] pr-2">
           <div className="space-y-6 py-4">
-            {error && (
-              <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md">
-                {error}
+
+            {reservation?.status !== 'checked-out' ? (
+              <>
+
+            {reservation?.status === 'overdue' && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/25 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm mb-4">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <span>
+                  Tamu ini melewati tanggal check-out ({format(new Date(reservation.check_out), 'dd MMM yyyy')}).
+                  Late fee akan dihitung dan ditambahkan ke billing.
+                </span>
               </div>
             )}
 
@@ -582,7 +592,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                     <h3 className="font-semibold text-slate-800 dark:text-gray-100">Guest Information</h3>
                     <div className="text-sm space-y-1">
                       <div><span className="font-medium">Name:</span> {reservation?.guest_name}</div>
-                      <div><span className="font-medium">Phone:</span> {reservation?.guest_phone}</div>
+                      <div><span className="font-medium">No. KTP:</span> {reservation?.guest_phone}</div>
                       {reservation?.guest_email && <div><span className="font-medium">Email:</span> {reservation?.guest_email}</div>}
                     </div>
                   </div>
@@ -590,7 +600,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                     <h3 className="font-semibold text-slate-800 dark:text-gray-100">Stay Information</h3>
                     <div className="text-sm space-y-1">
                       <div><span className="font-medium">Room:</span> {room?.number} ({room?.type})</div>
-                      <div><span className="font-medium">Check-in:</span> {reservation?.check_in_date ? format(new Date(reservation.check_in_date), 'dd MMM yyyy') : ''}</div>
+                      <div><span className="font-medium">Check-in:</span> {reservation?.check_in ? format(new Date(reservation.check_in), 'dd MMM yyyy') : ''}</div>
                       <div><span className="font-medium">Check-out:</span> {format(new Date(), 'dd MMM yyyy')} (Today)</div>
                     </div>
                   </div>
@@ -619,11 +629,11 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                           <div key={bill.id} className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded border">
                             <div>
                               <div className="font-medium">{bill.description}</div>
-                              <div className="text-sm text-slate-600 dark:text-gray-400">
+                              <div className="text-sm text-slate-600 dark:text-gray-300">
                                 {bill.category} • {format(new Date(bill.service_date), 'dd MMM yyyy')} • Qty: {bill.quantity}
                               </div>
                             </div>
-                            <div className="font-semibold text-red-600 dark:text-red-400">
+                            <div className="font-semibold text-red-600 dark:text-red-300">
                               {formatCurrencyCompat(bill.total_price)}
                             </div>
                           </div>
@@ -645,7 +655,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                       <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">
                         ✨ No Additional Charges
                       </h4>
-                      <p className="text-green-700 dark:text-green-400">
+                      <p className="text-green-700 dark:text-green-300">
                         Great! This guest has no unpaid bills. Ready for checkout.
                       </p>
                     </div>
@@ -865,6 +875,17 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                 </div>
               </CardContent>
             </Card>
+            </>
+            ) : (
+              <div className="bg-slate-800 text-slate-100 p-6 rounded-lg mb-4 text-center border overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+                <CheckCircle className="h-10 w-10 text-green-500 mx-auto mb-3" />
+                <h3 className="text-xl font-bold mb-1">Room Checked Out</h3>
+                <p className="text-slate-300 text-sm">
+                  This reservation has already been successfully checked out from the database. No further action is required.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -927,10 +948,11 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
   const DEPOSIT_AMOUNT = 100000
 
   const calculateWalkInNights = (checkoutDate: Date) => {
-    const today = new Date()
-    const diffTime = checkoutDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return Math.max(1, diffDays)
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const checkoutStart = new Date(checkoutDate)
+    checkoutStart.setHours(0, 0, 0, 0)
+    return Math.max(1, differenceInDays(checkoutStart, todayStart))
   }
 
   const [walkInName, setWalkInName] = useState("")
@@ -949,15 +971,24 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     }
   }, [open, room])
 
+  useEffect(() => {
+    if (open) {
+      const tomorrow = new Date()
+      tomorrow.setHours(0, 0, 0, 0)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      setWalkInCheckoutDate(tomorrow)
+    }
+  }, [open])
+
   const currentTotal = useMemo(() => {
     if (!room) return 0
 
     if (isWalkIn) {
-      const roomTotal = room.price * walkInNights
+      const roomTotal = (((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0) * walkInNights
       const breakfastTotal = walkInIncludeBreakfast ? (BREAKFAST_PRICE * walkInBreakfastQuantity * walkInNights) : 0
       return roomTotal + breakfastTotal + DEPOSIT_AMOUNT
     } else if (selectedReservation) {
-      const reservationTotal = (selectedReservation.total_amount || room.price) + DEPOSIT_AMOUNT
+      const reservationTotal = (selectedReservation.total_amount || (((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0)) + DEPOSIT_AMOUNT
       const remainingAmount = Math.max(0, reservationTotal - totalPaidAmount)
       return remainingAmount
     }
@@ -1018,17 +1049,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     try {
       console.log(`Fetching reservations for room ${room.id} (${room.number})`)
 
-      const { data, error } = await supabase
-        .from('reservations')
-        .select('*')
-        .eq('room_id', room.id)
-        .eq('status', 'confirmed')
-        .order('check_in', { ascending: true })
-
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
+      const data = await adminFetchCheckinReservations(String(room.id))
 
       console.log(`Found ${data?.length || 0} reservations for room ${room.number}`)
 
@@ -1067,7 +1088,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
       let breakfastTotal = 0
 
       if (isWalkIn) {
-        roomTotal = room ? room.price * walkInNights : 0
+        roomTotal = room ? (((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0) * walkInNights : 0
         breakfastTotal = walkInIncludeBreakfast ? (BREAKFAST_PRICE * walkInBreakfastQuantity * walkInNights) : 0
       } else if (selectedReservation) {
         roomTotal = selectedReservation.total_amount || 0
@@ -1086,8 +1107,8 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         status: 'paid',
         payment_method: paymentData.method,
         payment_reference: paymentData.transaction_id,
-        issue_date: new Date().toISOString().split('T')[0],
-        due_date: new Date().toISOString().split('T')[0],
+        issue_date: toLocalDateString(new Date()),
+        due_date: toLocalDateString(new Date()),
         paid_at: new Date().toISOString(),
         notes: `Check-in payment - Room ${room?.number}`,
         created_by: null
@@ -1303,7 +1324,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         let existingGuestId = null
         const conditions = []
         if (walkInEmail.trim()) conditions.push(`email.eq.${walkInEmail.trim()}`)
-        if (walkInPhone.trim()) conditions.push(`phone.eq.${walkInPhone.trim()}`)
+        if (walkInPhone.trim()) conditions.push(`id_number.eq.${walkInPhone.trim()}`)
 
         if (conditions.length > 0) {
           const { data: existingGuest } = await supabase
@@ -1323,7 +1344,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
             .insert({
               full_name: walkInName.trim(),
               email: walkInEmail.trim() || null,
-              phone: walkInPhone.trim()
+              id_number: walkInPhone.trim()
             })
             .select('id')
             .single()
@@ -1333,8 +1354,12 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         }
 
         const checkInDate = new Date()
-        const roomTotal = room.price * walkInNights
-        const breakfastTotal = walkInIncludeBreakfast ? (BREAKFAST_PRICE * walkInBreakfastQuantity * walkInNights) : 0
+        const checkInStart = new Date(checkInDate); checkInStart.setHours(0, 0, 0, 0)
+        const minCheckout = new Date(checkInStart); minCheckout.setDate(minCheckout.getDate() + 1)
+        const effectiveCheckoutDate = walkInCheckoutDate > minCheckout ? walkInCheckoutDate : minCheckout
+        const effectiveNights = Math.max(1, walkInNights)
+        const roomTotal = (((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0) * effectiveNights
+        const breakfastTotal = walkInIncludeBreakfast ? (BREAKFAST_PRICE * walkInBreakfastQuantity * effectiveNights) : 0
         const bookingId = `BK-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
         const { data: reservation, error: reservationError } = await supabase
@@ -1346,11 +1371,15 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
             guest_name: walkInName.trim(),
             guest_phone: walkInPhone.trim(),
             guest_email: walkInEmail.trim() || null,
-            check_in: checkInDate.toISOString().split('T')[0],
-            check_out: walkInCheckoutDate.toISOString().split('T')[0],
-            room_rate: room.price,
+            check_in: toLocalDateString(checkInDate),
+            check_out: toLocalDateString(effectiveCheckoutDate),
+            room_rate: (((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0),
             room_total: roomTotal,
             total_amount: currentTotal,
+            total_price: currentTotal,
+            room_number: room.number,
+            room_type: room.type,
+            guest_count: 1,
             status: 'checked-in',
             payment_status: 'paid',
             actual_check_in: checkInDate.toISOString(),
@@ -1376,7 +1405,9 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
           .update({
             status: 'checked-in',
             actual_check_in: new Date().toISOString(),
-            payment_status: 'paid'
+            payment_status: 'paid',
+            room_number: room.number,
+            room_type: room.type
           })
           .eq('id', selectedReservation.id)
 
@@ -1405,7 +1436,9 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
           amount: currentTotal,
           payment_method: paymentMethod,
           payment_date: new Date().toISOString(),
-          transaction_id: paymentResponse.transaction_id
+          status: 'completed',
+          transaction_id: paymentResponse.transaction_id,
+          notes: `Check-in payment - Room ${room?.number}`
         })
 
       if (paymentError) {
@@ -1415,9 +1448,10 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
       setInvoiceData(invoice)
       setPaymentSuccess(true)
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment failed:', error)
-      setError('Payment failed: ' + (error as Error).message)
+      const errDetail = error?.message || error?.error_description || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      setError('Payment failed: ' + errDetail)
     } finally {
       setPaymentLoading(false)
     }
@@ -1427,115 +1461,15 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
     if (!room) return
 
     if (!showPayment) {
-      setShowPayment(true)
-      return
-    }
-
-    setLoading(true)
-    setError("")
-
-    try {
-      if (isWalkIn) {
-        if (!walkInName.trim() || !walkInPhone.trim()) {
-          setError("Please fill in guest name and phone")
-          return
-        }
-
-        let guestId = null
-        const conditions = []
-        if (walkInEmail.trim()) conditions.push(`email.eq.${walkInEmail.trim()}`)
-        if (walkInPhone.trim()) conditions.push(`phone.eq.${walkInPhone.trim()}`)
-
-        if (conditions.length > 0) {
-          const { data: existingGuest } = await supabase
-            .from('guests')
-            .select('id')
-            .or(conditions.join(','))
-            .maybeSingle()
-
-          if (existingGuest) guestId = existingGuest.id
-        }
-
-        if (!guestId) {
-          const { data: newGuest, error: createGuestError } = await supabase
-            .from('guests')
-            .insert({
-              full_name: walkInName.trim(),
-              email: walkInEmail.trim() || null,
-              phone: walkInPhone.trim()
-            })
-            .select('id')
-            .single()
-
-          if (createGuestError) throw createGuestError
-          guestId = newGuest.id
-        }
-
-        const checkInDate = new Date()
-        const roomTotal = room.price * walkInNights
-        const breakfastTotal = walkInIncludeBreakfast ? (BREAKFAST_PRICE * walkInBreakfastQuantity * walkInNights) : 0
-        const bookingId = `BK-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
-
-        const { data: reservation, error: reservationError } = await supabase
-          .from('reservations')
-          .insert({
-            booking_id: bookingId,
-            room_id: room.id,
-            guest_id: guestId,
-            guest_name: walkInName.trim(),
-            guest_phone: walkInPhone.trim(),
-            guest_email: walkInEmail.trim() || null,
-            check_in: checkInDate.toISOString().split('T')[0],
-            check_out: walkInCheckoutDate.toISOString().split('T')[0],
-            room_rate: room.price,
-            room_total: roomTotal,
-            total_amount: currentTotal,
-            status: 'checked-in',
-            payment_status: 'pending',
-            actual_check_in: checkInDate.toISOString(),
-            breakfast_included: walkInIncludeBreakfast,
-            breakfast_pax: walkInIncludeBreakfast ? walkInBreakfastQuantity : 0,
-            breakfast_price: walkInIncludeBreakfast ? BREAKFAST_PRICE : 0,
-            breakfast_total: breakfastTotal,
-            adults: 1,
-            children: 0
-          })
-          .select()
-          .single()
-
-        if (reservationError) throw reservationError
-      } else {
-        if (!selectedReservation) {
-          setError("Please select a reservation")
-          return
-        }
-
-        const { error: updateError } = await supabase
-          .from('reservations')
-          .update({
-            status: 'checked-in',
-            actual_check_in: new Date().toISOString()
-          })
-          .eq('id', selectedReservation.id)
-
-        if (updateError) throw updateError
+      if (isWalkIn && (!walkInName.trim() || !walkInPhone.trim())) {
+        setError("Nama tamu dan No. KTP wajib diisi")
+        return
       }
-
-      const { error: roomError } = await supabase
-        .from('rooms')
-        .update({ status: 'occupied' })
-        .eq('id', room.id)
-
-      if (roomError) throw roomError
-
-      console.log(`Room ${room.number} checked in successfully`)
-      onCheckinComplete()
-      onOpenChange(false)
-    } catch (err) {
-      console.error('Error during check-in:', err)
-      setError('Failed to check-in: ' + (err as Error).message)
-    } finally {
-      setLoading(false)
+      if (!isWalkIn && !selectedReservation) {
+        setError("Pilih reservasi terlebih dahulu")
+        return
+      }
+      setShowPayment(true)
     }
   }
 
@@ -1631,7 +1565,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               </Button>
             </div>
 
-            <div className="text-center text-sm text-slate-600 dark:text-gray-400">
+            <div className="text-center text-sm text-slate-600 dark:text-gray-300">
               <p>✨ Room status has been updated to "Occupied"</p>
               <p>📋 Invoice has been saved to billing records</p>
               <p>🔄 You can view this invoice in the Billing page</p>
@@ -1651,7 +1585,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
             Check-in Room {room?.number}
           </DialogTitle>
           <DialogDescription className="text-slate-600 dark:text-gray-300">
-            Check-in guest to {room?.type} room - {room?.price ? formatCurrencyCompat(room.price) : ''} per night
+            Check-in guest to {room?.type} room - {room?.price ? formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0)) : ''} per night
           </DialogDescription>
         </DialogHeader>
 
@@ -1665,7 +1599,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                   <div className="space-y-1">
                     <h3 className="font-semibold text-lg text-slate-800 dark:text-gray-100">Room {room?.number}</h3>
                     <p className="text-slate-700 dark:text-gray-200">{room?.type}</p>
-                    <p className="text-sm text-slate-600 dark:text-gray-400">Floor {room?.floor || 'N/A'}</p>
+                    <p className="text-sm text-slate-600 dark:text-gray-300">Floor {room?.floor || 'N/A'}</p>
                   </div>
                   <Badge className="bg-slate-300 dark:bg-gray-700 text-slate-800 dark:text-gray-200 border-slate-400 dark:border-gray-600">Ready for Check-in</Badge>
                 </div>
@@ -1705,12 +1639,12 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                         <CardContent className="pt-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-700 dark:text-gray-200">
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-slate-600 dark:text-gray-400" />
+                              <User className="h-4 w-4 text-slate-600 dark:text-gray-300" />
                               <span className="font-medium">Guest:</span> <span className="font-semibold">{selectedReservation?.guest_name}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-slate-600 dark:text-gray-400" />
-                              <span className="font-medium">Phone:</span> {selectedReservation?.guest_phone}
+                              <CreditCard className="h-4 w-4 text-slate-600 dark:text-gray-300" />
+                              <span className="font-medium">No. KTP:</span> {selectedReservation?.guest_phone}
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-slate-600 dark:text-gray-400" />
@@ -1768,14 +1702,14 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="walkInPhone" className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        Phone Number *
+                        <CreditCard className="h-4 w-4" />
+                        No. KTP *
                       </Label>
-                      <PhoneInput
+                      <Input
                         id="walkInPhone"
                         value={walkInPhone}
-                        onChange={setWalkInPhone}
-                        placeholder="812-3456-7890"
+                        onChange={(e) => setWalkInPhone(e.target.value)}
+                        placeholder="Masukkan nomor KTP"
                         className="h-11"
                       />
                     </div>
@@ -1910,11 +1844,11 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span>Room rate per night:</span>
-                            <span className="font-medium">{room ? formatCurrencyCompat(room.price) : ''}</span>
+                            <span className="font-medium">{room ? formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0)) : ''}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Room total ({walkInNights} nights):</span>
-                            <span className="font-semibold">{room ? formatCurrencyCompat(room.price * walkInNights) : ''}</span>
+                            <span className="font-semibold">{room ? formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0) * walkInNights) : ''}</span>
                           </div>
                           {walkInIncludeBreakfast && (
                             <div className="flex justify-between text-blue-600 dark:text-blue-400">
@@ -1981,7 +1915,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Room Amount:</span>
                         <span className="font-semibold">
-                          {room && formatCurrencyCompat(room.price * walkInNights)}
+                          {room && formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0) * walkInNights)}
                         </span>
                       </div>
                       {isWalkIn && walkInIncludeBreakfast && (
@@ -2186,11 +2120,440 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
   )
 }
 
+function GuestHistoryDialog({ reservation, open, onOpenChange }: {
+  reservation: any
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [history, setHistory] = useState<any[]>([])
+  const [payments, setPayments] = useState<any[]>([])
+  const [billingItems, setBillingItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (open && reservation) fetchHistory()
+  }, [open, reservation])
+
+  const fetchHistory = async () => {
+    setLoading(true)
+    try {
+      const { history: historyData, payments: paymentsData, billingItems: billingData } = await adminFetchGuestHistory(reservation.guest_id, reservation.id)
+
+      setHistory(historyData)
+      setPayments(paymentsData)
+      setBillingItems(billingData)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+        <DialogHeader>
+          <DialogTitle>Guest History & Details</DialogTitle>
+          <DialogDescription>
+            Information about guest reservations and history
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="overflow-y-auto max-h-[70vh] pr-2">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold text-lg mb-2">Guest Information</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-gray-200">
+                    <div><strong>Name:</strong> {reservation?.guest_name}</div>
+                    <div><strong>No. KTP:</strong> {reservation?.guest_phone || '-'}</div>
+                    <div><strong>Email:</strong> {reservation?.guest_email || '-'}</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold text-lg mb-2">Current Stay Detail</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-gray-200 mb-4">
+                    <div><strong>Check In (Actual):</strong> {reservation?.actual_check_in ? format(new Date(reservation.actual_check_in), 'dd MMM yyyy HH:mm') : '-'}</div>
+                    <div><strong>Check Out (Actual):</strong> {reservation?.actual_check_out ? format(new Date(reservation.actual_check_out), 'dd MMM yyyy HH:mm') : '-'}</div>
+                  </div>
+
+                  <h4 className="font-medium mt-4 mb-2">Billing Items</h4>
+                  <table className="w-full text-sm text-left border rounded">
+                    <thead className="bg-slate-100 dark:bg-gray-800 border-b">
+                      <tr>
+                        <th className="py-2 px-3">Item</th>
+                        <th className="py-2 px-3">Qty</th>
+                        <th className="py-2 px-3">Total</th>
+                        <th className="py-2 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingItems.length > 0 ? billingItems.map((b, i) => (
+                        <tr key={i} className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3">{b.item_name}</td>
+                          <td className="py-2 px-3">{b.quantity}</td>
+                          <td className="py-2 px-3">{b.total_price}</td>
+                          <td className="py-2 px-3">{b.status}</td>
+                        </tr>
+                      )) : <tr><td colSpan={4} className="py-2 px-3 text-center">No additional bills</td></tr>}
+                    </tbody>
+                  </table>
+
+                  <h4 className="font-medium mt-4 mb-2">Payments</h4>
+                  <table className="w-full text-sm text-left border rounded">
+                    <thead className="bg-slate-100 dark:bg-gray-800 border-b">
+                      <tr>
+                        <th className="py-2 px-3">Date</th>
+                        <th className="py-2 px-3">Method</th>
+                        <th className="py-2 px-3">Amount</th>
+                        <th className="py-2 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.length > 0 ? payments.map((p, i) => (
+                        <tr key={i} className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3">{format(new Date(p.payment_date), 'dd MMM yyyy HH:mm')}</td>
+                          <td className="py-2 px-3">{p.payment_method}</td>
+                          <td className="py-2 px-3">{p.amount}</td>
+                          <td className="py-2 px-3">{p.status}</td>
+                        </tr>
+                      )) : <tr><td colSpan={4} className="py-2 px-3 text-center">No payments found</td></tr>}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold text-lg mb-2">Past Visits (Last 10)</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left border rounded">
+                      <thead className="bg-slate-100 dark:bg-gray-800 border-b">
+                        <tr>
+                          <th className="py-2 px-3">Room</th>
+                          <th className="py-2 px-3">In</th>
+                          <th className="py-2 px-3">Out</th>
+                          <th className="py-2 px-3">Total</th>
+                          <th className="py-2 px-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {history.map(h => (
+                          <tr key={h.id} className="border-b dark:border-gray-700">
+                            <td className="py-2 px-3">{h.room_number || '-'} ({h.room_type || '-'})</td>
+                            <td className="py-2 px-3">{h.check_in}</td>
+                            <td className="py-2 px-3">{h.check_out}</td>
+                            <td className="py-2 px-3">{h.total_amount}</td>
+                            <td className="py-2 px-3">
+                              <Badge variant="outline">{h.status}</Badge>
+                            </td>
+                          </tr>
+                        ))}
+                        {history.length === 0 && (
+                          <tr><td colSpan={5} className="py-2 px-3 text-center">No past visits</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationComplete }: {
+  room: Room | null
+  date: Date | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onReservationComplete: () => void
+}) {
+  const [guestName, setGuestName] = useState("")
+  const [guestIdNumber, setGuestIdNumber] = useState("")
+  const [guestEmail, setGuestEmail] = useState("")
+  const [checkoutDate, setCheckoutDate] = useState<Date>(addDays(new Date(), 1))
+  const [adults, setAdults] = useState(1)
+  const [children, setChildren] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (open && date) {
+      setCheckoutDate(addDays(date, 1))
+      setGuestName("")
+      setGuestIdNumber("")
+      setGuestEmail("")
+      setAdults(1)
+      setChildren(0)
+      setError("")
+    }
+  }, [open, date])
+
+  const nights = date && checkoutDate ? Math.max(1, differenceInDays(checkoutDate, date)) : 1
+  const roomRate = room ? (Number(room.price) || Number(room.base_price) || 0) : 0
+  const totalAmount = roomRate * nights
+
+  const handleCreateReservation = async () => {
+    if (!room || !date) return
+    if (!guestName.trim() || !guestIdNumber.trim()) {
+      setError("Nama tamu dan No. KTP wajib diisi")
+      return
+    }
+    setLoading(true)
+    setError("")
+
+    try {
+      let guestId = null
+      const { data: existingGuest } = await supabase
+        .from('guests')
+        .select('id')
+        .eq('id_number', guestIdNumber.trim())
+        .maybeSingle()
+
+      if (existingGuest) {
+        guestId = existingGuest.id
+      } else {
+        const { data: newGuest, error: guestError } = await supabase
+          .from('guests')
+          .insert({
+            full_name: guestName.trim(),
+            id_number: guestIdNumber.trim(),
+            email: guestEmail.trim() || null
+          })
+          .select('id')
+          .single()
+
+        if (guestError) throw guestError
+        guestId = newGuest.id
+      }
+
+      const bookingId = `BK-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+
+      const { error: resError } = await supabase
+        .from('reservations')
+        .insert({
+          booking_id: bookingId,
+          room_id: room.id,
+          guest_id: guestId,
+          guest_name: guestName.trim(),
+          guest_phone: guestIdNumber.trim(),
+          guest_email: guestEmail.trim() || null,
+          check_in: format(date, 'yyyy-MM-dd'),
+          check_out: format(checkoutDate, 'yyyy-MM-dd'),
+          room_rate: roomRate,
+          room_total: totalAmount,
+          total_amount: totalAmount,
+          total_price: totalAmount,
+          room_number: room.number,
+          room_type: room.type,
+          guest_count: adults + children,
+          adults,
+          children,
+          status: 'confirmed',
+          payment_status: 'pending',
+          breakfast_included: false,
+          breakfast_pax: 0,
+          breakfast_price: 0,
+          breakfast_total: 0,
+        })
+
+      if (resError) throw resError
+
+      onReservationComplete()
+      onOpenChange(false)
+    } catch (err) {
+      console.error('Error creating reservation:', err)
+      setError('Gagal membuat reservasi: ' + (err as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 dark:text-white">
+            <Calendar className="h-6 w-6 text-blue-600" />
+            Reservasi Baru — Kamar {room?.number}
+          </DialogTitle>
+          <DialogDescription className="text-slate-600 dark:text-gray-300">
+            Buat reservasi untuk {date ? format(date, 'dd MMMM yyyy', { locale: localeId }) : ''} — {room?.type} ({formatCurrencyCompat(roomRate)}/malam)
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="overflow-y-auto max-h-[65vh] pr-2">
+          <div className="space-y-6 py-4">
+            {/* Guest Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Nama Tamu *
+                </Label>
+                <Input value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="Nama lengkap tamu" className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  No. KTP *
+                </Label>
+                <Input value={guestIdNumber} onChange={e => setGuestIdNumber(e.target.value)} placeholder="Masukkan nomor KTP" className="h-11" />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </Label>
+                <Input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} placeholder="email@contoh.com (opsional)" className="h-11" />
+              </div>
+            </div>
+
+            {/* Stay Details */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Check-in</Label>
+                <div className="h-11 px-3 py-2 bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md flex items-center font-medium text-sm">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {date ? format(date, 'dd MMM yyyy') : ''}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Check-out</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("h-11 w-full justify-start text-left font-normal border-slate-300 dark:border-gray-600")}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {format(checkoutDate, 'dd MMM yyyy')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50">
+                    <CalendarComponent
+                      mode="single"
+                      selected={checkoutDate}
+                      onSelect={(d) => d && setCheckoutDate(d)}
+                      disabled={(d) => d <= (date || new Date())}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <Label>Durasi Menginap</Label>
+                <div className="h-11 px-3 py-2 bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md flex items-center justify-center font-bold text-lg">
+                  {nights} malam
+                </div>
+              </div>
+            </div>
+
+            {/* Guest Count */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Dewasa</Label>
+                <div className="flex items-center gap-3">
+                  <Button type="button" variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => setAdults(Math.max(1, adults - 1))} disabled={adults <= 1}><Minus className="h-4 w-4" /></Button>
+                  <div className="h-9 w-12 flex items-center justify-center bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md font-bold">{adults}</div>
+                  <Button type="button" variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => setAdults(adults + 1)}><Plus className="h-4 w-4" /></Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Anak-anak</Label>
+                <div className="flex items-center gap-3">
+                  <Button type="button" variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => setChildren(Math.max(0, children - 1))} disabled={children <= 0}><Minus className="h-4 w-4" /></Button>
+                  <div className="h-9 w-12 flex items-center justify-center bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md font-bold">{children}</div>
+                  <Button type="button" variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => setChildren(children + 1)}><Plus className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Price Summary */}
+            <Card className="bg-slate-200 dark:bg-gray-700 border-slate-300 dark:border-gray-600">
+              <CardContent className="pt-3 pb-3">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Tarif per malam:</span>
+                    <span className="font-medium">{formatCurrencyCompat(roomRate)}</span>
+                  </div>
+                  <hr className="border-slate-300 dark:border-gray-500" />
+                  <div className="flex justify-between font-bold text-lg text-blue-600 dark:text-blue-400">
+                    <span>Total ({nights} malam):</span>
+                    <span>{formatCurrencyCompat(totalAmount)}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">* Pembayaran dilakukan saat check-in</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {error && (
+              <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/20 dark:border-red-700 dark:text-red-300">
+                {error}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Batal</Button>
+          <Button
+            onClick={handleCreateReservation}
+            disabled={loading || !guestName.trim() || !guestIdNumber.trim()}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Memproses...
+              </div>
+            ) : (
+              "Buat Reservasi"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function OccupancyPage() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Calendar State
+  const [calendarStartDate, setCalendarStartDate] = useState(new Date())
+  const [calendarReservations, setCalendarReservations] = useState<any[]>([])
+  
+  const fetchCalendarReservations = async (startDate: Date) => {
+    try {
+      // Fetch -1 day to +14 days to cover full spans
+      const endDate = addDays(startDate, 14)
+      const data = await adminFetchCalendarReservations(format(subDays(startDate, 1), 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'))
+      
+      setCalendarReservations(data)
+    } catch (err) {
+      console.error('Error fetching calendar reservations:', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchCalendarReservations(calendarStartDate)
+  }, [calendarStartDate])
 
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [floorFilter, setFloorFilter] = useState<string>("all")
@@ -2201,6 +2564,11 @@ export default function OccupancyPage() {
 
   const [checkinDialogOpen, setCheckinDialogOpen] = useState(false)
   const [checkoutDialogOpen, setCheckoutDialogOpen] = useState(false)
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
+  const [selectedHistoryReservation, setSelectedHistoryReservation] = useState<any>(null)
+  const [calendarBookingDialogOpen, setCalendarBookingDialogOpen] = useState(false)
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(null)
+  const [housekeepingStaff, setHousekeepingStaff] = useState<any[]>([])
 
   const applyFilters = useCallback(() => {
     let result = [...rooms]
@@ -2230,18 +2598,13 @@ export default function OccupancyPage() {
 
       if (roomsError) throw roomsError
 
-      const { data: reservationsData, error: reservationsError } = await supabase
-        .from('reservations')
-        .select('room_id, status')
-        .in('status', ['confirmed', 'checked-in'])
-
-      if (reservationsError) throw reservationsError
+      const reservationsData = await adminFetchActiveReservations()
 
       const occupiedRoomIds = new Set(
-        reservationsData.filter(r => r.status === 'checked-in').map(r => r.room_id)
+        reservationsData.filter((r: any) => r.status === 'checked-in').map((r: any) => r.room_id)
       )
       const reservedRoomIds = new Set(
-        reservationsData.filter(r => r.status === 'confirmed').map(r => r.room_id)
+        reservationsData.filter((r: any) => r.status === 'confirmed').map((r: any) => r.room_id)
       )
 
       const updatedRooms = roomsData.map(room => {
@@ -2270,10 +2633,56 @@ export default function OccupancyPage() {
 
   const handleCheckoutComplete = async () => {
     await fetchRooms()
+    await fetchCalendarReservations(calendarStartDate)
   }
+
+  const fetchRoomsCallback = useCallback(fetchRooms, [])
+  const fetchCalendarReservationsCallback = useCallback(() => fetchCalendarReservations(calendarStartDate), [calendarStartDate])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('occupancy-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'reservations',
+      }, () => {
+        fetchRoomsCallback()
+        fetchCalendarReservationsCallback()
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'payments',
+      }, () => {
+        fetchRoomsCallback()
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'rooms',
+      }, () => {
+        fetchRoomsCallback()
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [calendarStartDate, fetchRoomsCallback, fetchCalendarReservationsCallback])
 
   useEffect(() => {
     fetchRooms()
+  }, [])
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const staff = await adminFetchHousekeepingStaff()
+        setHousekeepingStaff(staff)
+      } catch (err) {
+        console.error('Error fetching housekeeping staff:', err)
+      }
+    }
+    fetchStaff()
   }, [])
 
   useEffect(() => {
@@ -2407,8 +2816,245 @@ export default function OccupancyPage() {
         </Card>
       </div>
 
+            {/* GLOBAL ROOM FILTERS */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Room Occupancy & Management</h2>
+        <Button onClick={() => setShowFilters(!showFilters)} variant="outline">
+          <Filter className="mr-2 h-4 w-4" />
+          Filters
+        </Button>
+      </div>
+
+      {showFilters && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Filter Rooms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="typeFilter">Room Type</Label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger id="typeFilter">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {roomTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="floorFilter">Floor</Label>
+                <Select value={floorFilter} onValueChange={setFloorFilter}>
+                  <SelectTrigger id="floorFilter">
+                    <SelectValue placeholder="All Floors" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Floors</SelectItem>
+                    {floors.map(floor => (
+                      <SelectItem key={floor} value={floor.toString()}>Floor {floor}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="statusFilter">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="statusFilter">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="occupied">Occupied</SelectItem>
+                    <SelectItem value="reserved">Reserved</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setTypeFilter("all")
+                  setFloorFilter("all")
+                  setStatusFilter("all")
+                }}
+              >
+                Clear Filters
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredRooms.length} of {rooms.length} rooms
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 7-DAY OCCUPANCY CALENDAR */}
+      <div className="space-y-4 mt-8 mb-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">Occupancy Calendar</h2>
+            <Badge variant="outline" className="ml-2 bg-slate-100 text-slate-800 dark:bg-gray-800 dark:text-gray-300 border-slate-200 dark:border-gray-700">7 Days</Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className={cn("h-10 border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-200", !calendarStartDate && "text-muted-foreground")}
+                >
+                  <Calendar className="mr-2 h-4 w-4 text-blue-600" />
+                  {format(calendarStartDate, "dd MMM yyyy", { locale: localeId })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 z-50">
+                <CalendarComponent
+                  mode="single"
+                  selected={calendarStartDate}
+                  onSelect={(date) => date && setCalendarStartDate(date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg dark:bg-gray-800 border border-slate-200 dark:border-gray-700">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md" onClick={() => setCalendarStartDate(subDays(calendarStartDate, 14))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" className="h-8 px-3 rounded-md font-medium text-sm" onClick={() => setCalendarStartDate(new Date())}>
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md" onClick={() => setCalendarStartDate(addDays(calendarStartDate, 14))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <Card className="overflow-hidden border-slate-200 dark:border-gray-800 shadow-sm">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1200px] p-0">
+              <div className="flex border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-4 pb-3">
+                <div className="w-48 flex-shrink-0 font-semibold text-slate-500 uppercase tracking-wider text-xs flex items-center">Room</div>
+                <div className="flex-grow grid gap-2" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
+                  {eachDayOfInterval({ start: calendarStartDate, end: addDays(calendarStartDate, 13) }).map((date, i) => (
+                    <div key={i} className={`text-center py-1 rounded-md ${isSameDay(date, new Date()) ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-slate-600 dark:text-gray-400'}`}>
+                      <div className="text-[10px] uppercase tracking-wider font-semibold">{format(date, 'EEE')}</div>
+                      <div className="text-base font-bold">{format(date, 'dd')}</div>
+                      <div className="text-[9px] font-medium opacity-70">{format(date, 'MMM')}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="divide-y divide-slate-100 dark:divide-gray-800 p-4">
+                {filteredRooms.map(room => (
+                  <div key={room.id} className="flex items-center py-2 hover:bg-slate-50 dark:hover:bg-gray-900/50 transition-colors rounded-lg group">
+                    <div className="w-48 flex-shrink-0 pl-2">
+                      <div className="font-bold text-slate-800 dark:text-gray-200 text-base flex items-center gap-2">
+                        {room.number}
+                        {room.status === 'maintenance' && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                        {room.status === 'cleaning' && <span className="text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded animate-pulse">🧹 CLEANING</span>}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium bg-slate-100 dark:bg-gray-800 px-2 py-0.5 rounded inline-block mt-1">{room.type}</div>
+                    </div>
+                    <div className="flex-grow grid gap-2 h-12" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
+                      {eachDayOfInterval({ start: calendarStartDate, end: addDays(calendarStartDate, 13) }).map((date, i) => {
+                        const d = new Date(date);
+                        d.setHours(0,0,0,0);
+                        const matchingReservations = calendarReservations.filter(r => {
+                          if (r.room_id !== room.id) return false;
+                          const ci = new Date(r.check_in); ci.setHours(0,0,0,0);
+                          const co = new Date(r.check_out); co.setHours(0,0,0,0);
+                          return d >= ci && d <= co;
+                        })
+                        const statusPriority: Record<string, number> = { 'checked-in': 0, 'overdue': 1, 'confirmed': 2, 'checked-out': 3 }
+                        const reservation = matchingReservations.sort((a, b) => (statusPriority[a.status] ?? 99) - (statusPriority[b.status] ?? 99))[0] || null
+                        
+                        return (
+                          <div 
+                            key={i} 
+                            onClick={() => {
+                              setSelectedRoom(room)
+                              if (reservation) {
+                                if (reservation.status === 'confirmed') setCheckinDialogOpen(true)
+                                else if (reservation.status === 'checked-in' || reservation.status === 'overdue') setCheckoutDialogOpen(true)
+                                else if (reservation.status === 'checked-out') {
+                                  setSelectedHistoryReservation(reservation)
+                                  setHistoryDialogOpen(true)
+                                }
+                              } else {
+                                if (room.status === 'cleaning') return
+                                const clickedDate = new Date(date)
+                                clickedDate.setHours(0,0,0,0)
+                                const today = new Date()
+                                today.setHours(0,0,0,0)
+                                if (clickedDate.getTime() === today.getTime()) {
+                                  setCheckinDialogOpen(true)
+                                } else if (clickedDate > today) {
+                                  setCalendarSelectedDate(clickedDate)
+                                  setCalendarBookingDialogOpen(true)
+                                }
+                              }
+                            }}
+                            className={cn(
+                              "h-full rounded-md flex flex-col justify-center text-xs overflow-hidden cursor-pointer border transition-all duration-200 shadow-sm relative group-hover:border-slate-300 dark:group-hover:border-gray-600",
+                              reservation ? (
+                                reservation.status === 'overdue' ? 'bg-red-100 border-red-400 text-red-900 dark:bg-red-900/40 dark:border-red-600 dark:text-red-100 ring-1 ring-red-400 animate-pulse' :
+                                reservation.status === 'checked-in' ? 'bg-red-50 border-red-200 text-red-800 hover:bg-red-100 hover:shadow dark:bg-red-900/25 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-900/40' :
+                                reservation.status === 'confirmed' ? 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100 hover:shadow dark:bg-purple-900/25 dark:border-purple-800 dark:text-purple-200 dark:hover:bg-purple-900/40' :
+                                reservation.status === 'checked-out' ? 'bg-slate-200 border-slate-300 text-slate-600 hover:bg-slate-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 opacity-60' :
+                                'bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                              ) : room.status === 'cleaning' ? "bg-amber-50/60 border-amber-200 dark:bg-amber-900/15 dark:border-amber-700 cursor-not-allowed" : "bg-transparent border-dashed border-slate-200 dark:border-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:border-blue-700 dark:hover:text-blue-300 group-hover:border-solid text-transparent"
+                            )}
+                          >
+                            {reservation ? (
+                              <div className="px-1 text-left w-full relative z-10 flex flex-col items-center justify-center">
+                                <span className="block font-semibold truncate text-[9px] w-full text-center">{reservation.guest_name?.split(' ')[0]}</span>
+                                <div className="flex gap-0.5 items-center">
+                                  {isSameDay(new Date(reservation.check_in), date) && <span className="bg-white/60 dark:bg-black/40 px-0.5 rounded-[3px] text-[8px] font-bold">IN</span>}
+                                  {isSameDay(new Date(reservation.check_out), date) && <span className="bg-white/60 dark:bg-black/40 px-0.5 rounded-[3px] text-[8px] font-bold">OUT</span>}
+                                </div>
+                              </div>
+                            ) : room.status === 'cleaning' ? (
+                              <div className="flex flex-col items-center justify-center h-full w-full bg-amber-50/50 dark:bg-amber-900/15">
+                                <span className="text-[8px] font-bold text-amber-700 dark:text-amber-300">🧹</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center h-full w-full opacity-0 hover:opacity-100 transition-opacity">
+                                <Plus className="h-3 w-3" />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="bg-slate-50 dark:bg-gray-900/50 border-t border-slate-200 dark:border-gray-800 p-3 flex gap-6 text-xs text-slate-600 dark:text-gray-400 justify-center">
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full border border-purple-500"></div> Booked (Confirmed)</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-400"></div> In-House (Checked-In)</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-400 opacity-60"></div> Checked-Out</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500 ring-2 ring-red-200 animate-pulse"></div> Overdue</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm border border-dashed border-slate-300 dark:border-gray-700"></div> Available</div>
+            <div className="ml-4 flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-600" /> Paid</div>
+            <div className="flex items-center gap-2"><AlertTriangle className="w-3 h-3 text-orange-500" /> Pending</div>
+          </div>
+        </Card>
+      </div>
+
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Room Occupancy</h2>
+        <h2 className="text-xl font-bold text-slate-600 dark:text-gray-400">Room Status Grid</h2>
         <Button
           onClick={() => setShowFilters(!showFilters)}
           variant="outline"
@@ -2503,14 +3149,14 @@ export default function OccupancyPage() {
                   </span>
                 )}
               </CardTitle>
-              <Badge className={statusVariants[room.status || 'available']}>
+              <Badge className={statusVariants[(room.status || "available") as "available"|"occupied"|"reserved"|"cleaning"|"maintenance"|"out-of-order"]}>
                 {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'}
               </Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{room.type}</div>
               <p className="text-xs text-muted-foreground">
-                {formatCurrencyCompat(room.price)} per night
+                {formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0))} per night
               </p>
 
               {/* Occupancy Actions */}
@@ -2522,7 +3168,7 @@ export default function OccupancyPage() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300"
+                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
                         onClick={() => {
                           setSelectedRoom(room)
                           setCheckinDialogOpen(true)
@@ -2543,7 +3189,7 @@ export default function OccupancyPage() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300"
+                      className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:hover:bg-yellow-900/50"
                       onClick={() => handleCheckout(room)}
                     >
                       🚪 Check-out
@@ -2553,7 +3199,7 @@ export default function OccupancyPage() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      className="bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
                       onClick={() => {
                         setSelectedRoom(room)
                         setCheckinDialogOpen(true)
@@ -2566,19 +3212,46 @@ export default function OccupancyPage() {
 
                 {/* Status Info */}
                 {room.status === 'cleaning' && (
-                  <div className="text-xs text-orange-600 font-medium flex items-center gap-1 bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
-                    🧹 Being cleaned - HIGH priority task active
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium flex items-start gap-2 bg-amber-50 dark:bg-amber-900/25 border border-amber-300 dark:border-amber-600 p-3 rounded-lg">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5 animate-pulse" />
+                      <div>
+                        <div className="text-amber-800 dark:text-amber-200 font-bold">⚠️ WAJIB DIBERSIHKAN</div>
+                        <div className="text-amber-700 dark:text-amber-300 mt-0.5">Kamar belum siap untuk check-in baru</div>
+                      </div>
+                    </div>
+                    {housekeepingStaff.length > 0 && (
+                      <div className="text-xs text-slate-600 dark:text-gray-300 bg-slate-50 dark:bg-gray-800 p-2 rounded flex items-center gap-1">
+                        👷 Housekeeping: {housekeepingStaff.map(s => s.full_name).join(', ')}
+                      </div>
+                    )}
+                    <Button
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        try {
+                          const { error: updateErr } = await supabase.from('rooms').update({ status: 'available' }).eq('id', room.id)
+                          if (updateErr) throw updateErr
+                          fetchRooms()
+                        } catch (err) {
+                          console.error('Error marking room clean:', err)
+                        }
+                      }}
+                    >
+                      ✅ Tandai Sudah Bersih
+                    </Button>
                   </div>
                 )}
                 {room.status === 'maintenance' && (
-                  <div className="text-xs text-blue-600 font-medium flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                  <div className="text-xs text-blue-700 dark:text-blue-300 font-medium flex items-center gap-1 bg-blue-50 dark:bg-blue-900/25 p-2 rounded">
                     🔧 Under maintenance - Temporary repair needed
                   </div>
                 )}
                 {room.status === 'out-of-order' && (
-                  <div className="text-xs text-red-700 font-medium flex items-center gap-1 bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800">
+                  <div className="text-xs text-red-700 dark:text-red-300 font-medium flex items-center gap-1 bg-red-50 dark:bg-red-900/25 p-2 rounded border border-red-200 dark:border-red-700">
                     🚫 OUT OF ORDER - Major repair/renovation required
-                    <span className="text-xs text-red-600 dark:text-red-400 ml-2">
+                    <span className="text-xs text-red-600 dark:text-red-300 ml-2">
                       Cannot be booked until fixed
                     </span>
                   </div>
@@ -2595,7 +3268,7 @@ export default function OccupancyPage() {
         room={selectedRoom}
         open={checkinDialogOpen}
         onOpenChange={setCheckinDialogOpen}
-        onCheckinComplete={fetchRooms}
+        onCheckinComplete={async () => { await fetchRooms(); await fetchCalendarReservations(calendarStartDate); }}
       />
 
       {/* Checkout Dialog */}
@@ -2604,6 +3277,24 @@ export default function OccupancyPage() {
         open={checkoutDialogOpen}
         onOpenChange={setCheckoutDialogOpen}
         onCheckoutComplete={handleCheckoutComplete}
+      />
+      {/* History Dialog */}
+      <GuestHistoryDialog
+        reservation={selectedHistoryReservation}
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+      />
+
+      {/* Calendar Booking Dialog */}
+      <CalendarBookingDialog
+        room={selectedRoom}
+        date={calendarSelectedDate}
+        open={calendarBookingDialogOpen}
+        onOpenChange={setCalendarBookingDialogOpen}
+        onReservationComplete={async () => {
+          await fetchRooms()
+          await fetchCalendarReservations(calendarStartDate)
+        }}
       />
     </motion.div>
   )

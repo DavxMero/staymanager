@@ -107,11 +107,26 @@ export function AddInvoiceForm({
     setLoading(true)
 
     try {
+      const amountNum = parseFloat(formData.amount);
       const invoiceData: Omit<Invoice, 'id' | 'created_at'> = {
-        reservation_id: parseInt(formData.reservation_id),
-        amount: parseFloat(formData.amount),
+        reservation_id: formData.reservation_id,
+        amount: amountNum,
+        subtotal: amountNum,
+        tax_amount: 0,
+        discount_amount: 0,
+        total_amount: amountNum,
+        status: formData.status,
         due_date: formData.due_date,
-        status: formData.status
+        invoice_number: undefined,
+        service_charge: undefined,
+        payment_method: undefined,
+        payment_reference: undefined,
+        issue_date: undefined,
+        paid_at: undefined,
+        notes: undefined,
+        updated_at: undefined,
+        created_by: undefined,
+        guest_id: undefined,
       }
 
       await onAddInvoice(invoiceData)
@@ -131,7 +146,7 @@ export function AddInvoiceForm({
     }
   }
 
-  const selectedReservation = reservations.find(r => r.id === parseInt(formData.reservation_id))
+  const selectedReservation = reservations.find(r => r.id === formData.reservation_id)
   const selectedGuest = selectedReservation ? guests.find(g => g.id === selectedReservation.guest_id) : null
   const selectedRoom = selectedReservation ? rooms.find(r => r.id === selectedReservation.room_id) : null
 

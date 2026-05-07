@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     let revenueQuery = supabase
       .from('invoices')
       .select(`
-        amount,
+        total_amount,
         status,
         created_at,
         reservation_id
@@ -141,7 +141,7 @@ function calculateAnalytics(data: any) {
   const { invoices, reservations, rooms, roomService, housekeeping, billingItems, startDate, endDate } = data
 
   const totalRevenue = invoices.reduce((sum: number, invoice: any) => {
-    return sum + (invoice.status === 'paid' ? (invoice.amount || 0) : 0)
+    return sum + (invoice.status === 'paid' ? (invoice.total_amount || 0) : 0)
   }, 0)
 
   const totalBookings = reservations.length
@@ -181,10 +181,10 @@ function calculateAnalytics(data: any) {
 
     monthlyRevenue.push({
       month: format(subMonths(new Date(), i), 'MMM'),
-      revenue: monthInvoices.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0),
+      revenue: monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || 0), 0),
       bookings: monthBookings.length,
       adr: monthBookings.length > 0
-        ? monthInvoices.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) / monthBookings.length
+        ? monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || 0), 0) / monthBookings.length
         : 0,
       occupancy: Math.min(95, 60 + Math.random() * 35)
     })

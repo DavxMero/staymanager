@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from 'ai/react';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomCard } from '@/components/chatbot/RoomCard';
 import { BookingConfirmation } from '@/components/chatbot/BookingConfirmation';
@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LogIn, UserPlus, LayoutDashboard, History, PanelLeft } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
+import { toLocalDateString } from '@/lib/utils';
 
 interface Room {
   id: string;
@@ -46,7 +47,7 @@ export default function ChatbotPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [initialMessages, setInitialMessages] = useState<any[]>([]);
   const { theme, setTheme } = useTheme();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const { toggleSidebar } = useSidebar();
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
@@ -135,7 +136,8 @@ export default function ChatbotPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -294,8 +296,8 @@ export default function ChatbotPage() {
 
     setShowBooking({
       room,
-      checkIn: selectedDates.checkIn || new Date().toISOString().split('T')[0],
-      checkOut: selectedDates.checkOut || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      checkIn: selectedDates.checkIn || toLocalDateString(new Date()),
+      checkOut: selectedDates.checkOut || toLocalDateString(new Date(Date.now() + 86400000)),
       guestName: guestInfo.name,
       guestEmail: guestInfo.email,
       guestPhone: guestInfo.phone,
@@ -483,10 +485,10 @@ Phone: ${info.guestPhone}`
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 text-gray-800 dark:text-gray-100">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-[#0a0a0a] dark:via-[#0a0a0a] dark:to-[#0a0a0a] text-gray-800 dark:text-gray-100">
 
       {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 px-6 py-4 shadow-sm sticky top-0 z-10">
+      <header className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 px-6 py-4 shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -500,7 +502,7 @@ Phone: ${info.guestPhone}`
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 StayManager AI Concierge
               </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-300">
                 Professional Hotel Assistant • Available 24/7
               </p>
             </div>
@@ -564,8 +566,8 @@ Phone: ${info.guestPhone}`
 
             {/* Status Badge */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isLoading
-              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
               }`}>
               <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
               {isLoading ? 'Typing...' : 'Online'}
@@ -626,7 +628,7 @@ Phone: ${info.guestPhone}`
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 Welcome to StayManager
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
                 Your professional hotel concierge is here to assist you. I can help you check room availability, make reservations, and answer any questions about our hotel.
               </p>
 
@@ -650,10 +652,10 @@ Phone: ${info.guestPhone}`
                         content: action.prompt
                       });
                     }}
-                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-500 dark:hover:border-blue-400 transition-all group"
+                    className="bg-white dark:bg-[#1a1a1a] border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-500 dark:hover:border-blue-400 transition-all group"
                   >
                     <div className="text-3xl mb-2">{action.icon}</div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-300">
                       {action.text}
                     </div>
                   </motion.button>
@@ -691,7 +693,7 @@ Phone: ${info.guestPhone}`
                     <div
                       className={`p-4 rounded-2xl shadow-sm ${m.role === 'user'
                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none'
-                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none'
+                        : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none'
                         }`}
                     >
                       {/* Avatar & Role */}
@@ -702,7 +704,7 @@ Phone: ${info.guestPhone}`
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                             </svg>
                           </div>
-                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">AI Concierge</span>
+                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-300">AI Concierge</span>
                         </div>
                       )}
 
@@ -727,7 +729,7 @@ Phone: ${info.guestPhone}`
                               key={tool.toolCallId}
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              className="mt-3 flex items-center gap-2 text-xs bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-gray-300 p-3 rounded-lg border border-blue-200 dark:border-gray-700"
+                              className="mt-3 flex items-center gap-2 text-xs bg-blue-50 dark:bg-[#1a1a1a] text-blue-600 dark:text-gray-300 p-3 rounded-lg border border-blue-200 dark:border-gray-700"
                             >
                               <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -797,12 +799,12 @@ Phone: ${info.guestPhone}`
       </main>
 
       {/* Input Area */}
-      <footer className="bg-white/80 dark:bg-gray-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 p-4 md:p-6 sticky bottom-0 z-10">
+      <footer className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 p-4 md:p-6 sticky bottom-0 z-10">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex gap-3 items-end">
             <textarea
               ref={textareaRef}
-              className="flex-1 px-5 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-gray-500 focus:border-transparent transition-all text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 resize-none custom-scrollbar"
+              className="flex-1 px-5 py-4 bg-gray-50 dark:bg-[#1a1a1a] border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-gray-500 focus:border-transparent transition-all text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-400 resize-none custom-scrollbar"
               style={{ minHeight: '56px', maxHeight: '200px', overflowY: 'hidden' }}
               value={input}
               onChange={handleInputChange}
@@ -821,7 +823,7 @@ Phone: ${info.guestPhone}`
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-600 disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-semibold transition-all shadow-lg disabled:shadow-none flex items-center justify-center gap-2 h-[56px] flex-shrink-0"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-[#2a2a2a] dark:disabled:to-[#222222] disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-semibold transition-all shadow-lg disabled:shadow-none flex items-center justify-center gap-2 h-[56px] flex-shrink-0"
             >
               {isLoading ? (
                 <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

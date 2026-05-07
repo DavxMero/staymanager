@@ -10,7 +10,7 @@ import {
 import { Invoice } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 
-const statusVariants = {
+const statusVariants: Record<string, string> = {
   paid: "bg-green-100 text-green-800",
   pending: "bg-yellow-100 text-yellow-800",
   overdue: "bg-red-100 text-red-800",
@@ -47,8 +47,8 @@ export function BillingInvoicesTable({
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-right">
-                  <div className="font-medium">{formatCurrency(invoice.amount)}</div>
-                  <Badge className={statusVariants[invoice.status]}>
+                  <div className="font-medium">{formatCurrency(invoice.total_amount)}</div>
+                  <Badge className={statusVariants[invoice.status || "pending"]}>
                     {invoice.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}
                   </Badge>
                 </div>

@@ -88,12 +88,12 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
                         type="email"
                     />
                     <InfoField
-                        label="Phone"
+                        label="ID Number (No. KTP)"
                         value={localInfo.guestPhone}
                         editMode={editMode}
                         onChange={(v) => setLocalInfo({ ...localInfo, guestPhone: v })}
-                        icon="📱"
-                        type="tel"
+                        icon="🪪"
+                        type="text"
                     />
                 </div>
 

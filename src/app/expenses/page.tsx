@@ -290,10 +290,10 @@ export default function ExpensesPage() {
       amount: expense.amount.toString(),
       category: expense.category,
       subcategory: expense.subcategory || '',
-      payment_method: expense.payment_method,
-      receipt_url: expense.receipt_url || '',
-      supplier: expense.supplier || '',
-      date: expense.expense_date,
+      payment_method: expense.payment_method || '',
+      receipt_url: expense.receipt_number || '',
+      supplier: expense.vendor || '',
+      date: String(expense.expense_date),
       status: expense.status,
       notes: expense.notes || '',
       recurring: expense.recurring || false,
@@ -755,8 +755,8 @@ export default function ExpensesPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium">{expense.description}</p>
-                        {expense.supplier && (
-                          <p className="text-sm text-muted-foreground">{expense.supplier}</p>
+                        {expense.vendor && (
+                          <p className="text-sm text-muted-foreground">{expense.vendor}</p>
                         )}
                       </div>
                     </TableCell>
@@ -774,7 +774,7 @@ export default function ExpensesPage() {
                       {formatCurrency(expense.amount)}
                     </TableCell>
                     <TableCell className="capitalize">
-                      {expense.payment_method.replace('_', ' ')}
+                      {(expense.payment_method || '').replace('_', ' ')}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusInfo.color}>
@@ -797,11 +797,11 @@ export default function ExpensesPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        {expense.receipt_url && (
+                        {expense.receipt_number && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(expense.receipt_url, '_blank')}
+                            onClick={() => window.open(expense.receipt_number, '_blank')}
                           >
                             <Receipt className="h-4 w-4" />
                           </Button>

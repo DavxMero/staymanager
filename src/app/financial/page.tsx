@@ -78,24 +78,12 @@ interface Payment {
     }
 }
 
-interface POSTransaction {
-    id: number
-    transaction_number: string
-    total_amount: number
-    payment_method: string
-    transaction_date: string
-    status: string
-    transaction_type: string
-    guest_name?: string
-}
-
 export default function FinancialPage() {
     const [activeTab, setActiveTab] = useState("overview")
     const [isLoading, setIsLoading] = useState(true)
 
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [payments, setPayments] = useState<Payment[]>([])
-    const [posTransactions, setPosTransactions] = useState<POSTransaction[]>([])
 
     const [totalIncome, setTotalIncome] = useState(0)
     const [totalExpenses, setTotalExpenses] = useState(0)
@@ -103,7 +91,7 @@ export default function FinancialPage() {
 
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false)
     const [newExpense, setNewExpense] = useState({
-        date: new Date().toISOString().split('T')[0],
+        date: format(new Date(), 'yyyy-MM-dd'),
         category: 'supplies',
         amount: '',
         description: '',
@@ -137,31 +125,18 @@ export default function FinancialPage() {
 
             if (paymentsError) console.error('Error fetching payments:', paymentsError)
 
-            const { data: posData, error: posError } = await supabase
-                .from('pos_transactions')
-                .select('*')
-                .eq('status', 'completed')
-                .order('transaction_date', { ascending: false })
-
-            if (posError) console.error('Error fetching POS transactions:', posError)
-
             const loadedExpenses = expensesData || []
             const loadedPayments = paymentsData || []
-            const loadedPos = posData || []
 
             setExpenses(loadedExpenses)
             setPayments(loadedPayments)
-            setPosTransactions(loadedPos)
 
             const expTotal = loadedExpenses.reduce((sum, item) => sum + Number(item.amount), 0)
             const payTotal = loadedPayments.reduce((sum, item) => sum + Number(item.amount), 0)
-            const posTotal = loadedPos.reduce((sum, item) => sum + Number(item.total_amount), 0)
-
-            const incTotal = payTotal + posTotal
 
             setTotalExpenses(expTotal)
-            setTotalIncome(incTotal)
-            setNetProfit(incTotal - expTotal)
+            setTotalIncome(payTotal)
+            setNetProfit(payTotal - expTotal)
 
         } catch (error) {
             console.error('Error loading financial data:', error)
@@ -189,7 +164,7 @@ export default function FinancialPage() {
 
             setIsExpenseDialogOpen(false)
             setNewExpense({
-                date: new Date().toISOString().split('T')[0],
+                date: format(new Date(), 'yyyy-MM-dd'),
                 category: 'supplies',
                 amount: '',
                 description: '',
@@ -412,22 +387,6 @@ export default function FinancialPage() {
                                             <TableCell className="capitalize">{payment.payment_method}</TableCell>
                                             <TableCell className="text-right font-medium text-green-600">
                                                 +{formatCurrency(payment.amount)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {posTransactions.map((pos) => (
-                                        <TableRow key={pos.id}>
-                                            <TableCell>{format(new Date(pos.transaction_date), 'dd MMM yyyy HH:mm')}</TableCell>
-                                            <TableCell>
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium">POS Sale</span>
-                                                    <span className="text-xs text-muted-foreground">{pos.transaction_type}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="font-mono text-xs">{pos.transaction_number}</TableCell>
-                                            <TableCell className="capitalize">{pos.payment_method}</TableCell>
-                                            <TableCell className="text-right font-medium text-green-600">
-                                                +{formatCurrency(pos.total_amount)}
                                             </TableCell>
                                         </TableRow>
                                     ))}

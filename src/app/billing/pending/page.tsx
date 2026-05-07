@@ -120,7 +120,7 @@ export default function PendingPaymentsPage() {
     }
   }
 
-  const fetchUnpaidBillings = async (reservationId: number) => {
+  const fetchUnpaidBillings = async (reservationId: string) => {
     try {
       const billings = await billingItemsApi.getUnpaidByReservationId(reservationId)
       setUnpaidBillings(billings)
@@ -133,7 +133,7 @@ export default function PendingPaymentsPage() {
   const handleViewInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice)
     setIsDialogOpen(true)
-    fetchUnpaidBillings(invoice.reservation_id)
+    fetchUnpaidBillings(String(invoice.reservation_id || ""))
   }
 
   const handleAddBillingItem = async (billingItems: Omit<BillingItem, 'id' | 'created_at'>[]) => {
@@ -141,7 +141,7 @@ export default function PendingPaymentsPage() {
       for (const item of billingItems) {
         await billingItemsApi.create(item)
       }
-      await fetchUnpaidBillings(selectedInvoice?.reservation_id || 0)
+      await fetchUnpaidBillings(String(selectedInvoice?.reservation_id || ""))
       setIsAddingBillingItem(false)
     } catch (err) {
       console.error('Error adding billing items:', err)
@@ -152,7 +152,7 @@ export default function PendingPaymentsPage() {
   const handleUpdateBillingItem = async (id: number, updates: Partial<BillingItem>) => {
     try {
       await billingItemsApi.update(id, updates)
-      await fetchUnpaidBillings(selectedInvoice?.reservation_id || 0)
+      await fetchUnpaidBillings(String(selectedInvoice?.reservation_id || ""))
     } catch (err) {
       console.error('Error updating billing item:', err)
       setError(err instanceof Error ? err.message : 'Failed to update billing item')
@@ -164,7 +164,7 @@ export default function PendingPaymentsPage() {
   }
 
   const getTotalPendingAmount = () => {
-    return getPendingInvoices().reduce((sum, invoice) => sum + invoice.amount, 0)
+    return getPendingInvoices().reduce((sum, invoice) => sum + (invoice.amount || 0), 0)
   }
 
   if (error) {
@@ -219,7 +219,7 @@ export default function PendingPaymentsPage() {
         <CardContent>
           <div className="space-y-4">
             {getPendingInvoices().map((invoice) => {
-              const reservation = reservations.find(r => r.id === invoice.reservation_id)
+              const reservation = reservations.find(r => r.id === String(invoice.reservation_id || ""))
               const guest = guests.find(g => g.id === reservation?.guest_id)
               const room = rooms.find(r => r.id === reservation?.room_id)
 
@@ -235,7 +235,7 @@ export default function PendingPaymentsPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="font-medium">
-                      {formatCurrency(invoice.amount)}
+                      {formatCurrency((invoice.amount || 0))}
                     </div>
                     <Button
                       variant="outline"
@@ -280,7 +280,7 @@ export default function PendingPaymentsPage() {
                   })()}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Amount: {formatCurrency(selectedInvoice.amount)}
+                  Amount: {formatCurrency((selectedInvoice.amount || 0))}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Due Date: {selectedInvoice.due_date ? format(new Date(selectedInvoice.due_date), "MMM dd, yyyy") : 'N/A'}
@@ -306,7 +306,7 @@ export default function PendingPaymentsPage() {
                   <div className="mb-4 p-4 border rounded-lg">
                     <h4 className="font-medium mb-3">Add New Billing Item</h4>
                     <AddBillingItemForm
-                      reservationId={selectedInvoice.reservation_id}
+                      reservationId={String(selectedInvoice.reservation_id || "")}
                       onAddItem={handleAddBillingItem}
                       onCancel={() => setIsAddingBillingItem(false)}
                     />

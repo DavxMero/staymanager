@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { BillingItem } from '@/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, toLocalDateString } from '@/lib/utils';
 
 interface BillingItemForm {
   id: number;
@@ -52,7 +52,7 @@ const defaultItems = {
 };
 
 interface AddBillingItemFormProps {
-  reservationId: number;
+  reservationId: string;
   onAddItem: (items: Omit<BillingItem, 'id' | 'created_at'>[]) => void;
   onCancel: () => void;
 }
@@ -147,12 +147,15 @@ export function AddBillingItemForm({ reservationId, onAddItem, onCancel }: AddBi
     
     const itemsToAdd = billingItems.map(item => ({
       reservation_id: reservationId,
+      item_name: item.description, // using description as item_name
       description: item.description,
       quantity: item.quantity,
       unit_price: item.unitPrice,
       total_price: item.quantity * item.unitPrice,
+      tax_amount: 0, // placeholder
       status: 'pending' as const,
-      category: item.category
+      category: item.category,
+      service_date: toLocalDateString(new Date()),
     }));
     
     onAddItem(itemsToAdd);

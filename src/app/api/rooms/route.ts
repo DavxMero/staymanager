@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase credentials for rooms API:', { 
     url: !!supabaseUrl, 
-    serviceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    anonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
+    serviceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    /* anonKey removed for security */ 
   })
 }
 
@@ -32,10 +32,12 @@ export async function GET(request: NextRequest) {
     const floor = searchParams.get('floor')
     const availability = searchParams.get('availability')
     const limit = searchParams.get('limit')
+    const page = searchParams.get('page')
+    const offset = searchParams.get('offset')
 
     let query = supabase
       .from('rooms')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('number', { ascending: true })
 
     if (search) {
@@ -65,11 +67,25 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    let parsedLimit = 0
     if (limit) {
-      query = query.limit(parseInt(limit))
+      parsedLimit = parseInt(limit)
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        let parsedOffset = 0
+        if (offset) {
+          parsedOffset = parseInt(offset)
+        } else if (page) {
+          const parsedPage = parseInt(page)
+          if (!isNaN(parsedPage) && parsedPage > 0) {
+            parsedOffset = (parsedPage - 1) * parsedLimit
+          }
+        }
+        
+        query = query.range(parsedOffset, Math.max(0, parsedOffset + parsedLimit - 1))
+      }
     }
 
-    const { data, error } = await query
+    const { data, count, error } = await query
 
     if (error) {
       console.error('Database error:', error)
@@ -81,7 +97,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: data || []
+      data: data || [],
+      meta: {
+        count: count || 0,
+        page: page ? parseInt(page) : 1,
+        limit: parsedLimit || (count || 0),
+        totalPages: parsedLimit > 0 ? Math.ceil((count || 0) / parsedLimit) : 1
+      }
     })
 
   } catch (error) {

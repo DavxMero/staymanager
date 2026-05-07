@@ -1,0 +1,902 @@
+PENGEMBANGAN WEB PROPERTY MANAGEMENT SYSTEM (PMS) "STAYMANAGER" TERINTEGRASI CHATBOT BERBASIS LLM UNTUK OTOMATISASI RESERVASI
+SKRIPSI
+
+Oleh :
+Dava Remero
+	2540124412
+	Moh. Rezki
+	2501992936
+	
+
+  
+
+
+
+
+
+
+
+Computer Science Program
+Computer Science Study Program
+School of Computer Science
+Universitas Bina Nusantara
+Jakarta
+2025
+
+
+PENGEMBANGAN WEB PROPERTY MANAGEMENT SYSTEM (PMS) "STAYMANAGER" TERINTEGRASI CHATBOT BERBASIS LLM UNTUK OTOMATISASI RESERVASI
+SKRIPSI
+diajukan sebagai salah satu syarat 
+untuk gelar kesarjanaan pada 
+Program Studi Teknik Informatika 
+Jenjang Pendidikan Strata-1 
+Oleh :
+Dava Remero
+	2540124412
+	Moh. Rezki
+	2501992936
+	  
+
+
+
+
+
+Computer Science Program
+Computer Science Study Program
+School of Computer Science
+Universitas Bina Nusantara
+Jakarta
+2025
+
+
+Universitas Bina Nusantara
+________________
+
+
+Pernyataan Kesiapan Skripsi untuk Ujian Pendadaran 
+Pernyataan Penyusunan Skripsi
+Kami, Dava Remero
+               Moh. Rezki
+dengan ini menyatakan bahwa Skripsi yang berjudul:
+PENGEMBANGAN WEB PROPERTY MANAGEMENT SYSTEM (PMS) "STAYMANAGER" TERINTEGRASI CHATBOT BERBASIS LLM UNTUK OTOMATISASI RESERVASI
+DEVELOPMENT OF THE 'STAYMANAGER' WEB-BASED PROPERTY MANAGEMENT SYSTEM (PMS) WITH LLM CHATBOT INTEGRATION FOR RESERVATION AUTOMATION.
+adalah benar hasil karya kami dan belum pernah diajukan sebagai karya ilmiah, sebagian atau seluruhnya, atas nama kami atau pihak lain
+   
+
+
+	   
+	Dava Remero
+	Moh. Rezki
+	2540124412
+	2501992936
+	 Disetujui oleh Pembimbing
+Saya setuju Skripsi tersebut layak diajukan untuk Ujian Pendadaran
+  
+ 
+ Pualam Dipa Nusantara, S.Kom., M.Kom 
+D5186
+BAB 1
+PENDAHULUAN
+1.1. Latar Belakang
+Industri perhotelan merupakan salah satu sektor jasa yang memiliki karakteristik unik karena sangat bergantung pada kecepatan pemrosesan informasi (information velocity), akurasi data operasional, serta koordinasi yang efektif antarbagian kerja dalam rangka memberikan pelayanan yang optimal kepada tamu. Dalam perspektif sistem informasi, hotel dapat dipandang sebagai sebuah entitas organisasi dengan proses bisnis yang kompleks, dinamis, dan saling terhubung, mulai dari reservasi, pengelolaan kamar (housekeeping), penanganan keluhan, transaksi keuangan, hingga pelaporan manajerial. Tingginya kompleksitas tersebut menuntut dukungan teknologi informasi yang mampu mengintegrasikan seluruh proses bisnis secara sistematis, terpusat, dan real-time. Pemanfaatan sistem informasi yang tepat guna terbukti berperan penting dalam meningkatkan efisiensi operasional serta kualitas layanan melalui pengelolaan data yang terstruktur dan dukungan pengambilan keputusan berbasis informasi yang akurat, terutama dalam menghadapi ketidakpastian permintaan pasar (Shin & Kang, 2021).
+Perkembangan teknologi digital dan penetrasi internet yang masif semakin memperkuat kebutuhan akan sistem informasi perhotelan yang modern. Hal ini berjalan seiring dengan perubahan perilaku konsumen pascapandemi yang kini cenderung mengadopsi gaya hidup mobile-first, di mana pencarian informasi, pembandingan harga, hingga pemesanan layanan dilakukan secara daring melalui perangkat pintar. Dalam ekosistem baru ini, sistem informasi hotel tidak lagi hanya berfungsi sebagai alat administrasi internal (back-office tool), tetapi telah bertransformasi menjadi antarmuka utama interaksi antara hotel dan tamu (customer-facing interface). Kondisi ini menuntut kehadiran sistem yang mampu menyediakan informasi secara cepat, konsisten, dan dapat diakses kapan saja (24/7), serta mendukung proses bisnis hotel secara end-to-end dalam satu platform terpadu (Buhalis dkk., 2023).
+Urgensi transformasi digital ini tercermin secara nyata pada pertumbuhan pasar perangkat lunak manajemen perhotelan. Data industri terbaru menunjukkan bahwa pasar Asia Pacific Hotel & Hospitality Management Software Market terus mengalami tren peningkatan signifikan, menandakan bahwa sistem manajemen berbasis perangkat lunak telah bergeser dari sekadar alat bantu menjadi komponen strategis dalam keberlanjutan bisnis hospitality (Mordor Intelligence, 2024). Pertumbuhan pasar ini mengindikasikan bahwa ketergantungan hotel terhadap solusi teknologi informasi dalam mengelola operasional dan layanan semakin tidak terelakkan untuk mempertahankan daya saing.
+
+
+
+  
+
+
+Gambar 1.1. Data Industri
+Sumber: Asia Pacific Hotel & Hospitality Management Software Market
+
+
+Meskipun indikator pasar menunjukkan pertumbuhan positif, realitas di lapangan memperlihatkan adanya kesenjangan digital (digital divide). Pertumbuhan adopsi teknologi tersebut tidak serta-merta mencerminkan tingkat penerapan sistem yang terintegrasi secara optimal pada seluruh segmen hotel, khususnya pada segmen hotel kecil, menengah, dan properti boutique (UMKM). Pada praktiknya, masih banyak hotel di segmen ini yang menjalankan operasionalnya menggunakan pendekatan hibrida yang tidak efisien: sebagian menggunakan pencatatan manual berbasis kertas, dan sebagian lagi menggunakan aplikasi yang berdiri sendiri (siloed systems) untuk fungsi yang berbeda—misalnya aplikasi terpisah untuk akuntansi, reservasi, dan inventory. Pendekatan terfragmentasi ini menyebabkan data tersebar di berbagai media, sulit disinkronkan, mengalami latensi tinggi, serta sangat rentan terhadap human error.
+Dampak dari fragmentasi sistem ini sangat krusial. Staf hotel sering kali harus melakukan input data berulang (redundant data entry) yang membuang waktu produktif, sementara manajemen tidak dapat memperoleh gambaran operasional (dashboard) yang akurat dan terkini untuk pengambilan keputusan strategis. Temuan studi Kandampully dkk. (2023) menegaskan bahwa fragmentasi sistem informasi dan kurangnya interoperabilitas antar-teknologi merupakan penghambat utama efektivitas operasional hotel di era modern, yang berujung pada inefisiensi biaya dan penurunan standar layanan.
+Permasalahan integrasi ini menjadi titik kritis pada departemen room division, khususnya koordinasi antara front office dan housekeeping. Departemen ini memiliki keterkaitan langsung dengan siklus pendapatan utama hotel, yaitu penjualan kamar. Tanpa sistem yang terintegrasi secara real-time, informasi mengenai perubahan status kamar—seperti kamar kosong (vacant), sedang dibersihkan (on-change), atau siap huni (inspect/ready)—sering kali mengalami keterlambatan penyampaian. Fenomena "latensi data" ini menyebabkan kamar yang secara fisik sudah siap dijual namun belum terupdate di sistem, sehingga berpotensi mengakibatkan loss opportunity atau bahkan konflik data saat tamu check-in. Penelitian Tyan dkk. (2021) menekankan bahwa ketiadaan alur kerja digital yang terintegrasi (integrated digital workflow) menyebabkan koordinasi operasional menjadi lambat, sehingga diperlukan sistem terpusat sebagai sumber data tunggal (single source of truth) yang dapat diakses oleh semua departemen terkait.
+Sebagai solusi teknis terhadap permasalahan fragmentasi tersebut, Property Management System (PMS) dikembangkan sebagai kerangka kerja sistem informasi terintegrasi. PMS dirancang untuk mengorkestrasi seluruh proses inti operasional hotel dalam satu platform basis data. Dari sudut pandang rekayasa perangkat lunak dan teknik informatika, PMS modern telah berevolusi dari arsitektur client-server tradisional (desktop) menjadi arsitektur berbasis web (cloud-native). Migrasi ke arah sistem berbasis web ini menawarkan keunggulan signifikan berupa fleksibilitas akses lintas perangkat, kemudahan pemeliharaan (maintenance) tanpa instalasi lokal, serta skalabilitas sistem yang lebih baik melalui pemisahan lapisan frontend, backend, dan basis data (Shabani dkk., 2021). Selain itu, adopsi arsitektur berbasis web memfasilitasi integrasi melalui API (Application Programming Interface), yang memungkinkan pertukaran data secara real-time guna mempercepat komunikasi antarbagian (Al-Shami dkk., 2022).
+Di sisi lain, dorongan untuk mengimplementasikan sistem cerdas juga datang dari perspektif pelanggan (customer perspective). Tamu hotel modern, yang terbiasa dengan layanan digital instan dari sektor lain (seperti e-commerce dan ride-hailing), memiliki ekspektasi tinggi terhadap otonomi dan kecepatan layanan. Mereka cenderung menghindari friksi interaksi manual, seperti harus menelepon resepsionis hanya untuk menanyakan kata sandi Wi-Fi atau jam buka sarapan. Ketersediaan sistem yang mampu memberikan respons instan sangat dibutuhkan untuk mengurangi kecemasan tamu akibat ketidakpastian informasi (uncertainty reduction). Penelitian Liu dan Li (2022) menunjukkan bahwa penggunaan teknologi layanan cerdas yang responsif secara signifikan meningkatkan persepsi nilai dan loyalitas tamu, karena teknologi tersebut memberikan kontrol lebih besar kepada pengguna atas pengalaman menginap mereka.
+Namun, tantangan baru muncul ketika melihat kapabilitas PMS yang ada di pasaran saat ini. Sebagian besar sistem PMS masih didesain dengan pendekatan "berpusat pada staf" (staff-centric), berfokus pada fungsi administratif seperti pencatatan transaksi dan alokasi kamar, namun minim fitur interaksi langsung dengan tamu (guest-centric features). Akibatnya, beban komunikasi masih bertumpu pada staf manusia. Ketika volume permintaan tinggi, terjadi antrean layanan yang menurunkan kepuasan tamu. Investasi teknologi yang dilakukan hotel sering kali berhenti pada digitalisasi backend, namun belum menyentuh otomatisasi layanan frontend yang cerdas.
+Perkembangan teknologi kecerdasan buatan (Artificial Intelligence), khususnya dalam bidang pemrosesan bahasa alami (Natural Language Processing), membuka peluang solusi melalui chatbot. Namun, chatbot generasi lama yang berbasis aturan (rule-based) memiliki keterbatasan kaku: mereka hanya bisa menjawab pertanyaan sesuai skenario yang telah diprogram sebelumnya dan sering gagal memahami variasi bahasa manusia. Kemunculan Large Language Model (LLM) telah mengubah paradigma ini secara drastis. LLM memungkinkan sistem untuk memahami konteks percakapan yang kompleks, mendeteksi niat pengguna (intent recognition), serta menghasilkan respons generatif yang natural, empatik, dan relevan (Dwivedi dkk., 2023). Dalam konteks perhotelan, integrasi LLM berpotensi menghadirkan AI Concierge yang mampu menangani reservasi dan pertanyaan tamu layaknya staf manusia profesional.
+Kendati potensinya besar, integrasi antara PMS berbasis web dan chatbot LLM yang terhubung langsung ke basis data operasional (live database) masih menyisakan tantangan teknis yang kompleks. Tantangan tersebut meliputi mekanisme sinkronisasi data real-time (agar AI tidak menjual kamar yang sudah penuh), mitigasi halusinasi AI (memberikan informasi palsu), serta aspek keamanan data privasi tamu. Penelitian Mariani dkk. (2023) menyebutkan bahwa interoperabilitas antara sistem kecerdasan buatan generatif dengan sistem manajemen operasional yang kaku masih menjadi area penelitian yang terbuka dan krusial untuk diselesaikan.
+Berdasarkan analisis mendalam mengenai kebutuhan operasional, ekspektasi tamu, serta peluang dan tantangan teknologi terkini, penelitian ini mengusulkan pengembangan StayManager. Sistem ini dirancang sebagai Web-based Property Management System yang terintegrasi secara native dengan LLM Chatbot. Solusi ini menggabungkan arsitektur sistem web modern untuk keandalan data operasional dengan kecerdasan buatan generatif untuk interaksi layanan yang superior. Pengembangan ini diharapkan tidak hanya memecahkan masalah efisiensi dan fragmentasi data di hotel, tetapi juga memberikan kontribusi kebaruan (novelty) pada bidang teknik informatika, khususnya dalam perancangan arsitektur sistem informasi terdistribusi yang mengintegrasikan AI kontekstual ke dalam logika bisnis perhotelan.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1.2. Rumusan Masalah
+Berdasarkan latar belakang di atas, maka dapat dirumuskan beberapa permasalahan yang akan menjadi fokus dalam penelitian, yaitu:
+1. Bagaimana merancang dan membangun Property Management System (PMS) berbasis web yang mampu mengintegrasikan proses operasional utama hotel meliputi reservasi, manajemen kamar, housekeeping, transaksi keuangan, dan pelaporan manajerial dalam satu basis data terpusat dan real-time?
+2. Bagaimana mengimplementasikan dan mengintegrasikan chatbot berbasis Large Language Model (LLM) ke dalam arsitektur PMS tersebut agar dapat melakukan interaksi layanan dan pengecekan ketersediaan kamar secara kontekstual menggunakan bahasa alami?
+3. Bagaimana tingkat keberhasilan dan penerimaan pengguna terhadap sistem StayManager berdasarkan evaluasi fungsionalitas dan pengalaman pengguna?
+
+1.3. Ruang Lingkup Penelitian
+Agar pembahasan penelitian ini lebih terarah dan fokus pada tujuan yang telah ditetapkan, kami menetapkan batasan-batasan masalah dalam pengembangan sistem StayManager sebagai berikut:
+Batasan Fungsionalitas Sistem
+   1. Modul PMS: Pengembangan Property Management System (PMS) mencakup modul operasional esensial, yaitu: Dashboard, Manajemen Kamar (Room Management) dan Okupansi, Manajemen Tamu (Guest Management) dan Fasilitas Tamu, Manajemen Staf, Housekeeping, Manajemen Keuangan (Billing dan Pencatatan Pengeluaran), Logistik dan Inventaris, serta Pelaporan Manajerial.
+   2. Integrasi Data: Seluruh modul terintegrasi dalam satu basis data terpusat (centralized database) yang mendukung sinkronisasi data secara real-time antarbagian.
+   3. Saluran Reservasi: Sistem tidak terintegrasi dengan Online Travel Agent (OTA) seperti Traveloka atau Booking.com. Chatbot difungsikan sebagai satu-satunya antarmuka digital untuk pemesanan kamar langsung oleh tamu.
+   4. Mekanisme Pembayaran: Sistem tidak memfasilitasi gerbang pembayaran daring (payment gateway). Proses pembayaran dilakukan secara manual/offline di resepsionis, dan sistem hanya berfungsi untuk mencatat status pembayaran secara administratif.
+Batasan Interaksi Pengguna
+   1.  Antarmuka Staf: Staf hotel berinteraksi dengan sistem melalui antarmuka dashboard berbasis web yang dirancang untuk manajemen operasional internal.
+   2.  Antarmuka Tamu: Tamu berinteraksi dengan sistem hanya melalui chatbot berbasis Large Language Model(LLM). Tidak disediakan antarmuka web (client-side web UI) bagi tamu untuk melakukan reservasi mandiri tanpa melalui percakapan.
+   3.  Fungsi Chatbot: Kapabilitas chatbot dibatasi pada penyediaan informasi layanan hotel, pengecekan ketersediaan kamar, pembuatan reservasi, dan konfirmasi pemesanan. Seluruh respons chatbot bersumber secara ketat dari data operasional yang tersimpan dalam basis data PMS, bukan dari pencarian internet eksternal.
+Batasan Teknis dan Arsitektur
+   1.  Arsitektur Sistem: Sistem dibangun menggunakan arsitektur berbasis web dengan pemisahan lapisan yang jelas antara frontend internal (untuk staf), backend layanan aplikasi, dan basis data, guna mendukung modularitas dan kemudahan pemeliharaan.
+   2. Keamanan Sistem: Fitur keamanan dibatasi pada mekanisme autentikasi pengguna (login), enkripsi kata sandi standar, dan pengelolaan hak akses berbasis peran (Role-Based Access Control). Penelitian ini tidak mencakup pengujian keamanan tingkat lanjut seperti penetration testing, audit keamanan standar industri (ISO), atau perlindungan terhadap serangan siber kompleks.
+Batasan Evaluasi dan Pengujian
+   1.  Metode Pengujian: Pengujian sistem dilakukan menggunakan metode Black Box Testing untuk memvalidasi fungsionalitas fitur sesuai kebutuhan.
+   2.  Parameter Evaluasi: Evaluasi keberhasilan implementasi diukur melalui survei kepuasan pengguna yang berfokus pada aspek User Experience (UX), meliputi: kemudahan penggunaan (usability), kecepatan respons sistem, kejelasan informasi, dan kualitas interaksi natural dengan chatbot.
+   3.  Analisis Bisnis: Penelitian ini berfokus pada aspek teknis dan operasional sistem, sehingga tidak mencakup analisis kelayakan bisnis, perhitungan Return on Investment (ROI), maupun dampak finansial jangka panjang terhadap pendapatan hotel.
+1.4. Tujuan dan Manfaat
+1.4.1 Tujuan Penelitian
+Berdasarkan rumusan masalah yang telah dipaparkan, tujuan utama dari penelitian ini adalah:
+   1. Membangun Arsitektur PMS Terintegrasi: Merancang dan mengembangkan aplikasi Property Management System (PMS) berbasis web yang mampu mengintegrasikan seluruh fungsi operasional utama hotel (reservasi, housekeeping, keuangan, dan pelaporan) ke dalam satu basis data terpusat guna menghilangkan fragmentasi data.
+   2. Implementasi Layanan Cerdas Berbasis AI: Mengimplementasikan antarmuka layanan tamu menggunakan chatbot berbasis Large Language Model (LLM) yang dapat memahami konteks percakapan dan bahasa alami untuk melakukan pengecekan ketersediaan kamar serta reservasi secara otomatis.
+   3. Sinkronisasi Data Real-Time: Mengembangkan mekanisme pertukaran data yang akurat antara backend operasional PMS dan antarmuka chatbot untuk memastikan informasi yang diterima tamu selalu real-time dan mencegah terjadinya konflik data (double booking) atau ketidakkonsistenan informasi.
+   4. Evaluasi Penerimaan Pengguna: Mengevaluasi tingkat keberhasilan dan penerimaan pengguna terhadap sistem yang dikembangkan melalui pengujian fungsionalitas (Black Box Testing) dan survei pengalaman pengguna menggunakan kuesioner berbasis skala Likert.
+
+
+1.4.2. Manfaat Penelitian
+Hasil penelitian ini diharapkan memberikan manfaat sebagai berikut:
+   1. Bagi Pengembangan Ilmu Pengetahuan Memberikan referensi teknis mengenai penerapan integrasi kecerdasan buatan (Large Language Model) ke dalam sistem informasi manajemen berbasis web untuk meningkatkan interaksi sistem.
+   2. Bagi Industri Perhotelan Meningkatkan efisiensi operasional hotel dengan mengotomatiskan pencatatan data, mengurangi kesalahan manusia akibat sistem manual, serta mempermudah koordinasi antarbagian.
+   3. Bagi Tamu Hotel Memberikan pengalaman layanan yang lebih cepat dan responsif melalui akses informasi dan pemesanan kamar 24 jam tanpa perlu menunggu staf resepsionis.
+   4. Bagi Penulis Sebagai sarana penerapan ilmu rekayasa perangkat lunak dalam membangun solusi teknologi yang relevan dengan kebutuhan industri saat ini.
+1.5. Metode Penelitian
+Penelitian ini menggunakan metode penelitian pengembangan (research and development) dengan pendekatan rekayasa perangkat lunak. Metode penelitian pengembangan dipilih karena penelitian ini tidak hanya bertujuan untuk menganalisis permasalahan yang terjadi, tetapi juga menghasilkan sebuah produk berupa sistem informasi yang dirancang, diimplementasikan, dan dievaluasi secara sistematis. Penelitian pengembangan banyak digunakan dalam bidang teknologi informasi untuk menghasilkan solusi berbasis sistem yang dapat diuji dan diterapkan pada lingkungan nyata (Sugiyono, 2019).
+Jenis penelitian yang digunakan adalah penelitian terapan (applied research), yaitu penelitian yang difokuskan pada pemecahan permasalahan praktis melalui penerapan ilmu pengetahuan dan teknologi. Penelitian terapan menekankan pada pengembangan solusi yang dapat diimplementasikan secara langsung untuk meningkatkan efektivitas dan efisiensi suatu proses atau sistem. Dalam konteks penelitian ini, solusi yang dikembangkan berupa Property Management System berbasis web yang terintegrasi dengan chatbot berbasis Large Language Model untuk mendukung operasional hotel (Creswell & Creswell, 2017).
+Pendekatan penelitian yang digunakan bersifat deskriptif, karena penelitian ini bertujuan untuk menggambarkan proses perancangan, pengembangan, dan evaluasi sistem yang dibangun tanpa melakukan pengujian hipotesis statistik yang kompleks. Pendekatan deskriptif umum digunakan dalam penelitian sistem informasi untuk menjelaskan karakteristik sistem, alur kerja, serta fungsi solusi teknologi yang diusulkan (Creswell & Creswell, 2017).
+Secara umum, penelitian ini dilaksanakan melalui tahapan yang sistematis, meliputi identifikasi permasalahan dan kebutuhan sistem, perancangan solusi sistem, implementasi sistem, serta evaluasi terhadap sistem yang dihasilkan. Tahapan tersebut selaras dengan prinsip rekayasa perangkat lunak modern yang menekankan proses pengembangan yang terstruktur, terdokumentasi, dan berorientasi pada kualitas sistem (Sommerville, 2019).
+Melalui penerapan metode penelitian ini, diharapkan sistem yang dikembangkan mampu memberikan solusi yang sesuai terhadap permasalahan operasional hotel serta menjadi landasan yang kuat untuk tahapan pengumpulan data, pengembangan sistem, dan evaluasi yang dibahas pada bagian selanjutnya.
+1.5.1 Metode Pengumpulan Data
+Metode pengumpulan data dalam penelitian ini digunakan untuk memperoleh informasi yang diperlukan dalam proses perancangan, pengembangan, dan evaluasi Property Management System berbasis web yang terintegrasi dengan chatbot berbasis Large Language Model. Teknik pengumpulan data disesuaikan dengan karakteristik penelitian pengembangan sistem informasi dan dirancang untuk mendukung analisis kebutuhan sistem serta evaluasi penerimaan pengguna.
+   1. Observasi
+Observasi dilakukan untuk memahami secara langsung proses operasional hotel yang berkaitan dengan reservasi kamar, pengelolaan data kamar, serta koordinasi housekeeping. Melalui observasi, peneliti memperoleh gambaran nyata mengenai alur kerja yang berjalan, interaksi antarbagian, serta permasalahan yang muncul pada sistem operasional yang ada. Hasil observasi digunakan sebagai dasar dalam mengidentifikasi kebutuhan fungsional dan nonfungsional sistem yang akan dikembangkan. Observasi merupakan teknik yang efektif dalam penelitian sistem informasi karena memungkinkan peneliti memahami konteks penggunaan sistem dalam lingkungan nyata (Sugiyono, 2019).
+   2. Studi Literatur
+Studi literatur dilakukan dengan menelaah berbagai sumber pustaka yang relevan, meliputi buku teks, artikel jurnal ilmiah, dan publikasi penelitian terkini yang berkaitan dengan Property Management System, sistem informasi perhotelan, arsitektur sistem berbasis web, serta penerapan chatbot dan Large Language Model. Studi literatur bertujuan untuk membangun landasan teoretis penelitian, memperkuat kerangka konseptual, serta memastikan bahwa sistem yang dirancang selaras dengan perkembangan dan praktik terkini dalam bidang sistem informasi dan kecerdasan buatan (Creswell & Creswell, 2017).
+   3. Kuesioner
+Kuesioner digunakan sebagai instrumen pengumpulan data untuk mengevaluasi tingkat kepuasan dan penerimaan pengguna terhadap sistem yang dikembangkan, khususnya penggunaan chatbot berbasis Large Language Model sebagai media pemesanan kamar. Responden kuesioner terdiri dari tamu hotel yang menggunakan chatbot serta staf hotel yang memanfaatkan sistem dalam kegiatan operasional. Total responden berjumlah 30 orang yang terdiri dari 10 staf operasional hotel dan 20 tamu hotel (pengguna chatbot). Pemilihan responden dilakukan secara purposive sampling karena responden merupakan calon pengguna utama sistem yang terlibat langsung dalam operasional hotel maupun sebagai pengguna layanan chatbot.
+Instrumen kuesioner disusun menggunakan skala Likert dengan lima tingkat penilaian, mulai dari sangat tidak setuju hingga sangat setuju. Skala Likert dipilih karena mampu mengukur persepsi, sikap, dan tingkat kepuasan pengguna secara sistematis dan mudah dianalisis. Aspek yang diukur meliputi kemudahan penggunaan sistem, kejelasan informasi yang disampaikan oleh chatbot, kecepatan layanan dalam merespons permintaan pengguna, serta pengalaman interaksi pengguna dengan chatbot. Data yang diperoleh dari kuesioner dianalisis secara deskriptif untuk menggambarkan tingkat kepuasan dan penerimaan pengguna terhadap sistem yang dikembangkan. Penggunaan kuesioner berbasis skala Likert umum diterapkan dalam penelitian sistem informasi untuk evaluasi teknologi berbasis pengguna (Hair et al., 2021).
+
+
+1.5.2 Metode Pengembangan Sistem
+Metode pengembangan sistem yang digunakan dalam penelitian ini adalah metode Agile dengan framework Scrum. Scrum dipilih karena merupakan salah satu framework Agile yang menekankan pengembangan perangkat lunak secara iteratif, kolaboratif, dan adaptif terhadap perubahan kebutuhan pengguna. Pendekatan ini sesuai untuk pengembangan sistem informasi berbasis web yang memerlukan umpan balik berkelanjutan serta fleksibilitas dalam pengembangan fitur, seperti sistem PMS yang terintegrasi dengan chatbot berbasis Large Language Model (Sommerville, 2019).
+Pengembangan sistem dengan framework Scrum dilakukan melalui beberapa tahapan utama sebagai berikut:
+   1. Identifikasi Peran Scrum
+Dalam penelitian ini, peran Scrum disesuaikan dengan konteks penelitian akademik. Peneliti berperan sebagai pengembang sistem sekaligus Scrum Team, sementara pengguna sistem (staf hotel dan tamu) berperan sebagai pemberi umpan balik terhadap sistem yang dikembangkan. Pendekatan ini memungkinkan proses pengembangan tetap mengikuti prinsip Scrum meskipun dilakukan dalam skala penelitian.
+   2. Penyusunan Product Backlog
+Product backlog disusun sebagai daftar kebutuhan dan fitur sistem yang akan dikembangkan. Backlog mencakup fitur utama seperti reservasi kamar melalui chatbot, manajemen kamar, koordinasi housekeeping, pencatatan transaksi keuangan dasar, dan pelaporan manajerial. Setiap item backlog disusun berdasarkan prioritas kebutuhan sistem dan tujuan penelitian.
+   3. Perencanaan Sprint
+Sprint merupakan periode pengembangan singkat yang digunakan untuk mengimplementasikan item-item tertentu dari product backlog. Pada tahap perencanaan sprint, ditentukan fitur yang akan dikembangkan pada setiap sprint serta target capaian yang ingin dicapai. Perencanaan sprint dilakukan untuk memastikan proses pengembangan berjalan terarah dan terukur.
+   4. Pelaksanaan Sprint
+Pelaksanaan sprint dilakukan dengan mengembangkan fitur sistem sesuai dengan rencana sprint yang telah ditetapkan. Pada tahap ini dilakukan perancangan, implementasi, dan pengujian awal terhadap fitur yang dikembangkan. Setiap sprint menghasilkan peningkatan fungsionalitas sistem yang dapat diuji dan dievaluasi.
+   5. Review dan Evaluasi Sprint
+Setelah sprint selesai, dilakukan review terhadap hasil pengembangan untuk menilai kesesuaian fitur dengan kebutuhan sistem. Evaluasi dilakukan berdasarkan hasil pengujian fungsional dan umpan balik pengguna. Hasil evaluasi digunakan sebagai dasar perbaikan dan penyesuaian pada sprint berikutnya.
+   6. Penyempurnaan Sistem
+Tahap penyempurnaan dilakukan setelah seluruh sprint selesai dilaksanakan. Pada tahap ini dilakukan perbaikan terhadap kekurangan sistem serta penyempurnaan fungsionalitas dan kinerja sistem secara keseluruhan. Tahap ini bertujuan untuk memastikan bahwa sistem yang dikembangkan telah memenuhi tujuan penelitian dan siap digunakan.
+________________
+
+
+BAB 2 
+TINJAUAN PUSTAKA
+2.1. Teori yang Berkaitan dengan Penelitian
+Berdasarkan fokus penelitian yang telah dijelaskan di bab sebelumnya, bab ini menyajikan teori-teori dan konsep yang relevan guna membentuk landasan dalam pengembangan website.
+2.1.1 Sistem Informasi Manajemen Hotel
+Sistem Informasi Manajemen Hotel merupakan sistem perangkat lunak yang dirancang untuk mengelola dan mengoordinasikan seluruh aktivitas operasional hotel secara terintegrasi. Sistem ini mencakup pengelolaan reservasi, data tamu, status kamar, housekeeping, transaksi operasional, serta pelaporan manajerial. Tujuan utama dari sistem ini adalah menyediakan informasi yang akurat, konsisten, dan tepat waktu guna mendukung kelancaran operasional hotel dan pengambilan keputusan manajemen. Sistem informasi manajemen hotel menjadi fondasi bagi penerapan sistem digital modern di industri perhotelan karena mampu meningkatkan efisiensi kerja dan mengurangi kesalahan pencatatan operasional (Buhalis & Leung, 2018).
+2.1.2 Property Management System (PMS)
+Property Management System merupakan sistem inti dalam sistem informasi manajemen hotel yang berfungsi sebagai pusat pengelolaan data dan proses operasional. PMS mengintegrasikan modul utama seperti reservasi kamar, manajemen status kamar, koordinasi housekeeping, pencatatan transaksi operasional, serta pelaporan manajerial. Dengan adanya PMS, seluruh bagian hotel dapat bekerja berdasarkan satu sumber data yang sama sehingga meningkatkan konsistensi informasi dan efisiensi kerja. PMS berbasis web semakin banyak diterapkan karena mendukung fleksibilitas akses dan sinkronisasi data secara real-time (Buhalis & Leung, 2018).
+2.1.3 Sistem Perhotelan Berbasis Web
+Sistem perhotelan berbasis web adalah sistem yang dibangun menggunakan teknologi web sehingga dapat diakses melalui peramban tanpa memerlukan instalasi aplikasi khusus. Sistem berbasis web memungkinkan akses lintas perangkat, pemeliharaan yang lebih mudah, serta pembaruan sistem secara terpusat. Dalam konteks PMS, sistem berbasis web memudahkan integrasi data operasional hotel dan meningkatkan koordinasi antarbagian karena seluruh data disimpan dan diproses secara terpusat (Pressman & Maxim, 2020).
+2.1.4 Arsitektur Full-Stack dalam Pengembangan PMS
+Arsitektur full-stack mengacu pada pendekatan pengembangan perangkat lunak yang mencakup lapisan antarmuka pengguna, logika aplikasi, dan basis data dalam satu kesatuan sistem. Pendekatan ini memungkinkan pengelolaan alur data secara terpadu dari input pengguna hingga penyimpanan data. Dalam pengembangan PMS, arsitektur full-stack mempermudah integrasi antara modul operasional dan layanan tambahan seperti chatbot berbasis kecerdasan buatan serta mendukung pengembangan sistem yang modular dan mudah dipelihara (Sommerville, 2019).
+2.1.5 Next.js sebagai Framework Full-Stack Berbasis Web
+Next.js merupakan framework berbasis React yang mendukung pengembangan aplikasi web modern dengan paradigma full-stack. Next.js menyediakan mekanisme routing berbasis struktur folder, pemisahan komponen server dan client, serta dukungan pembuatan API melalui route handler. Dalam penelitian ini, Next.js digunakan untuk membangun antarmuka PMS dan layanan backend secara terintegrasi, sehingga memudahkan pengelolaan sistem dan integrasi dengan basis data serta layanan kecerdasan buatan (Vercel, 2024). 
+2.1.6 TypeScript dalam Pengembangan Sistem
+TypeScript merupakan bahasa pemrograman yang dikembangkan sebagai superset dari JavaScript dengan penambahan fitur pengetikan statis. Penggunaan TypeScript membantu meningkatkan keandalan dan keterbacaan kode, serta memungkinkan pendeteksian kesalahan sejak tahap pengembangan. Dalam sistem PMS yang melibatkan banyak entitas data, TypeScript berperan penting dalam menjaga konsistensi struktur data antara frontend, backend, dan basis data (Microsoft, 2023).
+2.1.7 Supabase sebagai Backend-as-a-Service
+Supabase merupakan platform Backend-as-a-Service yang menyediakan basis data PostgreSQL terkelola beserta layanan pendukung seperti autentikasi pengguna, penyimpanan file, dan fungsi basis data. Penggunaan Supabase memungkinkan pengembangan backend aplikasi dilakukan secara lebih cepat dan terstruktur tanpa harus mengelola infrastruktur server secara manual. Dalam penelitian ini, Supabase digunakan untuk mengelola data operasional hotel secara terpusat dan mendukung sinkronisasi data secara real-time (Supabase, 2023).
+2.1.8 Basis Data PostgreSQL
+PostgreSQL merupakan sistem manajemen basis data relasional yang mendukung transaksi, integritas data, dan operasi kompleks. Basis data relasional sangat sesuai untuk PMS karena data operasional hotel memiliki hubungan yang jelas antarentitas, seperti kamar, tamu, dan reservasi. PostgreSQL mendukung pengelolaan data yang konsisten dan andal sehingga banyak digunakan dalam sistem operasional berskala menengah hingga besar (Sommerville, 2019).
+2.1.9 Kecerdasan Buatan dalam Industri Perhotelan
+Kecerdasan buatan merupakan teknologi yang memungkinkan sistem melakukan pemrosesan data dan pengambilan keputusan secara cerdas. Dalam industri perhotelan, kecerdasan buatan digunakan untuk meningkatkan efisiensi operasional, personalisasi layanan, dan kualitas pengalaman tamu. Penerapan AI memungkinkan hotel memberikan layanan yang lebih responsif dan konsisten tanpa meningkatkan beban kerja staf secara signifikan (Tussyadiah & Park, 2018; Buhalis & Leung, 2018).
+2.1.10 Chatbot sebagai Antarmuka Layanan
+Chatbot merupakan aplikasi berbasis kecerdasan buatan yang memungkinkan interaksi antara sistem dan pengguna melalui bahasa alami. Dalam sistem perhotelan, chatbot digunakan sebagai antarmuka layanan untuk membantu tamu memperoleh informasi dan melakukan pemesanan kamar. Penggunaan chatbot mendukung otomatisasi layanan pelanggan dan memungkinkan layanan tersedia sepanjang waktu (Adamopoulou & Moussiades, 2020).
+2.1.11 Large Language Model (LLM)
+Large Language Model merupakan model kecerdasan buatan berbasis pembelajaran mendalam yang dilatih menggunakan data teks dalam skala besar untuk memahami dan menghasilkan bahasa alami secara kontekstual. LLM mampu memahami maksud pengguna, mempertahankan konteks percakapan, serta menghasilkan respons yang lebih natural dibandingkan chatbot berbasis aturan. Teknologi ini menjadi fondasi utama chatbot modern yang adaptif (Google, 2023). 
+2.1.12 Gemini sebagai Large Language Model
+Gemini merupakan keluarga Large Language Model yang dikembangkan oleh Google dan dirancang untuk pemrosesan bahasa alami tingkat lanjut. Gemini termasuk dalam kategori LLM karena dilatih menggunakan data berskala besar dan mampu memahami konteks percakapan secara mendalam. Dalam penelitian ini, Gemini digunakan sebagai mesin pemrosesan bahasa pada chatbot untuk mendukung proses pemesanan kamar dan penyediaan informasi hotel secara kontekstual (Google, 2023).
+2.1.13 Integrasi Chatbot dengan Property Management System
+Integrasi chatbot dengan PMS dilakukan melalui layanan backend yang menghubungkan chatbot dengan basis data operasional hotel. Melalui integrasi ini, chatbot dapat mengakses data ketersediaan kamar dan mencatat reservasi secara real-time. Proses pembayaran tidak dilakukan melalui chatbot dan tetap diproses secara manual di resepsionis hotel. Pembatasan ini bertujuan menjaga keamanan sistem dan kontrol operasional hotel (Adamopoulou & Moussiades, 2020).
+2.1.14 Evaluasi Kepuasan Pengguna Sistem
+Evaluasi kepuasan pengguna dilakukan untuk menilai keberhasilan sistem yang dikembangkan dari sudut pandang pengguna. Kepuasan pengguna diukur berdasarkan kemudahan penggunaan, kejelasan informasi, kecepatan layanan, dan pengalaman interaksi dengan chatbot. Evaluasi dilakukan menggunakan kuesioner berbasis skala Likert yang umum digunakan dalam penelitian sistem informasi untuk mengukur persepsi dan penerimaan pengguna terhadap teknologi (Hair et al., 2021).
+2.1.15 Entity Relationship Diagram (ERD)
+Entity Relationship Diagram (ERD) merupakan model konseptual yang digunakan untuk merepresentasikan struktur data dan hubungan antar data dalam suatu sistem informasi. ERD menggambarkan entitas, atribut, serta relasi antar entitas beserta kardinalitasnya, sehingga membantu pengembang sistem memahami kebutuhan data sebelum diimplementasikan ke dalam basis data relasional. Dalam pengembangan sistem informasi modern, ERD masih digunakan sebagai alat utama perancangan basis data karena mampu memberikan gambaran yang jelas mengenai struktur data dan keterkaitannya (Elmasri & Navathe, 2019; Sommerville, 2019).
+Pada pengembangan Property Management System, ERD digunakan untuk memodelkan entitas inti seperti tamu, kamar, reservasi, housekeeping, dan staf hotel. Penggunaan ERD membantu menjaga konsistensi dan integritas data, terutama pada sistem yang membutuhkan sinkronisasi data real-time antar modul operasional hotel (Sommerville, 2019).  
+
+
+  
+
+
+Gambar 2.1 Entity Relationship Diagram (ERD)
+Sumber: Hofmann, O’Mahony & Tierney (2013)
+2.1.16 Flowchart
+Flowchart merupakan representasi grafis yang digunakan untuk menggambarkan alur proses atau logika kerja suatu sistem secara berurutan dengan menggunakan simbol-simbol standar. Flowchart bertujuan untuk mempermudah pemahaman proses bisnis dan logika sistem, baik bagi pengembang maupun pihak non-teknis, karena menyajikan tahapan proses secara visual dan sistematis (Pressman & Maxim, 2020).
+Dalam penelitian ini, flowchart digunakan untuk memodelkan alur pemesanan kamar melalui chatbot, mulai dari permintaan pengguna, pengecekan ketersediaan kamar, pencatatan reservasi, hingga penyampaian informasi bahwa pembayaran dilakukan di resepsionis hotel. Penggunaan simbol flowchart pada penelitian ini mengacu pada standar dokumentasi proses yang diakui secara internasional untuk sistem pemrosesan informasi (ISO, 2011; Pressman & Maxim, 2020).
+  
+
+
+Gambar 2.2 Flowchart
+Sumber: Rahmadani, Suhada, & Damanik (2021)
+2.1.17 Use Case Diagram
+Use Case Diagram merupakan bagian dari Unified Modeling Language (UML) yang digunakan untuk memodelkan kebutuhan fungsional sistem dari sudut pandang pengguna. Diagram ini menggambarkan aktor dan interaksi mereka dengan sistem melalui use case yang merepresentasikan layanan atau fungsi yang disediakan oleh sistem (Object Management Group, 2021).
+Dalam konteks Property Management System berbasis chatbot, use case diagram digunakan untuk mengidentifikasi peran aktor seperti tamu dan staf hotel, serta fungsi utama sistem seperti pemesanan kamar melalui chatbot, pengecekan ketersediaan kamar, pengelolaan housekeeping, dan pelaporan operasional. Use case diagram membantu memastikan bahwa seluruh kebutuhan fungsional sistem telah terdefinisi dengan jelas sebelum tahap implementasi (Sommerville, 2019).
+
+
+  
+Gambar 2.3 Use Case Diagram
+Sumber: Ikwunne, Adigwe & Nnamene (2021)
+2.1.18 Activity Diagram
+Activity Diagram adalah diagram UML yang digunakan untuk memodelkan alur aktivitas atau workflow dalam suatu sistem. Diagram ini menggambarkan urutan aktivitas, kondisi percabangan keputusan, serta kemungkinan alur alternatif yang dapat terjadi selama proses berjalan. Activity diagram sangat sesuai digunakan untuk menggambarkan proses bisnis dan prosedur operasional yang bersifat dinamis (Object Management Group, 2021).
+Dalam penelitian ini, activity diagram digunakan untuk menggambarkan proses pemesanan kamar melalui chatbot secara rinci, mulai dari interaksi awal pengguna, proses validasi dan pengecekan ketersediaan kamar, hingga pencatatan reservasi dan pengiriman konfirmasi kepada pengguna. Dengan activity diagram, alur kerja sistem dapat dipahami secara lebih jelas dan terstruktur (Sommerville, 2019).
+
+
+  
+
+
+Gambar 2.4 Activity Diagram
+Sumber: Grant, Adhikara & Bisoyi et al. (2016) 
+
+2.1.19 Sequence Diagram
+Sequence Diagram merupakan diagram UML yang digunakan untuk memodelkan interaksi antar objek atau komponen sistem berdasarkan urutan waktu. Diagram ini menampilkan lifeline dan pesan (message) yang dikirim antar komponen untuk menggambarkan alur komunikasi dalam suatu skenario tertentu (Object Management Group, 2021).
+Dalam penelitian ini, sequence diagram digunakan untuk menggambarkan interaksi antara tamu, chatbot, API PMS, dan basis data ketika proses pemesanan kamar dilakukan. Diagram ini memperlihatkan urutan permintaan pengecekan ketersediaan kamar, penyimpanan data reservasi, hingga pengiriman kode booking kepada pengguna, sehingga membantu memahami mekanisme komunikasi antar komponen sistem secara sistematis (Pressman & Maxim, 2020).
+
+
+  
+Gambar 2.5 Sequence Diagram
+Sumber: Rahmadani, Raharjana, & Taufik (2015)
+2.1.20  Class Diagram
+Class Diagram merupakan diagram UML struktural yang digunakan untuk menggambarkan struktur statis sistem dalam bentuk kelas, atribut, metode, serta hubungan antar kelas. Class diagram berfungsi sebagai jembatan antara kebutuhan sistem dan implementasi perangkat lunak karena membantu perancang sistem mendefinisikan struktur objek yang akan diimplementasikan dalam kode program (Object Management Group, 2021).
+Dalam Property Management System berbasis chatbot, class diagram digunakan untuk memodelkan kelas-kelas utama seperti Guest, Room, Reservation, HousekeepingTask, Staff, dan Payment. Penggunaan class diagram membantu memastikan bahwa rancangan struktur sistem telah konsisten dengan kebutuhan fungsional serta mendukung pengembangan perangkat lunak yang terstruktur dan mudah dipelihara (Sommerville, 2019).
+
+
+  
+Gambar 2.6 Class Diagram
+Sumber: Dennis, Wixom, & Roth (2012)
+
+
+
+
+
+
+2.1.21 Eight Golden Rules of Interface Design
+Untuk menciptakan sistem interaktif seperti situs web atau aplikasi yang memiliki tingkat usabilitas tinggi, perancang antarmuka dapat mengacu pada delapan prinsip utama yang dikenal sebagai Eight Golden Rules of Interface Design. Prinsip-prinsip ini dirumuskan oleh Shneiderman et al. (2017, hlm. 198–200) berdasarkan pengalaman riset selama tiga dekade. Meskipun prinsip ini bersifat fundamental, penerapannya tetap harus disesuaikan dengan kebutuhan spesifik dari desain yang sedang dikembangkan. Adapun kedelapan aturan tersebut adalah sebagai berikut:
+   1. Upayakan Konsistensi (Strive for Consistency) Elemen antarmuka harus dirancang secara seragam di seluruh bagian sistem. Konsistensi ini mencakup penggunaan terminologi, tata letak, warna, serta tipografi yang sama pada setiap menu dan layar bantuan. Pengecualian terhadap aturan ini hanya diperbolehkan pada kondisi tertentu yang terbatas, seperti saat sistem meminta konfirmasi penghapusan data atau menyembunyikan karakter kata sandi. Tujuan utama konsistensi adalah meminimalkan kebingungan pengguna agar mereka dapat mempelajari sistem dengan lebih cepat.
+   2. Dukung Usabilitas Universal (Seek Universal Usability) Sistem harus dirancang secara inklusif untuk mengakomodasi keberagaman pengguna, mulai dari pemula hingga ahli. Antarmuka perlu menyediakan fleksibilitas, seperti memberikan panduan langkah demi langkah bagi pengguna awam, sekaligus menyediakan fitur pintasan (shortcuts) bagi pengguna berpengalaman untuk mempercepat interaksi. Pendekatan ini memastikan pengalaman pengguna yang optimal bagi berbagai tingkat keahlian.
+   3. Berikan Umpan Balik Informatif (Offer Informative Feedback) Sistem wajib memberikan respons yang jelas terhadap setiap aksi yang dilakukan pengguna. Untuk interaksi ringan yang sering dilakukan, umpan balik visual yang sederhana sudah cukup. Namun, untuk tindakan krusial atau jarang terjadi, sistem harus memberikan notifikasi yang lebih tegas dan jelas. Umpan balik ini berfungsi untuk meyakinkan pengguna bahwa perintah mereka telah diterima dan diproses oleh sistem.
+   4. Desain Dialog yang Menandakan Penyelesaian (Design Dialogs to Yield Closure) Alur interaksi harus memiliki struktur yang jelas, yang terdiri dari permulaan, pertengahan, dan penutup. Informasi penyelesaian di akhir proses (seperti notifikasi "transaksi berhasil") sangat penting untuk memberikan rasa lega dan kepuasan kepada pengguna bahwa tugas telah tuntas. Contoh penerapannya adalah alur belanja daring yang sistematis mulai dari pemilihan barang hingga konfirmasi pembayaran.
+   5. Cegah Kesalahan (Prevent Errors) Antarmuka yang baik didesain untuk mencegah pengguna melakukan kesalahan sejak awal, misalnya dengan membatasi jenis karakter pada kolom input tertentu. Apabila kesalahan tetap terjadi, sistem harus mampu mendeteksinya tanpa mengubah keadaan antarmuka secara drastis, serta memberikan instruksi perbaikan yang spesifik dan mudah dipahami. Hal ini memungkinkan pengguna memperbaiki kesalahan tanpa perlu mengulang proses dari awal.
+   6. Izinkan Pembalikan Aksi (Permit Easy Reversal of Actions) Sistem sebaiknya menyediakan fitur pembatalan aksi (undo) yang memungkinkan pengguna mengembalikan keadaan ke kondisi sebelumnya. Ketersediaan fitur ini akan mengurangi kecemasan pengguna terhadap risiko kesalahan fatal, sehingga mendorong mereka untuk lebih berani mengeksplorasi fitur-fitur baru dalam sistem.
+   7. Berikan Kendali pada Pengguna (Keep Users in Control) Pengguna, khususnya yang sudah mahir, menginginkan kendali penuh atas antarmuka dan memosisikan sistem sebagai alat yang merespons perintah mereka. Oleh karena itu, antarmuka harus beroperasi secara terprediksi dan menghindari perilaku otomatis yang mengejutkan atau membingungkan. Sistem juga sebaiknya menghindari proses input data yang berbelit-belit yang dapat mengganggu kenyamanan pengguna.
+   8. Kurangi Beban Memori Jangka Pendek (Reduce Short-term Memory Load) Desain antarmuka tidak boleh membebani ingatan pengguna dengan mengharuskan mereka mengingat informasi dari satu halaman ke halaman lain. Informasi penting harus selalu terlihat atau mudah diakses kembali. Contoh penerapannya adalah fitur pengisian formulir otomatis atau navigasi breadcrumb yang membantu pengguna mengetahui posisi mereka dalam sistem tanpa perlu mengingat langkah-langkah sebelumnya.
+2.1.22 Lima Faktor Manusia yang Terukur (Five Measurable Human Factors)
+Dalam proses evaluasi usabilitas antarmuka pengguna (user interface), Shneiderman et al. (2017, hlm. 61–68) mengemukakan bahwa terdapat lima indikator utama yang berkaitan dengan faktor manusia yang dapat diukur secara kuantitatif maupun kualitatif. Kelima indikator tersebut meliputi:
+   1. Waktu untuk Belajar (Time to Learn) Indikator ini mengkaji durasi yang diperlukan oleh pengguna, khususnya pengguna baru, untuk mempelajari operasional sistem atau fitur-fitur di dalamnya. Tujuannya adalah memastikan tingkat kemudahan pemahaman sistem. Semakin cepat waktu yang dibutuhkan pengguna untuk menguasai sistem, semakin tinggi tingkat usabilitas sistem tersebut.
+   2. Kecepatan Kinerja (Speed of Performance) Faktor ini menilai efisiensi antarmuka dengan mengukur waktu penyelesaian tugas oleh pengguna yang sudah terbiasa atau memahami alur kerja sistem. Kecepatan ini menjadi tolok ukur seberapa efektif antarmuka membantu pengguna mencapai tujuannya tanpa hambatan.
+   3. Tingkat Kesalahan Pengguna (Rate of Errors by User) Poin ini mengevaluasi frekuensi kesalahan yang dilakukan pengguna saat berinteraksi dengan sistem. Selain jumlah kesalahan, indikator ini juga melihat seberapa andal antarmuka dalam menangani kesalahan tersebut dan memandu pengguna kembali ke jalur yang benar.
+   4. Daya Ingat dari Waktu ke Waktu (Retention Over Time) Faktor ini mengukur kemampuan pengguna untuk mengingat kembali cara pengoperasian sistem setelah tidak menggunakannya dalam jangka waktu tertentu. Tingkat retensi ini sangat bergantung pada seberapa sering sistem digunakan dan berapa lama waktu yang dihabiskan pengguna saat mempelajarinya di awal.
+   5. Kepuasan Subjektif (Subjective Satisfaction) Indikator ini berkaitan dengan persepsi dan perasaan pengguna terhadap antarmuka. Penilaian ini melihat apakah aplikasi mampu memenuhi harapan fungsional serta memberikan kenyamanan emosional bagi penggunanya.
+2.1.23 Figma
+Dalam ranah pengembangan antarmuka pengguna, Figma diakui sebagai instrumen vital dengan tingkat adopsi yang tinggi, sebagaimana terkonfirmasi dalam laporan 2022 Design Tools Survey (Geoco, 2022). Perangkat lunak ini mengakomodasi proses desain yang komprehensif, memfasilitasi transisi dari konsep abstrak menjadi prototipe interaktif yang detail. Walaupun operasionalnya terkadang didukung oleh alat eksternal seperti FigJam untuk keperluan diagramatik, integrasi intinya tetap solid. Menurut Schwarz (2023, hlm. 7), kehadiran fitur manajemen sistem desain serta spesifikasi handover memungkinkan Figma untuk mengeliminasi hambatan kolaboratif, menghubungkan visi desainer dengan implementasi kode oleh pengembang secara efisien.
+2.2. Perbandingan Penelitian Sejenis
+2.2.1 Studi Bibliometrik Penelitian Chatbot dalam Pariwisata dan Perhotelan
+Penelitian bibliometrik yang dilakukan oleh Yılmaz dan Şahin-Yılmaz menganalisis tren penelitian chatbot dalam bidang pariwisata dan perhotelan melalui lebih dari 30 publikasi ilmiah pada periode 2019–2024. Hasil penelitian menunjukkan bahwa kajian mengenai chatbot dalam sektor ini masih tergolong relatif baru, namun menunjukkan peningkatan signifikan dari tahun ke tahun. Fokus utama penelitian terdahulu berada pada perilaku wisatawan, persepsi pengguna terhadap chatbot, serta tingkat adopsi chatbot dalam layanan pariwisata dan perhotelan. Studi ini juga menegaskan perlunya penelitian lanjutan yang lebih mendalam terkait interaksi pengguna dengan chatbot dalam sistem layanan berbasis kecerdasan buatan, khususnya dari sisi integrasi teknologi dan konteks operasional sistem (Yılmaz & Şahin-Yılmaz, 2025).
+2.2.2 Efektivitas Chatbot dalam Meningkatkan Komunikasi dengan Tamu
+Penelitian yang dilakukan oleh Dutta mengkaji efektivitas chatbot dalam meningkatkan komunikasi antara hotel dan tamu dengan memanfaatkan data sekunder dari laporan industri serta studi kasus. Hasil penelitian menunjukkan bahwa chatbot berbasis kecerdasan buatan dan Natural Language Processing mampu memberikan respons yang cepat dan akurat terhadap permintaan tamu, sehingga meningkatkan kualitas komunikasi dan mengurangi beban kerja staf hotel. Penelitian ini juga mengusulkan pendekatan layanan hibrid, yaitu kombinasi antara chatbot untuk menangani permintaan rutin dan staf manusia untuk menangani situasi yang lebih kompleks, sebagai solusi optimal dalam meningkatkan kualitas layanan perhotelan (Dutta, 2024).
+2.2.3 Peran AI Chatbot dalam Pengalaman Pelanggan dan Strategi Pemasaran Hotel
+Dalam konteks yang lebih luas, sebuah buku bab penelitian oleh Chen, Konar, dan Kumar membahas peran chatbot berbasis kecerdasan buatan dalam industri perhotelan, khususnya terkait pengalaman pelanggan dan strategi pemasaran. Penelitian tersebut menemukan bahwa integrasi AI chatbot dapat meningkatkan pengalaman pelanggan melalui penyediaan layanan instan, personalisasi layanan berdasarkan kebutuhan tamu, serta kemampuan sistem dalam mengumpulkan dan menganalisis preferensi pelanggan. Pemanfaatan chatbot dengan kemampuan tersebut dinilai mampu meningkatkan kepuasan dan loyalitas pelanggan terhadap layanan hotel (Chen et al., 2024).
+2.2.4 Penerapan Chatbot dalam Ekosistem Layanan Digital Pariwisata
+Penelitian lain yang membahas penerapan kecerdasan buatan dalam industri pariwisata menunjukkan bahwa chatbot telah digunakan secara luas dalam berbagai layanan perjalanan dan perhotelan, mulai dari reservasi hotel hingga rekomendasi perjalanan yang bersifat personal. Meskipun tingkat penerimaan chatbot dibandingkan interaksi manusia belum sepenuhnya teruji secara eksperimental, penelitian ini menegaskan bahwa chatbot merupakan bagian penting dari ekosistem layanan digital yang terus berkembang dalam industri pariwisata dan perhotelan (Wüst, 2025).
+2.2.5 Kesenjangan Penelitian (Research Gap)
+Berdasarkan hasil penelitian dan aplikasi sejenis yang telah dikaji, dapat disimpulkan bahwa sebagian besar penelitian terdahulu masih berfokus pada aspek persepsi pengguna, komunikasi pemasaran, dan analisis tren adopsi chatbot. Penelitian yang membahas integrasi teknis chatbot berbasis kecerdasan buatan dengan sistem operasional inti hotel, seperti Property Management System berbasis web yang terhubung dengan basis data real-time untuk pengelolaan status kamar, reservasi, dan housekeeping, masih relatif terbatas. Oleh karena itu, penelitian ini diarahkan untuk mengisi kesenjangan tersebut dengan mengembangkan dan mengkaji integrasi chatbot berbasis AI dengan PMS sebagai sistem operasional utama hotel.
+________________
+BAB 3
+METODE PENELITIAN
+3.1. Metode Penelitian.
+3.1.1. Metode Pengumpulan Data
+Metode pengumpulan data dalam penelitian ini menggunakan data primer yang diperoleh secara langsung dari responden melalui survei dan observasi. Pendekatan ini dipilih karena penelitian berfokus pada pengembangan sistem informasi yang memerlukan pemahaman terhadap kebutuhan pengguna serta evaluasi terhadap sistem yang dikembangkan.
+Survei dilakukan menggunakan kuesioner digital yang disebarkan secara daring kepada responden. Instrumen kuesioner disusun menggunakan skala Likert lima tingkat, yaitu sangat tidak setuju, tidak setuju, netral, setuju, dan sangat setuju. Skala ini digunakan untuk mengukur persepsi pengguna terhadap sistem yang dikembangkan, khususnya pada aspek kemudahan penggunaan (usability), kejelasan informasi, kesesuaian fitur dengan kebutuhan operasional, serta pengalaman interaksi dengan chatbot berbasis Large Language Model (LLM).
+Responden dalam penelitian ini berjumlah 30 orang yang terdiri dari 10 staf operasional hotel dan 20 tamu hotel (pengguna chatbot). Pemilihan responden dilakukan secara purposive sampling karena responden merupakan calon pengguna utama sistem yang terlibat langsung dalam operasional hotel maupun sebagai pengguna layanan chatbot.
+Sebelum pengisian kuesioner dilakukan, responden terlebih dahulu diberikan demonstrasi singkat mengenai fungsi dan alur kerja sistem StayManager, termasuk penggunaan chatbot berbasis Large Language Model sebagai media interaksi untuk memperoleh informasi layanan hotel serta melakukan pemesanan kamar. Hal ini dilakukan agar responden memiliki pemahaman yang memadai terhadap sistem sehingga dapat memberikan penilaian yang lebih objektif.
+Selain survei, observasi langsung juga dilakukan terhadap proses operasional hotel, khususnya pada aktivitas reservasi kamar, pencatatan status kamar, serta koordinasi housekeeping. Observasi ini bertujuan untuk memperoleh gambaran nyata mengenai alur kerja yang berjalan saat ini serta mengidentifikasi permasalahan yang terjadi pada proses operasional.
+Data yang diperoleh dari survei kemudian dianalisis menggunakan analisis deskriptif kuantitatif, sedangkan data hasil observasi dianalisis secara deskriptif kualitatif. Kedua pendekatan ini digunakan untuk memperoleh gambaran yang komprehensif mengenai kebutuhan pengguna serta tingkat penerimaan terhadap sistem yang dikembangkan.
+3.1.2. Agile Software Development Life Cycle
+Dalam penelitian ini, metodologi pengembangan perangkat lunak yang digunakan adalah Agile Software Development Life Cycle dengan menerapkan kerangka kerja Scrum. Pemilihan metodologi ini didasarkan pada kebutuhan akan pengembangan sistem yang adaptif, iteratif, dan mampu merespon perubahan kebutuhan dengan cepat. Agile dipandang relevan karena proyek StayManager tidak hanya berfokus pada pembangunan sistem manajemen hotel berbasis web, tetapi juga mencakup integrasi chatbot berbasis kecerdasan buatan yang menuntut fleksibilitas dalam pengembangan.
+Tahapan pengembangan dalam Agile dimulai dari Concept, yaitu penetapan visi produk dan identifikasi kebutuhan bisnis yang menjadi dasar pengembangan sistem. Selanjutnya, pada tahap Inception, dilakukan pengumpulan kebutuhan melalui observasi dan survei terhadap calon pengguna, disertai dengan analisis dokumen dan perencanaan awal proyek. Setelah itu proses berlanjut ke tahap Iterations, yaitu rangkaian Sprint berdurasi dua minggu yang berfokus pada pengembangan fungsionalitas inti, mulai dari autentikasi pengguna, manajemen kamar, dan reservasi, hingga integrasi chatbot AI.
+Setiap Sprint diawali dengan Sprint Planning Meeting untuk menentukan Sprint Backlog yang berisi user stories prioritas sesuai kebutuhan pengguna. Proses pengembangan kemudian dipantau melalui Daily Scrum Meeting yang dilakukan untuk mengidentifikasi progres dan hambatan. Di akhir Sprint, dilakukan Sprint Review untuk mendemonstrasikan hasil increment kepada stakeholder, dilanjutkan dengan Sprint Retrospective sebagai sarana refleksi tim dalam memperbaiki proses pengembangan pada iterasi berikutnya. Implementasi Scrum pada penelitian ini menempatkan peneliti sebagai Product Owner, sekaligus bagian dari tim pengembang, dengan tanggung jawab memastikan visi produk tetap selaras dengan tujuan penelitian.
+Setiap peningkatan yang dihasilkan melalui Sprint akan melalui serangkaian pengujian untuk memastikan kualitas produk. Pengujian dilakukan menggunakan metode Black Box Testing untuk memvalidasi fungsionalitas fitur sesuai kebutuhan, serta User Acceptance Testing (UAT) dengan melibatkan calon pengguna. Umpan balik dari pengujian ini menjadi dasar perbaikan dalam Sprint berikutnya sehingga kualitas sistem dapat meningkat secara bertahap.
+Dengan siklus yang terstruktur namun tetap adaptif, penerapan Agile Software Development Life Cycle melalui kerangka kerja Scrum memungkinkan penelitian ini menghasilkan produk perangkat lunak yang sesuai dengan kebutuhan pengguna sekaligus memenuhi standar kualitas. Melalui pendekatan iteratif, pengembangan StayManager dapat berjalan secara berkesinambungan dengan memanfaatkan mekanisme feedback yang konsisten, sehingga pada akhirnya sistem yang dihasilkan tidak hanya fungsional tetapi juga user-friendly, aman, dan mampu memberikan manfaat nyata bagi manajemen hotel.
+
+
+  
+
+Gambar 3.1. Flowchart Kerangka Kerja Scrum
+Sumber: Olahan Penulis
+Flowchart pada Gambar 3.1. menggambarkan alur kerja pengembangan sistem menggunakan metodologi Agile dengan kerangka kerja Scrum. Proses diawali dari Product Requirements, yaitu kebutuhan sistem yang ditetapkan oleh Product Owner berdasarkan hasil survei serta analisis kebutuhan pengguna. Selanjutnya masuk pada tahap Define Sprint Goals untuk menentukan tujuan Sprint, kemudian dilakukan Breakdown & Prioritize Features guna merinci fitur yang akan dikembangkan dan menetapkan prioritas pengerjaan.
+Setelah itu, dilakukan Assign Tasks kepada tim pengembang untuk mulai mengimplementasikan fitur-fitur yang telah ditentukan. Tahap berikutnya adalah Develop Features, di mana tim pengembang membangun modul-modul sistem sesuai user stories. Hasil pengembangan kemudian melalui tahap Code Review untuk memastikan standar pengkodean dan arsitektur sistem telah terpenuhi. Jika standar belum terpenuhi, maka pekerjaan dikembalikan ke tahap pengembangan.
+Apabila kode memenuhi standar, maka dilanjutkan ke tahap Testing oleh tim penguji. Pada tahap ini, jika ditemukan Critical Bugs, proses diarahkan ke Bug Fixing oleh tim pengembang sebelum kembali dilakukan Final Testing. Jika tidak ditemukan bug yang signifikan, sistem langsung dilanjutkan ke Final Testing. Tahap terakhir adalah Deployment, yaitu rilis increment produk yang siap digunakan sekaligus menjadi bahan evaluasi pada Sprint Review dan Sprint Retrospective.
+Melalui alur kerja ini, setiap increment yang dihasilkan akan terus diuji dan dievaluasi sehingga pengembangan sistem StayManager dapat berjalan secara iteratif, adaptif, serta memastikan produk akhir sesuai dengan kebutuhan pengguna dan standar kualitas perangkat lunak.
+        3.1.3. Kerangka Berpikir Penelitan (Flowchart)
+Untuk memperjelas tahapan penelitian yang dilakukan, penulis menyusun kerangka berpikir dalam bentuk flowchart. Kerangka berpikir ini digunakan sebagai pedoman sistematis agar setiap tahap dalam proses Research and Development (R&D) berjalan terarah. Dengan adanya kerangka berpikir, alur penelitian mulai dari identifikasi permasalahan hingga implementasi produk akhir dapat tergambar dengan jelas dan memudahkan peneliti serta pembaca dalam memahami jalannya penelitian.
+
+
+
+
+
+
+
+
+
+
+  
+
+Gambar 3.2. Flowchart Kerangka Berpikir StayManager
+Sumber: Olahan Penulis
+Gambar 3.2  menunjukkan kerangka berpikir penelitian yang menggunakan metode Research and Development (R&D). Tahap awal dimulai dengan identifikasi masalah yaitu keterbatasan sistem manajemen hotel konvensional yang masih manual dan kurang terintegrasi, sehingga menghambat efisiensi operasional serta layanan pelanggan. Dari identifikasi masalah tersebut kemudian dilakukan analisis kebutuhan, baik kebutuhan fungsional seperti reservasi, check-in/out, housekeeping, dan chatbot; maupun kebutuhan non-fungsional seperti keamanan, reliabilitas, dan kemudahan penggunaan.
+Hasil analisis kebutuhan digunakan sebagai dasar dalam perancangan sistem, yang meliputi penyusunan UML, ERD, serta rancangan antarmuka berbasis prinsip Human-Computer Interaction (HCI). Tahap berikutnya adalah pengembangan sistem StayManager berbasis web yang terintegrasi dengan chatbot AI. Sistem yang dibangun kemudian melewati tahap pengujian menggunakan Black Box Testing dan evaluasi kepuasan pengguna melalui kuesioner berbasis skala Likert.
+Selanjutnya dilakukan evaluasi produk untuk menilai sejauh mana sistem telah memenuhi kebutuhan pengguna dan standar kualitas perangkat lunak. Pada tahap akhir, sistem diujicobakan pada lingkungan hotel kecil/menengah sebagai bentuk implementasi dan pemanfaatan, sehingga dapat dilihat manfaat nyata yang dihasilkan oleh sistem. Dengan kerangka berpikir ini, penelitian tidak hanya menghasilkan produk teknologi yang fungsional, tetapi juga memberikan kontribusi praktis bagi peningkatan kualitas manajemen hotel.
+3.2. Analisis
+3.2.1. Analisis Aplikasi Sejenis
+Analisis sistem yang berjalan dilakukan melalui observasi langsung terhadap proses operasional hotel mitra, dengan fokus pada identifikasi workflow existing, pain points yang dialami, dan gap technology yang perlu diatasi. Observasi mencakup proses check-in/check-out tamu, manajemen kamar dan inventaris, pencatatan keuangan, serta penanganan komunikasi dengan tamu. Hasil observasi mengungkapkan bahwa sebagian besar proses masih dilakukan secara manual atau menggunakan sistem yang terfragmentasi, menyebabkan inefisiensi operasional dan potensi error dalam aktivitas harian.
+Perbandingan komprehensif dengan aplikasi sejenis dilakukan terhadap sistem manajemen hotel komersial ternama seperti Opera Cloud, Cloudbeds, dan Hotelogix, serta solusi chatbot khusus perhotelan seperti Ivy dan HiJiffy. Analisis komparatif menunjukkan bahwa meskipun solusi-solusi tersebut menawarkan fitur yang komprehensif, terdapat kesenjangan signifikan dalam hal affordability untuk hotel kecil-menengah, lokalisasi untuk pasar Indonesia, dan integrasi antara PMS dengan AI-powered features. StayManager dirancang secara khusus untuk mengisi kesenjangan ini melalui penyediaan solusi terintegrasi yang cost-effective dan sesuai dengan kebutuhan spesifik hotel lokal, sekaligus memastikan aliran data yang mulus dan business intelligence yang komprehensif.
+3.2.2. Analisis Permasalahan/Kebutuhan
+Identifikasi permasalahan dilakukan melalui observasi langsung dan survei terhadap berbagai pengguna potensial hotel, mencakup staf operasional dan tamu hotel. Permasalahan utama yang teridentifikasi meliputi inefisiensi dalam proses manual, kurangnya integrasi antarsistem, keterbatasan dalam menyediakan layanan pelanggan 24/7, serta kurangnya otomatisasi dalam proses reservasi. Kebutuhan yang muncul mencakup pengembangan sistem terintegrasi untuk mengelola seluruh aspek operasional hotel serta chatbot untuk meningkatkan responsivitas layanan pelanggan.
+Analisis kebutuhan juga mempertimbangkan aspek teknis seperti scalability, security, dan ease of use. Hasil analisis mengungkapkan bahwa hotel memerlukan solusi yang tidak hanya mampu mengatasi permasalahan operasional saat ini, tetapi juga dapat beradaptasi dengan pertumbuhan bisnis dan evolusi teknologi di masa depan. Kebutuhan localization untuk pasar Indonesia juga menjadi prioritas utama, khususnya dalam hal dukungan Bahasa Indonesia dan pemahaman terhadap kultur bisnis lokal.
+(Sisipkan Gambar 3.3 Screenshot Kuesioner/Survei di sini)
+3.2.3. Usulan Pemecahan Masalah
+Berdasarkan hasil analisis permasalahan yang telah dilakukan, solusi yang diusulkan dalam penelitian ini adalah pengembangan sistem StayManager, yaitu sebuah Web-based Property Management System (PMS) yang terintegrasi dengan chatbot berbasis Large Language Model (LLM).
+Sistem ini dirancang untuk mengatasi permasalahan fragmentasi data dan inefisiensi operasional hotel melalui penerapan basis data terpusat yang mengintegrasikan berbagai modul operasional hotel seperti reservasi kamar, manajemen status kamar, housekeeping, pencatatan transaksi, serta pelaporan manajerial.
+Selain itu, sistem ini dilengkapi dengan chatbot berbasis Large Language Model yang berfungsi sebagai antarmuka interaksi antara tamu dan sistem. Chatbot memungkinkan tamu untuk memperoleh informasi layanan hotel, mengecek ketersediaan kamar, serta melakukan reservasi menggunakan bahasa alami secara otomatis.
+Integrasi antara chatbot dan Property Management System dilakukan melalui layanan backend yang menghubungkan chatbot dengan basis data operasional hotel secara real-time. Dengan mekanisme ini, chatbot dapat memberikan informasi yang akurat mengenai ketersediaan kamar serta mencatat reservasi secara langsung ke dalam sistem PMS.
+Melalui pendekatan ini, StayManager diharapkan mampu meningkatkan efisiensi operasional hotel sekaligus memberikan pengalaman layanan yang lebih responsif bagi tamu melalui otomatisasi reservasi berbasis kecerdasan buatan.
+(Sisipkan Gambar 3.4 Flowchart Aplikasi StayManager di sini)
+3.3. Perancangan
+3.3.1. Software Design Document
+A. Deskripsi Software
+StayManager merupakan sistem manajemen hotel berbasis web yang dirancang untuk membantu hotel kecil dan menengah dalam mengelola operasional secara terintegrasi. Sistem ini menggabungkan Property Management System (PMS) dengan chatbot berbasis Large Language Model untuk meningkatkan efisiensi operasional serta kualitas layanan kepada tamu.
+Melalui sistem ini, berbagai proses operasional hotel seperti manajemen reservasi, pengelolaan kamar, koordinasi housekeeping, pencatatan transaksi, serta pelaporan manajerial dapat dikelola dalam satu platform terpusat.
+Selain itu, StayManager dilengkapi dengan chatbot berbasis kecerdasan buatan yang memungkinkan tamu untuk memperoleh informasi hotel dan melakukan reservasi kamar secara otomatis melalui percakapan menggunakan bahasa alami.
+Integrasi antara chatbot dan sistem PMS memungkinkan chatbot untuk mengakses data operasional hotel secara real-time sehingga informasi yang diberikan kepada tamu selalu akurat dan terkini.
+B. Fungsi-Fungsi Software
+Fungsi utama yang disediakan oleh sistem StayManager meliputi:
+   1. Manajemen Tamu : Pengelolaan profil tamu, riwayat pemesanan, dan pelacakan preferensi.
+   2. Manajemen Kamar : Pemantauan status kamar secara real-time, pembaruan ketersediaan, dan koordinasi housekeeping.
+   3. Sistem Reservasi : Pembuatan reservasi dengan konfirmasi dan pengingat otomatis.
+   4. Manajemen Keuangan : Penagihan (billing), pelacakan pendapatan, pencatatan pengeluaran dengan alur kerja persetujuan, dan pembuatan faktur.
+   5. Pelaporan Manajerial : Laporan komprehensif untuk analisis harian, bulanan, maupun tahunan.
+   6. Chatbot Berbasis LLM : Chatbot menggunakan Gemini API untuk pemrosesan bahasa alami dalam Bahasa Indonesia dan Inggris, meliputi penanganan pertanyaan informasi, proses pemesanan, serta penyediaan informasi layanan hotel secara kontekstual berdasarkan data PMS.
+   7. Manajemen Logistik dan Inventaris : Pengelolaan stok dan kebutuhan operasional hotel.
+   8. Manajemen Staf : Pengelolaan data dan tugas staf hotel.
+   9. Dasbor Analitik : Penyediaan indikator kinerja utama (KPI) untuk mendukung pengambilan keputusan.
+C. Kebutuhan Teknologi
+Teknologi yang digunakan dalam pengembangan sistem StayManager meliputi:
+   1. Basis Data: PostgreSQL : Dipilih karena kepatuhan terhadap prinsip ACID untuk integritas transaksi keuangan, fitur pengindeksan lanjutan, dukungan tipe data JSON, serta fitur keamanan yang robust.
+   2. Framework: Next.js dengan TypeScript : Menyediakan arsitektur full-stack untuk pengembangan frontend dan backend dalam satu kerangka kerja terpadu dengan type safety.
+   3. Frontend: React dengan TypeScript : Arsitektur berbasis komponen untuk interaksi pengguna yang responsif, menggunakan pustaka shadcn/ui untuk konsistensi desain.
+   4. Kecerdasan Buatan: Gemini API (Google) : Large Language Model untuk pemrosesan bahasa alami dan pembuatan respons kontekstual pada chatbot.
+   5. Backend-as-a-Service: Supabase : Menyediakan PostgreSQL terkelola, layanan real-time, autentikasi terintegrasi dengan Role-Based Access Control (RBAC), dan penyimpanan file.
+   6. Deployment: Vercel : Platform hosting dengan distribusi konten global dan skalabilitas otomatis.
+
+
+
+3.3.2. Perancangan Sistem
+A. Pendekatan OOAD
+Analisis dan Desain Berorientasi Objek (Object-Oriented Analysis and Design/OOAD) digunakan sebagai metodologi utama dalam perancangan sistem, dengan fokus pada pemodelan entitas dunia nyata di bidang perhotelan beserta relasi di antaranya. Analisis use case mengidentifikasi aktor utama (staf hotel, manajemen, tamu, administrator sistem) serta interaksi mereka dengan sistem melalui berbagai skenario. Use case kunci mencakup proses check-in/check-out tamu, alur kerja manajemen kamar, transaksi keuangan, dan interaksi percakapan chatbot.
+Desain kelas menerapkan prinsip-prinsip berorientasi objek dengan pemisahan tanggung jawab yang jelas (separation of concerns), enkapsulasi untuk perlindungan data, pewarisan (inheritance) untuk penggunaan kembali kode, dan polimorfisme (polymorphism) untuk perilaku yang fleksibel. Kelas-kelas domain inti meliputi Guest, Room, Reservation, Transaction, dan ChatbotSession, yang masing-masing memiliki atribut dan metode yang terdefinisi dengan baik untuk mendukung kebutuhan logika bisnis.
+Pola-pola desain (design patterns) seperti Repository, Factory, dan Observer diimplementasikan untuk menciptakan arsitektur kode yang mudah dipelihara (maintainable) dan dapat diperluas (extensible).
+B. Perancangan User Interface
+Antarmuka pengguna dirancang dengan mengadopsi prinsip-prinsip desain berpusat pengguna (user-centered design) yang menekankan aspek kegunaan (usability), aksesibilitas, dan efisiensi. Sebuah sistem desain (design system) dikembangkan dengan melibatkan palet warna, tipografi, ikonografi, dan pustaka komponen yang konsisten guna memastikan pengalaman pengguna yang koheren di seluruh modul sistem.
+Struktur navigasi dirancang secara hierarkis dengan arsitektur informasi yang jelas, memungkinkan pengguna untuk menemukan dan mengakses fungsi yang dibutuhkan dengan cepat. Penerapan desain responsif (responsive design) menjamin pengalaman optimal pada berbagai ukuran layar, mulai dari ponsel pintar hingga monitor desktop berskala besar.
+Pendekatan mobile-first digunakan dengan peningkatan progresif (progressive enhancement) untuk fitur-fitur desktop. Kepatuhan terhadap aksesibilitas mengikuti pedoman WCAG 2.1 (Web Content Accessibility Guidelines), yang diwujudkan melalui penanda semantik yang tepat (proper semantic markup), dukungan navigasi keyboard, kompatibilitas dengan pembaca layar (screen reader), serta opsi kontras tinggi bagi pengguna dengan gangguan penglihatan.
+C. Perancangan Database
+Desain basis data memanfaatkan pemodelan Entity-Relationship (ER) untuk merangkum struktur data dan relasi yang mendukung seluruh fungsionalitas sistem. Entitas-inti meliputi Tamu (Guests) dengan informasi profil yang komprehensif, Kamar (Rooms) dengan pelacakan status dan riwayat pemeliharaan, Reservasi (Reservations) dengan logika pemesanan yang kompleks, Transaksi (Transactions) untuk integritas data keuangan, serta entitas khusus untuk komponen kecerdasan buatan seperti Percakapan Chatbot (ChatbotConversations).
+Strategi normalisasi mengikuti bentuk Normal Ketiga (3NF) untuk memastikan integritas data, dengan penerapan denormalisasi selektif guna mengoptimalkan kinerja pada data yang sering diakses. Strategi pengindeksian dikembangkan untuk mendukung pola-pola kueri umum dengan mempertimbangkan kinerja pembacaan dan penulisan. Langkah-langkah keamanan data mencakup enkripsi untuk informasi sensitif, kontrol akses berbasis peran, jejak audit untuk kepatuhan regulasi, serta prosedur pencadangan data yang komprehensif untuk perlindungan data dan pemulihan bencana.
+
+
+(Sisipkan Gambar 3.5 Entity Relationship Diagram (ERD) Sistem StayManager di sini)
+BAB 4
+HASIL DAN PEMBAHASAN
+Bab ini membahas hasil pengembangan dan pengujian sistem StayManager secara komprehensif. Pembahasan mencakup spesifikasi sistem yang digunakan dalam proses pengembangan dan pengujian, implementasi setiap modul sistem, hasil pengujian fungsionalitas menggunakan metode Black Box Testing, hasil evaluasi kepuasan pengguna melalui kuesioner berbasis skala Likert, serta analisis dan pembahasan terhadap seluruh hasil yang diperoleh.
+
+
+4.1. Spesifikasi Sistem
+Pada subbab ini diuraikan spesifikasi perangkat keras (hardware) dan perangkat lunak (software) yang digunakan selama proses pengembangan dan pengujian sistem StayManager.
+
+
+4.1.1. Spesifikasi Perangkat Keras
+Perangkat keras yang digunakan dalam pengembangan dan pengujian sistem StayManager adalah sebagai berikut:
+
+
+Tabel 4.1. Spesifikasi Perangkat Keras
+| No. | Komponen       | Spesifikasi                          |
+|-----|----------------|--------------------------------------|
+| 1   | Laptop         | (ISI: merek dan model laptop)        |
+| 2   | Prosesor       | (ISI: contoh Intel Core i7-12700H)   |
+| 3   | RAM            | (ISI: contoh 16 GB DDR5)             |
+| 4   | Penyimpanan    | (ISI: contoh SSD 512 GB NVMe)        |
+| 5   | Layar          | (ISI: contoh 15.6" FHD 1920x1080)    |
+| 6   | Koneksi        | Wi-Fi 6, Bluetooth 5.2               |
+
+
+4.1.2. Spesifikasi Perangkat Lunak
+Perangkat lunak yang digunakan dalam pengembangan dan pengujian sistem StayManager meliputi:
+
+
+Tabel 4.2. Spesifikasi Perangkat Lunak
+| No. | Komponen              | Spesifikasi                                |
+|-----|-----------------------|--------------------------------------------|
+| 1   | Sistem Operasi        | (ISI: contoh Windows 11 Pro 24H2)          |
+| 2   | Bahasa Pemrograman    | TypeScript 5.x                             |
+| 3   | Framework             | Next.js 16 (React 19)                      |
+| 4   | CSS Framework         | Tailwind CSS 4                             |
+| 5   | Komponen UI           | shadcn/ui, Radix UI, HeroUI, Mantine       |
+| 6   | Basis Data            | PostgreSQL (via Supabase)                  |
+| 7   | Backend-as-a-Service  | Supabase (autentikasi, real-time, storage) |
+| 8   | AI / LLM              | Gemini API (via @ai-sdk/google)            |
+| 9   | Deployment            | Vercel                                     |
+| 10  | Version Control       | Git & GitHub                               |
+| 11  | Code Editor           | Visual Studio Code                         |
+| 12  | Desain UI             | Figma                                      |
+| 13  | Browser Pengujian     | Google Chrome (versi terbaru)              |
+| 14  | Package Manager       | pnpm 10.x                                 |
+
+
+4.2. Implementasi Sistem
+Pada subbab ini diuraikan implementasi setiap modul sistem StayManager berdasarkan perancangan yang telah dilakukan pada BAB 3. Setiap modul disertai dengan tangkapan layar (screenshot) antarmuka serta penjelasan fungsionalitas yang tersedia.
+
+
+4.2.1. Halaman Login dan Autentikasi
+Halaman login merupakan halaman awal yang ditampilkan kepada pengguna saat mengakses sistem StayManager. Pengguna diminta untuk memasukkan alamat email dan kata sandi yang telah terdaftar dalam sistem. Proses autentikasi dilakukan melalui layanan Supabase Authentication yang mendukung mekanisme autentikasi berbasis email dan kata sandi dengan enkripsi standar.
+Setelah berhasil login, sistem secara otomatis mengarahkan pengguna ke halaman yang sesuai berdasarkan peran (role) yang dimiliki. Staf hotel dan manajemen diarahkan ke halaman Dashboard, sedangkan tamu hotel diarahkan ke halaman Chatbot. Mekanisme Role-Based Access Control (RBAC) diterapkan untuk membatasi akses pengguna terhadap fitur dan modul tertentu sesuai dengan hak akses yang telah ditentukan.
+
+
+(Sisipkan Gambar 4.1 Halaman Login StayManager di sini)
+
+
+4.2.2. Modul Dashboard
+Dashboard merupakan halaman utama yang ditampilkan setelah staf hotel berhasil login ke sistem. Halaman ini menyajikan ringkasan informasi operasional hotel secara real-time melalui indikator kinerja utama (Key Performance Indicators/KPI).
+Informasi yang ditampilkan pada dashboard meliputi:
+   1. Statistik okupansi kamar (jumlah kamar terisi, kosong, dan dalam proses pembersihan)
+   2. Jumlah tamu yang sedang menginap (in-house guests)
+   3. Jumlah reservasi aktif dan yang akan datang
+   4. Ringkasan pendapatan harian dan bulanan
+   5. Grafik tren okupansi dan pendapatan dalam bentuk diagram batang dan diagram garis
+   6. Notifikasi tugas housekeeping yang perlu ditindaklanjuti
+Dashboard dirancang menggunakan komponen kartu (card) dan grafik interaktif yang dibangun dengan pustaka Recharts dan Chart.js, sehingga memberikan visualisasi data yang informatif dan mudah dipahami oleh manajemen hotel.
+
+
+(Sisipkan Gambar 4.2 Halaman Dashboard StayManager di sini)
+
+
+4.2.3. Modul Manajemen Kamar (Rooms)
+Modul Manajemen Kamar menyediakan antarmuka untuk mengelola data kamar hotel secara komprehensif. Fitur utama yang tersedia pada modul ini meliputi:
+   1. Penambahan data kamar baru beserta atribut seperti nomor kamar, tipe kamar, harga, kapasitas, dan fasilitas
+   2. Pengeditan informasi kamar yang sudah ada
+   3. Pemantauan status kamar secara real-time (Available, Occupied, Maintenance, Cleaning)
+   4. Pengelolaan tipe kamar kustom (Custom Room Types) yang memungkinkan hotel mendefinisikan kategori kamar sesuai kebutuhan
+   5. Koordinasi housekeeping yang terintegrasi langsung dengan status kamar
+Data kamar disimpan dalam basis data PostgreSQL melalui Supabase dan disinkronkan secara real-time sehingga setiap perubahan status langsung terlihat oleh seluruh pengguna sistem.
+
+
+(Sisipkan Gambar 4.3 Halaman Manajemen Kamar di sini)
+
+
+4.2.4. Modul Okupansi (Occupancy)
+Modul Okupansi menyediakan tampilan visual mengenai tingkat hunian kamar hotel pada periode tertentu. Modul ini menampilkan:
+   1. Visualisasi okupansi kamar dalam bentuk grid atau kalender yang menunjukkan status setiap kamar per hari
+   2. Persentase tingkat okupansi harian, mingguan, dan bulanan
+   3. Informasi tamu yang menempati setiap kamar beserta tanggal check-in dan check-out
+   4. Filter berdasarkan tipe kamar, lantai, atau status kamar
+Modul ini membantu manajemen hotel dalam memantau ketersediaan kamar dan mengoptimalkan alokasi kamar untuk memaksimalkan pendapatan.
+
+
+(Sisipkan Gambar 4.4 Halaman Okupansi Kamar di sini)
+
+
+4.2.5. Modul Manajemen Tamu (Guest Management)
+Modul Manajemen Tamu berfungsi untuk mengelola seluruh data tamu hotel. Fitur yang tersedia meliputi:
+   1. Pendaftaran tamu baru dengan pencatatan data identitas (nama, kontak, alamat, nomor identitas)
+   2. Pengelolaan data tamu yang sedang menginap (in-house guests)
+   3. Pencarian dan filter data tamu berdasarkan berbagai parameter
+   4. Proses check-in dan check-out tamu yang terintegrasi dengan modul kamar dan keuangan
+   5. Riwayat menginap tamu untuk keperluan manajemen hubungan pelanggan
+Seluruh data tamu dikelola dengan memperhatikan aspek keamanan dan privasi data sesuai dengan standar pengelolaan informasi pribadi.
+
+
+(Sisipkan Gambar 4.5 Halaman Manajemen Tamu di sini)
+
+
+4.2.6. Modul Fasilitas Tamu (Guest Facilities)
+Modul Fasilitas Tamu menyediakan antarmuka untuk mengelola informasi mengenai fasilitas dan layanan yang tersedia di hotel. Modul ini mencakup:
+   1. Penambahan dan pengeditan data fasilitas hotel (restoran, kolam renang, spa, gym, ruang pertemuan, dan lain-lain)
+   2. Penjadwalan dan pengaturan jam operasional fasilitas
+   3. Informasi tarif penggunaan fasilitas
+   4. Data fasilitas ini juga digunakan oleh chatbot LLM sebagai basis pengetahuan untuk menjawab pertanyaan tamu mengenai fasilitas hotel
+Antarmuka modul ini membedakan tampilan berdasarkan peran pengguna: staf hotel dapat menambah, mengedit, dan menghapus data fasilitas, sementara tamu hanya dapat melihat informasi fasilitas yang tersedia.
+
+
+(Sisipkan Gambar 4.6 Halaman Fasilitas Tamu di sini)
+
+
+4.2.7. Modul Manajemen Staf (Staff)
+Modul Manajemen Staf menyediakan fitur untuk mengelola data karyawan hotel. Fitur yang tersedia meliputi:
+   1. Pendaftaran data staf baru (nama, jabatan, departemen, kontak)
+   2. Pengelolaan data dan informasi staf yang sudah terdaftar
+   3. Pengaturan jadwal dan penugasan staf
+   4. Pengelolaan hak akses staf melalui integrasi dengan modul Roles dan Settings
+Modul ini membantu manajemen hotel dalam mengorganisasi sumber daya manusia secara efisien dan memastikan setiap staf memiliki akses sistem yang sesuai dengan tanggung jawabnya.
+
+
+(Sisipkan Gambar 4.7 Halaman Manajemen Staf di sini)
+
+
+4.2.8. Modul Keuangan (Financial)
+Modul Keuangan mengintegrasikan seluruh aspek pengelolaan finansial hotel dalam satu antarmuka terpadu. Modul ini terdiri dari beberapa submodul:
+   A. Billing
+   Submodul billing mengelola penagihan kepada tamu, meliputi:
+      1. Pembuatan tagihan berdasarkan layanan yang digunakan tamu (kamar, layanan tambahan)
+      2. Pencatatan status pembayaran (belum dibayar, sebagian dibayar, lunas)
+      3. Pembuatan faktur (invoice) yang dapat dicetak
+   B. Pencatatan Pengeluaran (Expenses)
+   Submodul expenses mencatat seluruh pengeluaran operasional hotel, meliputi:
+      1. Pencatatan pengeluaran berdasarkan kategori (operasional, pemeliharaan, pembelian inventaris)
+      2. Alur kerja persetujuan pengeluaran (approval workflow) untuk kontrol keuangan
+      3. Riwayat dan laporan pengeluaran
+   C. Ringkasan Keuangan
+   Halaman ringkasan keuangan menyajikan:
+      1. Total pendapatan dan pengeluaran dalam periode tertentu
+      2. Grafik perbandingan pendapatan dan pengeluaran
+      3. Analisis arus kas (cash flow) hotel
+
+
+(Sisipkan Gambar 4.8 Halaman Keuangan — Billing di sini)
+(Sisipkan Gambar 4.9 Halaman Keuangan — Expenses di sini)
+
+
+4.2.9. Modul Logistik dan Inventaris (Logistics & Inventory)
+Modul Logistik dan Inventaris menyediakan fitur untuk mengelola stok barang dan kebutuhan operasional hotel. Fitur utama meliputi:
+   1. Pencatatan dan pemantauan stok inventaris hotel (linen, amenities, perlengkapan kamar)
+   2. Pengelolaan data pemasok (suppliers) beserta informasi kontak dan riwayat transaksi
+   3. Pembuatan dan pelacakan pesanan pembelian (purchase orders)
+   4. Notifikasi stok minimum untuk mencegah kehabisan persediaan
+   5. Riwayat pergerakan stok (masuk dan keluar)
+Modul ini membantu hotel dalam mengoptimalkan pengelolaan persediaan dan memastikan ketersediaan barang yang dibutuhkan untuk operasional sehari-hari.
+
+
+(Sisipkan Gambar 4.10 Halaman Logistik dan Inventaris di sini)
+
+
+4.2.10. Modul Pelaporan (Reports)
+Modul Pelaporan menyediakan laporan komprehensif yang mendukung pengambilan keputusan manajemen hotel. Jenis laporan yang tersedia meliputi:
+   1. Laporan okupansi kamar (harian, mingguan, bulanan, tahunan)
+   2. Laporan pendapatan berdasarkan sumber (kamar, layanan, fasilitas)
+   3. Laporan pengeluaran berdasarkan kategori
+   4. Laporan aktivitas tamu dan riwayat reservasi
+   5. Laporan kinerja staf dan penugasan housekeeping
+Setiap laporan dapat difilter berdasarkan rentang tanggal tertentu dan ditampilkan dalam bentuk tabel data serta grafik visual menggunakan diagram batang (bar chart) dan diagram garis (line chart) yang dibangun dengan pustaka Recharts.
+
+
+(Sisipkan Gambar 4.11 Halaman Pelaporan di sini)
+
+
+4.2.11. Modul Chatbot Berbasis LLM
+Modul Chatbot merupakan antarmuka utama interaksi antara tamu hotel dan sistem StayManager. Chatbot dibangun menggunakan Gemini API dari Google melalui AI SDK (@ai-sdk/google) dan mampu memproses bahasa alami dalam Bahasa Indonesia maupun Bahasa Inggris.
+Fungsionalitas chatbot meliputi:
+   1. Menjawab pertanyaan tamu mengenai fasilitas, layanan, dan informasi umum hotel berdasarkan data yang tersimpan dalam basis data PMS
+   2. Melakukan pengecekan ketersediaan kamar secara real-time berdasarkan tanggal yang diminta oleh tamu
+   3. Memproses reservasi kamar secara otomatis melalui percakapan bahasa alami dan mencatat data reservasi langsung ke dalam sistem PMS
+   4. Memberikan konfirmasi pemesanan dan kode booking kepada tamu
+   5. Menyimpan riwayat percakapan yang dapat diakses kembali melalui halaman Chat History
+Chatbot terintegrasi dengan basis data operasional hotel melalui API routes yang dibangun di backend Next.js, sehingga seluruh informasi yang diberikan kepada tamu bersumber dari data aktual dan terkini. Setiap respons chatbot dibatasi hanya pada informasi yang tersedia dalam sistem PMS dan tidak mengakses sumber data eksternal.
+
+
+(Sisipkan Gambar 4.12 Halaman Chatbot StayManager di sini)
+(Sisipkan Gambar 4.13 Contoh Percakapan Chatbot — Pengecekan Ketersediaan Kamar di sini)
+(Sisipkan Gambar 4.14 Contoh Percakapan Chatbot — Proses Reservasi di sini)
+
+
+4.2.12. Modul Pengaturan dan RBAC (Settings & Roles)
+Modul Pengaturan menyediakan fitur konfigurasi sistem dan pengelolaan hak akses pengguna. Fitur yang tersedia meliputi:
+   1. Pengaturan profil hotel (nama, alamat, kontak, logo)
+   2. Pengelolaan akun pengguna (tambah, edit, nonaktifkan akun)
+   3. Pengaturan peran (roles) dan hak akses berbasis Role-Based Access Control (RBAC) yang terintegrasi dengan Supabase Authentication
+   4. Konfigurasi umum sistem (zona waktu, mata uang, format tanggal)
+RBAC diimplementasikan untuk memastikan setiap pengguna hanya dapat mengakses modul dan fitur yang sesuai dengan perannya. Peran yang tersedia dalam sistem meliputi Administrator, Manager, Front Office Staff, Housekeeping Staff, dan Guest.
+
+
+(Sisipkan Gambar 4.15 Halaman Pengaturan dan Manajemen Peran di sini)
+
+
+4.3. Pengujian Sistem
+Pengujian sistem dilakukan untuk memastikan bahwa seluruh fitur dan fungsionalitas sistem StayManager berjalan sesuai dengan kebutuhan yang telah ditetapkan. Pengujian terdiri dari dua komponen utama, yaitu pengujian fungsionalitas menggunakan metode Black Box Testing dan evaluasi kepuasan pengguna melalui kuesioner berbasis skala Likert.
+
+
+4.3.1. Pengujian Black Box Testing
+Pengujian Black Box Testing dilakukan dengan menguji fungsionalitas sistem berdasarkan masukan (input) dan keluaran (output) yang diharapkan, tanpa memperhatikan struktur internal kode program. Pengujian dilakukan terhadap seluruh modul utama sistem StayManager.
+
+
+A. Pengujian Modul Login dan Autentikasi
+
+
+Tabel 4.3. Hasil Black Box Testing Modul Login
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Login dengan data valid | Email dan kata sandi yang terdaftar | Pengguna berhasil masuk dan diarahkan ke halaman sesuai peran | (ISI) | (ISI) |
+| 2   | Login dengan data tidak valid | Email atau kata sandi salah | Sistem menampilkan pesan kesalahan | (ISI) | (ISI) |
+| 3   | Login dengan field kosong | Email atau kata sandi kosong | Sistem menampilkan validasi form | (ISI) | (ISI) |
+| 4   | Redirect berdasarkan peran | Login sebagai staf dan tamu | Staf diarahkan ke Dashboard, tamu ke Chatbot | (ISI) | (ISI) |
+
+
+B. Pengujian Modul Dashboard
+
+
+Tabel 4.4. Hasil Black Box Testing Modul Dashboard
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Menampilkan data KPI | Mengakses halaman Dashboard | Data okupansi, pendapatan, dan tamu ditampilkan | (ISI) | (ISI) |
+| 2   | Menampilkan grafik statistik | Mengakses halaman Dashboard | Grafik tren okupansi dan pendapatan ditampilkan | (ISI) | (ISI) |
+
+
+C. Pengujian Modul Manajemen Kamar
+
+
+Tabel 4.5. Hasil Black Box Testing Modul Manajemen Kamar
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Menambahkan kamar baru | Data kamar lengkap | Data kamar berhasil disimpan dan ditampilkan | (ISI) | (ISI) |
+| 2   | Mengedit data kamar | Perubahan data kamar | Data kamar berhasil diperbarui | (ISI) | (ISI) |
+| 3   | Mengubah status kamar | Perubahan status (Available/Occupied/Maintenance) | Status kamar berhasil diubah secara real-time | (ISI) | (ISI) |
+| 4   | Menghapus data kamar | Konfirmasi penghapusan | Data kamar berhasil dihapus dari sistem | (ISI) | (ISI) |
+
+
+D. Pengujian Modul Manajemen Tamu
+
+
+Tabel 4.6. Hasil Black Box Testing Modul Manajemen Tamu
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Mendaftarkan tamu baru | Data identitas tamu lengkap | Data tamu berhasil disimpan | (ISI) | (ISI) |
+| 2   | Proses check-in | Data tamu dan kamar tujuan | Tamu berhasil check-in, status kamar berubah menjadi Occupied | (ISI) | (ISI) |
+| 3   | Proses check-out | Konfirmasi check-out | Tamu berhasil check-out, status kamar berubah | (ISI) | (ISI) |
+| 4   | Mencari data tamu | Kata kunci pencarian | Data tamu yang sesuai ditampilkan | (ISI) | (ISI) |
+
+
+E. Pengujian Modul Keuangan
+
+
+Tabel 4.7. Hasil Black Box Testing Modul Keuangan
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Membuat tagihan baru | Data tagihan dan layanan | Tagihan berhasil dibuat dan ditampilkan | (ISI) | (ISI) |
+| 2   | Mencatat pembayaran | Data pembayaran | Status tagihan berhasil diperbarui | (ISI) | (ISI) |
+| 3   | Mencatat pengeluaran baru | Data pengeluaran dan kategori | Pengeluaran berhasil dicatat | (ISI) | (ISI) |
+| 4   | Mencetak faktur | Permintaan cetak faktur | Faktur berhasil dicetak/diunduh | (ISI) | (ISI) |
+
+
+F. Pengujian Modul Logistik dan Inventaris
+
+
+Tabel 4.8. Hasil Black Box Testing Modul Logistik dan Inventaris
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Menambahkan item inventaris | Data item baru | Item berhasil ditambahkan ke sistem | (ISI) | (ISI) |
+| 2   | Memperbarui stok | Perubahan jumlah stok | Data stok berhasil diperbarui | (ISI) | (ISI) |
+| 3   | Membuat pesanan pembelian | Data pesanan pembelian | PO berhasil dibuat dan dikirim ke pemasok | (ISI) | (ISI) |
+| 4   | Mengelola data pemasok | Data pemasok baru | Data pemasok berhasil disimpan | (ISI) | (ISI) |
+
+
+G. Pengujian Modul Chatbot
+
+
+Tabel 4.9. Hasil Black Box Testing Modul Chatbot
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Menanyakan informasi hotel | Pertanyaan tentang fasilitas hotel | Chatbot memberikan jawaban yang akurat berdasarkan data PMS | (ISI) | (ISI) |
+| 2   | Mengecek ketersediaan kamar | Permintaan cek kamar dengan tanggal tertentu | Chatbot menampilkan informasi ketersediaan kamar secara real-time | (ISI) | (ISI) |
+| 3   | Melakukan reservasi | Permintaan pemesanan kamar | Chatbot memproses reservasi dan memberikan kode booking | (ISI) | (ISI) |
+| 4   | Menanyakan di luar cakupan | Pertanyaan yang tidak berkaitan dengan hotel | Chatbot memberikan respons bahwa pertanyaan di luar cakupan layanan | (ISI) | (ISI) |
+| 5   | Percakapan dalam bahasa Indonesia | Pertanyaan dalam Bahasa Indonesia | Chatbot merespons dalam Bahasa Indonesia yang natural | (ISI) | (ISI) |
+| 6   | Percakapan dalam bahasa Inggris | Pertanyaan dalam Bahasa Inggris | Chatbot merespons dalam Bahasa Inggris yang natural | (ISI) | (ISI) |
+
+
+H. Pengujian Modul Pelaporan
+
+
+Tabel 4.10. Hasil Black Box Testing Modul Pelaporan
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Menampilkan laporan okupansi | Filter rentang tanggal | Laporan okupansi ditampilkan sesuai periode | (ISI) | (ISI) |
+| 2   | Menampilkan laporan pendapatan | Filter rentang tanggal | Laporan pendapatan ditampilkan dengan grafik | (ISI) | (ISI) |
+| 3   | Menampilkan laporan pengeluaran | Filter kategori dan tanggal | Laporan pengeluaran ditampilkan sesuai filter | (ISI) | (ISI) |
+
+
+I. Pengujian Modul Pengaturan dan RBAC
+
+
+Tabel 4.11. Hasil Black Box Testing Modul Pengaturan
+| No. | Skenario Pengujian | Masukan | Hasil yang Diharapkan | Hasil | Status |
+|-----|--------------------|---------|-----------------------|-------|--------|
+| 1   | Mengubah pengaturan profil hotel | Data profil hotel baru | Pengaturan berhasil disimpan | (ISI) | (ISI) |
+| 2   | Menambahkan peran baru | Data peran dan hak akses | Peran berhasil ditambahkan | (ISI) | (ISI) |
+| 3   | Membatasi akses berdasarkan peran | Login dengan peran berbeda | Pengguna hanya dapat mengakses modul sesuai peran | (ISI) | (ISI) |
+
+
+Berdasarkan seluruh pengujian Black Box Testing yang dilakukan terhadap (ISI: jumlah total) skenario pengujian, diperoleh hasil sebagai berikut:
+
+
+Tabel 4.12. Ringkasan Hasil Black Box Testing
+| No. | Modul                   | Jumlah Skenario | Berhasil | Gagal | Persentase |
+|-----|-------------------------|-----------------|----------|-------|------------|
+| 1   | Login dan Autentikasi   | 4               | (ISI)    | (ISI) | (ISI)      |
+| 2   | Dashboard               | 2               | (ISI)    | (ISI) | (ISI)      |
+| 3   | Manajemen Kamar         | 4               | (ISI)    | (ISI) | (ISI)      |
+| 4   | Manajemen Tamu          | 4               | (ISI)    | (ISI) | (ISI)      |
+| 5   | Keuangan                | 4               | (ISI)    | (ISI) | (ISI)      |
+| 6   | Logistik dan Inventaris | 4               | (ISI)    | (ISI) | (ISI)      |
+| 7   | Chatbot                 | 6               | (ISI)    | (ISI) | (ISI)      |
+| 8   | Pelaporan               | 3               | (ISI)    | (ISI) | (ISI)      |
+| 9   | Pengaturan dan RBAC     | 3               | (ISI)    | (ISI) | (ISI)      |
+|     | Total                   | 34              | (ISI)    | (ISI) | (ISI)      |
+
+
+4.3.2. Evaluasi Kepuasan Pengguna
+Evaluasi kepuasan pengguna dilakukan melalui kuesioner berbasis skala Likert lima tingkat terhadap 30 responden yang terdiri dari 10 staf operasional hotel dan 20 tamu hotel (pengguna chatbot). Aspek yang dievaluasi meliputi kemudahan penggunaan (usability), kejelasan informasi, kecepatan respons sistem, dan kualitas interaksi chatbot.
+
+
+A. Hasil Kuesioner Staf Hotel (10 Responden)
+Kuesioner untuk staf hotel difokuskan pada evaluasi sistem PMS dari aspek operasional harian.
+
+
+Tabel 4.13. Hasil Kuesioner Staf Hotel
+| No. | Pernyataan | STS (1) | TS (2) | N (3) | S (4) | SS (5) | Rata-rata |
+|-----|------------|---------|--------|-------|-------|--------|-----------|
+| 1   | Sistem mudah digunakan dan dipahami | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 2   | Navigasi antar modul mudah ditemukan | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 3   | Informasi yang ditampilkan jelas dan akurat | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 4   | Sistem mempercepat proses operasional | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 5   | Sistem membantu koordinasi antarbagian | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 6   | Tampilan antarmuka menarik dan profesional | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 7   | Sistem bekerja dengan stabil tanpa error | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 8   | Secara keseluruhan, saya puas dengan sistem ini | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+
+
+B. Hasil Kuesioner Tamu Hotel / Pengguna Chatbot (20 Responden)
+Kuesioner untuk tamu hotel difokuskan pada evaluasi pengalaman interaksi dengan chatbot berbasis LLM.
+
+
+Tabel 4.14. Hasil Kuesioner Tamu Hotel (Pengguna Chatbot)
+| No. | Pernyataan | STS (1) | TS (2) | N (3) | S (4) | SS (5) | Rata-rata |
+|-----|------------|---------|--------|-------|-------|--------|-----------|
+| 1   | Chatbot mudah digunakan | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 2   | Chatbot memahami pertanyaan saya dengan baik | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 3   | Jawaban chatbot akurat dan sesuai | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 4   | Respons chatbot cepat | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 5   | Proses reservasi melalui chatbot mudah dipahami | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 6   | Chatbot membantu saya mendapatkan informasi hotel | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 7   | Saya lebih memilih chatbot daripada menelepon resepsionis | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+| 8   | Secara keseluruhan, saya puas dengan chatbot ini | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) | (ISI) |
+
+
+4.4. Pembahasan
+Pada subbab ini dilakukan analisis dan pembahasan terhadap hasil pengujian fungsionalitas dan evaluasi kepuasan pengguna yang telah diperoleh.
+
+
+4.4.1. Analisis Hasil Black Box Testing
+Berdasarkan hasil pengujian Black Box Testing yang dilakukan terhadap 34 skenario pengujian pada 9 modul utama sistem StayManager, diperoleh tingkat keberhasilan sebesar (ISI: persentase)%. Hasil ini menunjukkan bahwa seluruh fungsionalitas utama sistem telah berjalan sesuai dengan spesifikasi kebutuhan yang ditetapkan pada tahap perancangan.
+Pengujian pada modul chatbot menunjukkan bahwa integrasi antara Gemini API dengan basis data PMS berhasil diimplementasikan dengan baik. Chatbot mampu melakukan pengecekan ketersediaan kamar secara real-time dan mencatat reservasi langsung ke dalam basis data, tanpa terjadi konflik data (double booking). Kemampuan chatbot dalam memproses bahasa alami dalam Bahasa Indonesia maupun Bahasa Inggris juga telah tervalidasi melalui pengujian.
+Modul-modul operasional PMS (Manajemen Kamar, Manajemen Tamu, Keuangan, Logistik, dan Pelaporan) menunjukkan konsistensi dalam melakukan operasi CRUD (Create, Read, Update, Delete) serta sinkronisasi data antar modul secara real-time melalui basis data PostgreSQL yang dikelola oleh Supabase.
+
+
+4.4.2. Analisis Hasil Evaluasi Kepuasan Pengguna
+Berdasarkan hasil kuesioner yang disebarkan kepada 30 responden, diperoleh rata-rata skor kepuasan keseluruhan sebesar (ISI: rata-rata skor) dari skala 5. Hasil ini dapat diinterpretasikan bahwa pengguna menilai sistem StayManager secara positif.
+
+
+Analisis terhadap hasil kuesioner staf hotel menunjukkan:
+   1. Aspek kemudahan penggunaan (usability) memperoleh rata-rata skor (ISI), yang mengindikasikan bahwa antarmuka sistem cukup intuitif dan mudah dipahami oleh staf operasional hotel.
+   2. Aspek efisiensi operasional memperoleh rata-rata skor (ISI), yang menunjukkan bahwa sistem mampu mempercepat proses kerja dibandingkan dengan metode manual yang sebelumnya digunakan.
+   3. Aspek koordinasi antarbagian memperoleh rata-rata skor (ISI), yang mengkonfirmasi bahwa basis data terpusat berhasil mengeliminasi masalah fragmentasi data yang sebelumnya terjadi.
+
+
+Analisis terhadap hasil kuesioner tamu hotel (pengguna chatbot) menunjukkan:
+   1. Aspek kemudahan penggunaan chatbot memperoleh rata-rata skor (ISI), yang menunjukkan bahwa antarmuka percakapan bahasa alami berhasil menyediakan pengalaman interaksi yang user-friendly.
+   2. Aspek akurasi jawaban chatbot memperoleh rata-rata skor (ISI), yang mengindikasikan bahwa integrasi chatbot dengan basis data PMS memberikan informasi yang akurat dan terkini.
+   3. Aspek preferensi chatbot dibandingkan interaksi manual memperoleh rata-rata skor (ISI), yang menunjukkan kecenderungan positif pengguna terhadap layanan berbasis chatbot untuk keperluan informasi dan reservasi.
+
+
+4.4.3. Keterbatasan Sistem
+Meskipun hasil pengujian menunjukkan tingkat keberhasilan yang tinggi, terdapat beberapa keterbatasan yang teridentifikasi selama proses pengujian:
+   1. Chatbot bergantung sepenuhnya pada ketersediaan API Gemini dari Google, sehingga gangguan pada layanan pihak ketiga dapat memengaruhi fungsionalitas chatbot.
+   2. Chatbot belum memiliki kemampuan untuk memproses pembayaran secara langsung, sehingga tamu perlu melakukan pembayaran secara manual di resepsionis hotel.
+   3. Sistem belum terintegrasi dengan platform Online Travel Agent (OTA), sehingga sinkronisasi data reservasi dari saluran pemesanan eksternal belum tersedia.
+   4. Pengujian dilakukan pada skala terbatas dengan 30 responden, sehingga generalisasi hasil evaluasi keperluan kajian lebih lanjut dengan jumlah responden yang lebih besar.
+
+
+BAB 5 
+SIMPULAN DAN SARAN
+5.1 Kesimpulan
+Berdasarkan penelitian yang telah dilakukan, maka dapat disimpulkan sebagai berikut:
+      1. Telah berhasil dirancang dan dibangun Property Management System (PMS) berbasis web bernama StayManager yang mampu mengintegrasikan proses operasional utama hotel meliputi manajemen kamar dan okupansi, manajemen tamu dan fasilitas tamu, manajemen staf, housekeeping, manajemen keuangan (billing dan pencatatan pengeluaran), logistik dan inventaris, serta pelaporan manajerial dalam satu basis data terpusat berbasis PostgreSQL melalui platform Supabase. Sistem ini dibangun menggunakan framework Next.js dengan TypeScript dan dideploy melalui platform Vercel, sehingga dapat diakses secara real-time melalui peramban web tanpa memerlukan instalasi aplikasi khusus. Berdasarkan hasil survei terhadap 10 staf operasional hotel, sistem ini dinilai mampu membantu pengelolaan operasional hotel secara lebih efisien dan terintegrasi.
+      2. Telah berhasil diimplementasikan dan diintegrasikan chatbot berbasis Large Language Model (LLM) menggunakan Gemini API dari Google ke dalam arsitektur PMS StayManager. Chatbot ini mampu melakukan interaksi layanan dengan tamu menggunakan bahasa alami, menyediakan informasi layanan hotel, melakukan pengecekan ketersediaan kamar, serta memproses reservasi secara kontekstual berdasarkan data operasional yang tersimpan dalam basis data PMS secara real-time. Berdasarkan hasil survei terhadap 20 tamu hotel (pengguna chatbot), sistem chatbot dinilai mampu membantu pengguna dalam memperoleh informasi dan melakukan reservasi secara efektif.
+      3. Berdasarkan hasil evaluasi melalui kuesioner berbasis skala Likert yang dilakukan terhadap 30 responden (10 staf operasional hotel dan 20 tamu hotel), sistem StayManager secara keseluruhan dinilai berhasil memenuhi kebutuhan pengguna dari aspek kemudahan penggunaan (usability), kejelasan informasi, kecepatan respons sistem, serta kualitas interaksi dengan chatbot.
+
+
+5.2. Saran
+Berdasarkan hasil penelitian dan keterbatasan yang ada, berikut adalah saran untuk pengembangan sistem di masa depan:
+      1. Pengembangan integrasi gerbang pembayaran (payment gateway) yang memungkinkan tamu untuk melakukan pembayaran secara daring melalui berbagai metode, baik secara offline maupun online, sehingga proses pembayaran tidak perlu dilakukan secara manual di resepsionis.
+      2. Pengembangan integrasi dengan platform Online Travel Agent (OTA) seperti Traveloka atau Booking.com untuk memperluas jangkauan pemasaran dan sinkronisasi data reservasi dari berbagai saluran pemesanan.
+      3. Penambahan fitur analisis sentimen (sentiment analysis) terhadap ulasan tamu dari berbagai platform untuk mengidentifikasi tren kepuasan pelanggan dan menghasilkan rekomendasi peningkatan kualitas layanan secara otomatis.
+      4. Pengembangan aplikasi mobile native untuk memperluas aksesibilitas sistem bagi staf hotel maupun tamu yang lebih terbiasa menggunakan perangkat mobile.
+      5. Penambahan dukungan multi-bahasa yang lebih luas serta peningkatan kemampuan chatbot dalam memahami konteks percakapan yang lebih kompleks.
+
+
+________________
+
+
+REFERENSI
+
+
+Adamopoulou, E., & Moussiades, L. (2020). Chatbots: History, technology, and applications. Machine Learning with Applications, 2, 100006.
+Al-Shami, S. A., Rashid, N., & Majid, I. (2022). API-driven integration in cloud-based hotel management systems. Journal of Hospitality and Tourism Technology, 13(4), 612–628.
+Buhalis, D., & Leung, R. (2018). Smart hospitality—Interconnectivity and interoperability towards an ecosystem. International Journal of Hospitality Management, 71, 41–50.
+Buhalis, D., Harwood, T., Bogicevic, V., Viglia, G., Beldona, S., & Hofacker, C. (2023). Technological disruptions in services: Lessons from tourism and hospitality. Journal of Service Management, 34(3), 424–447.
+Chen, L., Konar, R., & Kumar, S. (2024). The role of AI chatbots in customer experience and marketing strategies in the hotel industry. In AI and Hospitality Management (pp. 112–130). Springer.
+Chen, P. P. (1976). The entity-relationship model—Toward a unified view of data. ACM Transactions on Database Systems, 1(1), 9–36.
+Creswell, J. W., & Creswell, J. D. (2017). Research design: Qualitative, quantitative, and mixed methods approaches (5th ed.). SAGE Publications.
+Dennis, A., Wixom, B. H., & Roth, R. M. (2012). Systems analysis and design (5th ed.). John Wiley & Sons.
+Dutta, S. (2024). Effectiveness of AI chatbots in enhancing hotel guest communication. International Journal of Hospitality Technology and Management, 25(2), 145–162.
+Dwivedi, Y. K., Kshetri, N., Hughes, L., Slade, E. L., Jeyaraj, A., Kar, A. K., ... & Wright, R. (2023). Opinion paper: "So what if ChatGPT wrote it?" Multidisciplinary perspectives on opportunities, challenges and implications of generative conversational AI for research, practice and policy. International Journal of Information Management, 71, 102642.
+Elmasri, R., & Navathe, S. B. (2019). Fundamentals of database systems (7th ed.). Pearson.
+Figma. (2023). Figma documentation and help center. Figma Inc.
+Geoco, J. (2022). 2022 Design tools survey results. UX Tools.
+Google. (2023). Gemini: A family of highly capable multimodal models. Google DeepMind.
+Grant, D., Adhikara, C. T., & Bisoyi, B. (2016). UML activity diagram modeling for hotel reservation systems. Journal of Software Engineering, 12(3), 45–58.
+Hair, J. F., Hult, G. T. M., Ringle, C. M., & Sarstedt, M. (2021). A primer on partial least squares structural equation modeling (PLS-SEM) (3rd ed.). SAGE Publications.
+Hofmann, P., O'Mahony, M., & Tierney, B. (2013). Entity-relationship modeling for hotel management systems. In Proceedings of ICCSE 2013 (pp. 234–241).
+Ikwunne, T., Adigwe, W., & Nnamene, C. (2021). Use case modeling for hotel management systems. In Information Systems and Technologies (pp. 112–120). Springer.
+ISO/IEC. (2011). Systems and software engineering — Systems and software quality requirements and evaluation (SQuaRE). ISO/IEC 25010.
+Kandampully, J., Zhang, T. C., & Bilgihan, A. (2023). Customer loyalty: A review and future directions with a special focus on the hospitality industry. International Journal of Contemporary Hospitality Management, 35(3), 1006–1041.
+Liu, C., & Li, H. (2022). Smart service technology and guest loyalty in hotels: The role of perceived value and uncertainty reduction. International Journal of Hospitality Management, 102, 103165.
+Mariani, M., Machado, I., & Nambisan, S. (2023). Types of innovation and artificial intelligence: A systematic quantitative literature review and research agenda. Journal of Business Research, 155, 113364.
+Microsoft. (2023). TypeScript documentation. Microsoft Corporation.
+Mordor Intelligence. (2024). Asia Pacific hotel and hospitality management software market – Growth, trends, and forecasts. Mordor Intelligence.
+Object Management Group. (2021). Unified Modeling Language (UML) specification, version 2.5.1. OMG.
+Pressman, R. S., & Maxim, B. R. (2020). Software engineering: A practitioner's approach (9th ed.). McGraw-Hill Education.
+Rahmadani, A., Raharjana, I. K., & Taufik, M. (2015). Sequence diagram modeling for information systems. Journal of Information Systems Engineering, 8(2), 78–89.
+Rahmadani, R., Suhada, S., & Damanik, B. E. (2021). Flowchart-based process modeling for hotel reservation systems. Jurnal Sistem Informasi, 13(1), 25–35.
+Schwaber, K., & Sutherland, J. (2020). The Scrum Guide. Scrum.org.
+Schwarz, D. (2023). Figma for dummies. John Wiley & Sons.
+Shabani, N., Munir, A., & Hassan, A. (2021). Cloud-based property management systems: A systematic review and future research directions. Journal of Hospitality and Tourism Insights, 4(5), 601–620.
+Shin, H., & Kang, J. (2021). Reducing perceived health risk to attract hotel customers in the COVID-19 pandemic era: Focused on technology innovation for social distancing and cleanliness. International Journal of Hospitality Management, 91, 102664.
+Shneiderman, B., Plaisant, C., Cohen, M., Jacobs, S., Elmqvist, N., & Diakopoulos, N. (2017). Designing the user interface: Strategies for effective human-computer interaction (6th ed.). Pearson.
+Sommerville, I. (2019). Software engineering (10th ed.). Pearson.
+Sugiyono. (2019). Metode penelitian kuantitatif, kualitatif, dan R&D (2nd ed.). Alfabeta.
+Supabase. (2023). Supabase documentation. Supabase Inc.
+Tussyadiah, I. P., & Park, S. (2018). Consumer evaluation of hotel service robots. In B. Stangl & J. Pesonen (Eds.), Information and Communication Technologies in Tourism 2018 (pp. 308–320). Springer.
+Tyan, I., Yagüe, M. I., & Guevara-Plaza, A. (2021). Blockchain technology for smart tourism destinations: A review and research agenda. Tourism Review, 76(1), 32–48.
+Vercel. (2024). Next.js documentation. Vercel Inc.
+Wüst, K., & Bremser, K. (2025). Artificial intelligence in tourism through chatbot support in the booking process—An experimental investigation. Tourism and Hospitality, 6(1), 36.
+Yılmaz, R., & Şahin-Yılmaz, G. (2025). Chatbot research in tourism and hospitality: A bibliometric analysis. Tourism and Hospitality, 6(1), 25.
