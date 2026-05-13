@@ -1,0 +1,52 @@
+flowchart TD
+    Start([Front Desk buka /occupancy]) --> Calendar[Tampilkan kalender hunian]
+    Calendar --> SelectRoom[Klik kamar<br/>dengan reservasi confirmed]
+    SelectRoom --> OpenDialog[CheckinDialog terbuka]
+
+    OpenDialog --> Mode{Walk-in<br/>atau pilih reservasi?}
+    Mode -->|Walk-in| WalkForm[Input: nama tamu, KTP,<br/>kontak, tanggal stay]
+    Mode -->|Reservasi existing| FetchRes[Fetch reservations<br/>WHERE room_id AND<br/>status=confirmed]
+
+    FetchRes --> ResEmpty{Ada<br/>reservasi?}
+    ResEmpty -->|Tidak| ErrNoRes[Error 'Tidak ada reservasi<br/>siap check-in']
+    ErrNoRes --> Calendar
+    ResEmpty -->|Ya| PickRes[Pilih dari dropdown]
+
+    WalkForm --> ValidWalk{Field valid?}
+    ValidWalk -->|Tidak| ErrField[Error 'Field wajib diisi']
+    ErrField --> WalkForm
+    ValidWalk -->|Ya| Continue
+    PickRes --> Continue[Klik 'Lanjut ke Pembayaran']
+
+    Continue --> ShowPay[Tampilkan pilihan<br/>payment method]
+    ShowPay --> PayMethod{Pilih method}
+    PayMethod -->|Cash| Cash[Input cash received<br/>hitung change]
+    PayMethod -->|Transfer/Card| NonCash[Input transaction reference]
+
+    Cash --> Process[Klik 'Process Payment']
+    NonCash --> Process
+
+    Process --> InsertPay[(INSERT payments<br/>amount + method + txId)]
+    InsertPay --> UpdateRes[(UPDATE reservations<br/>status=checked-in<br/>actual_check_in=NOW)]
+    UpdateRes --> UpdateRoom[(UPDATE rooms<br/>status=occupied)]
+    UpdateRoom --> CreateInv[(INSERT invoices<br/>generate invoice_number)]
+
+    CreateInv --> Success[Tampilkan modal success<br/>+ ringkasan pembayaran]
+    Success --> ActPick{Aksi?}
+    ActPick -->|Print Invoice| Print[window.print<br/>browser dialog]
+    ActPick -->|Close| CloseDialog[Tutup dialog<br/>refresh kalender]
+    Print --> CloseDialog
+    CloseDialog --> RTSync[Realtime sync<br/>kamar 'occupied'<br/>reservasi 'checked-in']
+    RTSync --> End([Selesai])
+
+    classDef startEnd fill:#dcfce7,stroke:#10b981
+    classDef decision fill:#fef3c7,stroke:#f59e0b
+    classDef action fill:#dbeafe,stroke:#3b82f6
+    classDef db fill:#e0e7ff,stroke:#6366f1
+    classDef error fill:#fee2e2,stroke:#ef4444
+
+    class Start,End startEnd
+    class Mode,ResEmpty,ValidWalk,PayMethod,ActPick decision
+    class Calendar,SelectRoom,OpenDialog,WalkForm,FetchRes,PickRes,Continue,ShowPay,Cash,NonCash,Process,Success,Print,CloseDialog,RTSync action
+    class InsertPay,UpdateRes,UpdateRoom,CreateInv db
+    class ErrField,ErrNoRes error

@@ -1,0 +1,42 @@
+flowchart TD
+    Start([Mulai]) --> Mode{Mode Registrasi}
+
+    Mode -->|Self-signup<br/>tamu eksternal| SelfPath["/signup page"]
+    Mode -->|Admin invite<br/>untuk staf| AdminPath["/staff page<br/>oleh super_admin/manager"]
+
+    SelfPath --> SelfForm[Form: nama, email, password]
+    SelfForm --> SelfValid{Validasi:<br/>email unik,<br/>password >= 8 char}
+    SelfValid -->|Tidak| SelfErr[Toast error]
+    SelfErr --> SelfForm
+    SelfValid -->|Ya| SelfSignup[supabase.auth.signUp]
+    SelfSignup --> SelfCreate[(INSERT auth.users)]
+    SelfCreate --> SelfProfile[(INSERT profiles<br/>role default 'guest')]
+    SelfProfile --> SelfRole[(INSERT user_roles<br/>role_id=guest_role_id)]
+    SelfRole --> SelfVerif[Email verifikasi opsional]
+    SelfVerif --> SelfDone[Redirect ke /login]
+
+    AdminPath --> AdminForm[Admin isi form:<br/>full_name, email, role_name]
+    AdminForm --> AdminValid{Validasi<br/>email belum ada?}
+    AdminValid -->|Tidak| AdminErr[Toast 'Email sudah terdaftar']
+    AdminErr --> AdminForm
+    AdminValid -->|Ya| AdminInvite[Admin SDK<br/>auth.admin.createUser<br/>+ generate temp password]
+    AdminInvite --> AdminProfile[(INSERT profiles<br/>full_name, role)]
+    AdminProfile --> AdminLookup[(SELECT roles<br/>WHERE name = role_name)]
+    AdminLookup --> AdminAssign[(INSERT user_roles<br/>user_id, role_id, assigned_by)]
+    AdminAssign --> AdminEmail[Kirim email<br/>password sementara]
+    AdminEmail --> AdminDone[Staff baru muncul<br/>di list /staff]
+
+    SelfDone --> End([Selesai])
+    AdminDone --> End
+
+    classDef startEnd fill:#dcfce7,stroke:#10b981
+    classDef decision fill:#fef3c7,stroke:#f59e0b
+    classDef action fill:#dbeafe,stroke:#3b82f6
+    classDef db fill:#e0e7ff,stroke:#6366f1
+    classDef error fill:#fee2e2,stroke:#ef4444
+
+    class Start,End,SelfDone,AdminDone startEnd
+    class Mode,SelfValid,AdminValid decision
+    class SelfPath,SelfForm,SelfSignup,SelfVerif,AdminPath,AdminForm,AdminInvite,AdminEmail action
+    class SelfCreate,SelfProfile,SelfRole,AdminProfile,AdminLookup,AdminAssign db
+    class SelfErr,AdminErr error

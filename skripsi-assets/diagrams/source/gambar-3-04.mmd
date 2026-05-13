@@ -1,0 +1,88 @@
+flowchart LR
+    %% ========== Aktor ==========
+    subgraph Aktor["Aktor Sistem"]
+        direction TB
+        SA(("Super Admin"))
+        MG(("Manajer"))
+        FD(("Front Desk"))
+        HK(("Staf<br/>Housekeeping"))
+        FN(("Staf<br/>Keuangan"))
+        GL(("Tamu<br/>Terdaftar"))
+        GA(("Tamu<br/>Anonymous"))
+    end
+
+    %% ========== Use Cases ==========
+    subgraph SS["Sistem StayManager"]
+        direction TB
+
+        subgraph G1["Autentikasi"]
+            UC1[Login / Logout]
+            UC2[Kelola Akun & Roles]
+        end
+
+        subgraph G2["Front Office"]
+            UC3[Lihat Dashboard KPI]
+            UC8[Lihat Kalender Occupancy]
+            UC9[Buat Reservasi Manual]
+            UC10[Proses Check-in]
+            UC11[Proses Check-out + Invoice]
+            UC18[Layanan Permintaan Tamu]
+        end
+
+        subgraph G3["Kamar & Housekeeping"]
+            UC4[Kelola Kamar - CRUD]
+            UC5[Kelola Tipe Kamar Custom]
+            UC6[Kelola Tugas Housekeeping]
+            UC7[Kelola Tamu - CRUD]
+        end
+
+        subgraph G4["Keuangan & Inventaris"]
+            UC12[Kelola Billing Items]
+            UC13[Kelola Invoice & Pembayaran]
+            UC14[Kelola Deposit]
+            UC15[Catat Pengeluaran]
+            UC16[Kelola Inventaris]
+            UC17[Kelola Supplier & PO]
+            UC19[Generate Laporan]
+            UC20[Konfigurasi Hotel]
+        end
+
+        subgraph G5["Chatbot LLM"]
+            UC21[Akses Chatbot Publik]
+            UC22[Browse Room Types]
+            UC23[Cek Ketersediaan]
+            UC24[Buat Reservasi via Chatbot<br/>requires login]
+            UC25[Konfirmasi Pembayaran]
+        end
+    end
+
+    %% ========== Relasi Aktor → UC (compact syntax) ==========
+    SA --> G1 & G2 & G3 & G4
+    MG --> UC1 & UC3 & UC4 & UC5 & UC6 & UC7 & UC8 & UC9 & UC11 & UC15 & UC16 & UC17 & UC18 & UC19
+    FD --> UC1 & UC3 & UC7 & UC8 & UC9 & UC10 & UC11 & UC18
+    HK --> UC1 & UC3 & UC4 & UC6
+    FN --> UC1 & UC3 & UC12 & UC13 & UC14 & UC15 & UC19
+
+    GL --> UC1 & UC21 & UC22 & UC23 & UC24 & UC25
+    GA --> UC21 & UC22 & UC23
+    GA -.->|membutuhkan login<br/>LoginPromptCard| UC24
+
+    %% ========== Include / Extend ==========
+    UC10 -.->|include| UC8
+    UC11 -.->|include| UC13
+    UC24 -.->|extend| UC1
+    UC24 -.->|include| UC23
+    UC25 -.->|include| UC24
+
+    %% ========== Styling ==========
+    classDef actor fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef anonActor fill:#fee2e2,stroke:#ef4444,stroke-width:2px
+    classDef guestActor fill:#dcfce7,stroke:#10b981,stroke-width:2px
+    classDef usecase fill:#e0e7ff,stroke:#4472C4,stroke-width:1px
+    classDef walled fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+
+    class SA,MG,FD,HK,FN actor
+    class GL guestActor
+    class GA anonActor
+    class UC1,UC2,UC3,UC4,UC5,UC6,UC7,UC8,UC9,UC10,UC11,UC12,UC13,UC14,UC15,UC16,UC17,UC18,UC19,UC20,UC21,UC22,UC23,UC25 usecase
+    class UC24 walled

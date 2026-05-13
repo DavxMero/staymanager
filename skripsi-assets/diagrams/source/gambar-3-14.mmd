@@ -1,0 +1,62 @@
+sequenceDiagram
+    autonumber
+    actor Sup as Supervisor / Manager
+    actor HK as Housekeeping Staff
+    participant UI as Rooms Page<br/>(/rooms tab Housekeeping)
+    participant SB as Supabase Client
+    participant DB as PostgreSQL
+    participant CronAPI as /api/housekeeping/<br/>daily-maintenance
+    participant ChkAPI as /api/housekeeping/<br/>checkout-cleaning
+
+    Sup->>UI: Buka /rooms, klik tab Housekeeping
+    UI->>SB: from('housekeeping_tasks')<br/>.select('*, rooms(...)')
+    SB->>DB: SELECT housekeeping_tasks JOIN rooms
+    DB-->>SB: tasks[]
+    SB-->>UI: data
+    UI-->>Sup: Render task list + filter status, priority
+
+    rect rgb(220, 252, 231)
+    Note over Sup,DB: CREATE Task Manual
+    Sup->>UI: Klik "Add Task"
+    Sup->>UI: Isi: roomId, taskType,<br/>priority, assigned_to, notes,<br/>estimated_duration
+    UI->>SB: from('housekeeping_tasks').insert({...})
+    SB->>DB: INSERT
+    DB-->>SB: new task row
+    SB-->>UI: data
+    UI-->>Sup: Toast "Tugas ditambahkan"
+    end
+
+    rect rgb(254, 243, 199)
+    Note over CronAPI,DB: CREATE Tasks Otomatis (Daily)
+    CronAPI->>SB: rpc('run_daily_housekeeping_tasks')
+    SB->>DB: function generates daily<br/>tasks for all occupied rooms
+    DB-->>SB: tasks count
+    end
+
+    rect rgb(254, 243, 199)
+    Note over ChkAPI,DB: CREATE Task Otomatis (Post-Checkout)
+    ChkAPI->>SB: from('housekeeping_tasks').insert({<br/>task_type: 'checkout',<br/>room_id: ?,<br/>priority: 'high'<br/>})
+    SB->>DB: INSERT
+    end
+
+    rect rgb(219, 234, 254)
+    Note over HK,DB: UPDATE Task Status
+    HK->>UI: Buka /rooms tab Housekeeping<br/>(filter assigned_to = me)
+    HK->>UI: Klik task → "Start Task"
+    UI->>SB: from('housekeeping_tasks').update({<br/>status: 'in-progress',<br/>started_at: NOW()<br/>}).eq('id', taskId)
+    SB->>DB: UPDATE
+    DB-->>SB: ok
+    UI-->>HK: Status berubah, badge update
+
+    HK->>UI: Selesaikan tugas, klik "Complete"
+    UI->>SB: update({<br/>status: 'completed',<br/>completed_at: NOW()<br/>})
+    SB->>DB: UPDATE
+
+    alt task_type = 'checkout'
+        UI->>SB: from('rooms').update({status: 'available'})<br/>.eq('id', task.room_id)
+        SB->>DB: UPDATE
+        Note over DB: Kamar siap dijual kembali
+    end
+    end
+
+    Note over UI: Tidak ada Supabase Realtime<br/>untuk housekeeping_tasks —<br/>list refresh manual atau<br/>navigasi ulang

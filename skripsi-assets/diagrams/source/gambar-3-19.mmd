@@ -1,0 +1,58 @@
+flowchart TD
+    Start([Mulai]) --> Source{Sumber tugas}
+
+    Source -->|Manual oleh<br/>supervisor| ManualPath["/rooms tab Housekeeping<br/>Klik 'Add Task'"]
+    Source -->|Otomatis post-checkout| AutoCheckout[Trigger oleh<br/>checkout flow]
+    Source -->|Otomatis daily| DailyCron[Cron / scheduled<br/>run_daily_housekeeping_tasks]
+
+    ManualPath --> ManualForm[Isi: room, task_type<br/>priority, assigned_to,<br/>estimated_duration, notes]
+    ManualForm --> ManualValid{Field valid?}
+    ManualValid -->|Tidak| ManualErr[Error]
+    ManualErr --> ManualForm
+    ManualValid -->|Ya| InsertTask[(INSERT housekeeping_tasks<br/>status='pending')]
+
+    AutoCheckout --> AutoTask[(INSERT task<br/>task_type=checkout<br/>priority=high<br/>auto-assign)]
+
+    DailyCron --> DailyTasks[(INSERT batch tasks<br/>untuk semua kamar occupied<br/>task_type=daily)]
+
+    InsertTask --> ListView[Task muncul di list]
+    AutoTask --> ListView
+    DailyTasks --> ListView
+
+    ListView --> StaffView[HK Staff buka /rooms<br/>tab Housekeeping<br/>filter: assigned_to=me]
+    StaffView --> PickTask[Pilih tugas dari list]
+    PickTask --> StartTask[Klik 'Start Task']
+    StartTask --> UpdProgress[(UPDATE status=in-progress<br/>started_at=NOW)]
+
+    UpdProgress --> PhysicalWork[Kerjakan tugas fisik<br/>di kamar]
+    PhysicalWork --> Finished{Tugas<br/>selesai?}
+    Finished -->|Belum| Pause[Pause / lanjut nanti]
+    Pause --> StaffView
+    Finished -->|Ya| MarkDone[Klik 'Complete']
+
+    MarkDone --> UpdComplete[(UPDATE status=completed<br/>completed_at=NOW)]
+    UpdComplete --> CheckType{task_type<br/>= 'checkout'?}
+
+    CheckType -->|Ya| FreeRoom[(UPDATE rooms<br/>status=available)]
+    CheckType -->|Tidak| NoFree[Status kamar tetap]
+
+    FreeRoom --> RTUpdate[Realtime sync ke<br/>occupancy + dashboard]
+    NoFree --> ListView2[Refresh task list]
+    RTUpdate --> ListView2
+    ListView2 --> Continue{Tugas lain?}
+    Continue -->|Ya| StaffView
+    Continue -->|Tidak| End([Selesai])
+
+    classDef startEnd fill:#dcfce7,stroke:#10b981
+    classDef decision fill:#fef3c7,stroke:#f59e0b
+    classDef action fill:#dbeafe,stroke:#3b82f6
+    classDef db fill:#e0e7ff,stroke:#6366f1
+    classDef auto fill:#fce7f3,stroke:#ec4899
+    classDef error fill:#fee2e2,stroke:#ef4444
+
+    class Start,End startEnd
+    class Source,ManualValid,Finished,CheckType,Continue decision
+    class ManualPath,ManualForm,ListView,ListView2,StaffView,PickTask,StartTask,PhysicalWork,Pause,MarkDone,RTUpdate,NoFree action
+    class InsertTask,AutoTask,DailyTasks,UpdProgress,UpdComplete,FreeRoom db
+    class AutoCheckout,DailyCron auto
+    class ManualErr error

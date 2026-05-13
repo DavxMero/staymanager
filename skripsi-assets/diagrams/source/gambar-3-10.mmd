@@ -1,0 +1,81 @@
+flowchart LR
+    subgraph Client["Client Layer (Browser)"]
+        UI[Chatbot UI<br/>chatbot/page.tsx<br/>useChat hook]
+        Cards[Interactive Cards<br/>RoomCard PaymentOptions<br/>GuestForm DateSelector]
+    end
+
+    subgraph NextServer["Next.js Server Runtime"]
+        APIRoute["/api/chat/route.ts<br/>POST handler"]
+        AISDK["Vercel AI SDK<br/>ai package<br/>streamText"]
+    end
+
+    subgraph LLM["Google Gemini API"]
+        Model[gemini-2.5-flash<br/>via @ai-sdk/google]
+        FuncCall[Function Calling<br/>Engine]
+    end
+
+    subgraph Tools["Tool Definitions Zod schema"]
+        T1[cekKetersediaan<br/>checkIn checkOut tipeKamar]
+        T2[createBooking<br/>guest data + room + dates]
+        T3[getRoomTypes<br/>tanpa parameter]
+        T4[confirmPayment<br/>bookingReference + method]
+    end
+
+    subgraph DB["Supabase PostgreSQL"]
+        TR[(rooms)]
+        TG[(guests)]
+        TRes[(reservations)]
+        TP[(payments)]
+        TC[(Chat ai_messages)]
+    end
+
+    subgraph SystemPrompt["System Prompt Configuration"]
+        SP[Hotel Concierge<br/>Bilingual ID-EN<br/>Pay-now or Pay-later flow<br/>Booking code hold rule]
+    end
+
+    User((Tamu Hotel)) -->|Pesan natural language| UI
+    UI -->|POST messages| APIRoute
+    APIRoute -->|streamText with tools| AISDK
+    AISDK -->|HTTPS request| Model
+    SP -.->|inject| Model
+
+    Model --> FuncCall
+    FuncCall -->|Auto-select tool| T1
+    FuncCall -->|Auto-select tool| T2
+    FuncCall -->|Auto-select tool| T3
+    FuncCall -->|Auto-select tool| T4
+
+    T1 -->|SELECT busy + available| TR
+    T1 -->|JOIN reservations| TRes
+    T2 -->|UPSERT guest| TG
+    T2 -->|INSERT reservation| TRes
+    T3 -->|SELECT distinct types| TR
+    T4 -->|INSERT payment| TP
+    T4 -->|UPDATE reservation| TRes
+
+    T1 -.->|tool result| FuncCall
+    T2 -.->|tool result| FuncCall
+    T3 -.->|tool result| FuncCall
+    T4 -.->|tool result| FuncCall
+
+    FuncCall -->|generate text<br/>+ JSON markers| Model
+    Model -->|stream chunks| AISDK
+    AISDK -->|SSE response| APIRoute
+    APIRoute -->|stream to client| UI
+
+    UI -->|Parse markers<br/>SHOW_GUEST_FORM<br/>ROOM_CARDS<br/>SHOW_PAYMENT_OPTIONS<br/>SHOW_DATE_SELECTOR| Cards
+    Cards --> User
+
+    APIRoute -.->|Persist conversation| TC
+
+    classDef clientNode fill:#fef3c7,stroke:#f59e0b
+    classDef serverNode fill:#dbeafe,stroke:#3b82f6
+    classDef llmNode fill:#fce7f3,stroke:#ec4899
+    classDef toolNode fill:#e0e7ff,stroke:#6366f1
+    classDef dbNode fill:#dcfce7,stroke:#10b981
+
+    class UI,Cards clientNode
+    class APIRoute,AISDK serverNode
+    class Model,FuncCall,SP llmNode
+    class T1,T2,T3,T4 toolNode
+    class TR,TG,TRes,TP,TC dbNode

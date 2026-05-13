@@ -1,0 +1,64 @@
+sequenceDiagram
+    autonumber
+    actor FD as Front Desk Staff
+    participant UI as Occupancy Page<br/>(/occupancy/page.tsx)
+    participant Dialog as CheckoutDialog
+    participant Action as adminFetchCheckoutData
+    participant SB as Supabase Client
+    participant DB as PostgreSQL
+    participant RT as Supabase Realtime
+    participant HKAPI as /api/housekeeping/<br/>checkout-cleaning
+
+    FD->>UI: Klik kamar dengan status 'checked-in'
+    UI->>Dialog: open CheckoutDialog
+
+    Dialog->>Action: adminFetchCheckoutData(roomId)
+    Action->>DB: SELECT reservation +<br/>billing_items WHERE status='pending'
+    DB-->>Action: { reservation, unpaidBills }
+    Action-->>Dialog: data
+    Dialog-->>FD: Tampilkan ringkasan + bills
+
+    alt Reservasi overdue (lewat tanggal checkout)
+        Dialog->>Dialog: hitung daysLate
+        Dialog->>SB: INSERT billing_items<br/>(category='late_fee',<br/>quantity=daysLate,<br/>total_price=daysLate*roomRate)
+        SB->>DB: INSERT
+        Dialog->>Dialog: refresh checkout data
+        Dialog-->>FD: Show late fee added,<br/>minta lanjut bayar
+    end
+
+    alt Ada unpaid bills
+        FD->>Dialog: Pilih payment method
+        Dialog->>Dialog: processCheckoutPayment(method, amount)
+        Dialog->>SB: INSERT payments<br/>(amount, method, txId)
+        SB->>DB: INSERT
+        DB-->>SB: payment row
+
+        Dialog->>SB: UPDATE billing_items<br/>SET status='paid'<br/>WHERE id IN (unpaidBillIds)
+        SB->>DB: UPDATE
+    end
+
+    Dialog->>SB: UPDATE reservations<br/>SET status='checked-out',<br/>actual_check_out=NOW()
+    SB->>DB: UPDATE
+    DB->>RT: emit postgres_changes
+
+    Dialog->>SB: UPDATE rooms<br/>SET status='cleaning'
+    SB->>DB: UPDATE
+    DB->>RT: emit postgres_changes
+
+    Dialog->>Dialog: createCheckoutInvoice(paymentResult)
+    Dialog->>SB: INSERT invoices<br/>(reservation_id, invoice_number,<br/>subtotal, total_amount,<br/>payment_method, status='paid')
+    SB->>DB: INSERT
+    DB-->>SB: invoice row
+
+    Dialog->>Dialog: setCheckoutInvoice(invoice)<br/>setCheckoutSuccess(true)
+
+    Note over Dialog,HKAPI: Trigger housekeeping task otomatis<br/>(via background job atau<br/>dipicu manual via tab Housekeeping)
+
+    Dialog-->>FD: Tampilkan invoice success<br/>+ Print button
+
+    FD->>Dialog: Klik "Print Checkout Invoice"
+    Dialog->>Dialog: printCheckoutInvoice()<br/>window.print()
+
+    RT-->>UI: realtime sync
+    UI->>UI: Update kalender + KPI
+    UI-->>FD: Kamar berubah ke 'cleaning',<br/>siap untuk housekeeping

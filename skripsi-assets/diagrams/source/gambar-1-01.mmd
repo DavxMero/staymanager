@@ -1,0 +1,87 @@
+flowchart LR
+    subgraph FrontOffice["Front Office Layer"]
+        FD[Reception<br/>Front Desk]
+        Res[Reservation<br/>Module]
+        Concierge[Guest Services<br/>Concierge]
+    end
+
+    subgraph CorePMS["Core PMS Engine"]
+        RoomMgmt[Room Inventory<br/>& Status]
+        GuestProf[Guest Profile<br/>& History]
+        Folio[Guest Folio<br/>Charges]
+        Rates[Rate Management<br/>& Yield]
+    end
+
+    subgraph BackOffice["Back Office Layer"]
+        HK[Housekeeping<br/>Coordination]
+        Maint[Maintenance<br/>Scheduling]
+        Acct[Accounting<br/>& Billing]
+        Invent[Inventory<br/>Management]
+        Reports[Reporting &<br/>Business Intelligence]
+    end
+
+    subgraph Distribution["Distribution Layer"]
+        DirectWeb[Direct Booking<br/>Channel<br/>Web atau Chatbot]
+        CM[Channel Manager]
+        OTA[OTA<br/>Booking.com, Agoda,<br/>Traveloka, Expedia]
+        GDS[GDS<br/>Global Distribution<br/>System]
+    end
+
+    subgraph DataLayer["Data Layer"]
+        DB[(Centralized<br/>Database)]
+    end
+
+    subgraph External["External Integrations"]
+        PG[Payment<br/>Gateway]
+        POS[Point of Sale<br/>Restaurant Bar]
+        CRM[CRM &<br/>Loyalty Program]
+    end
+
+    FD --> Res
+    Res --> RoomMgmt
+    Res --> GuestProf
+    Concierge --> GuestProf
+    FD --> Folio
+
+    RoomMgmt --> HK
+    RoomMgmt --> Maint
+    Folio --> Acct
+    HK --> RoomMgmt
+
+    Acct --> Invent
+    Acct --> Reports
+    GuestProf --> Reports
+    RoomMgmt --> Reports
+    Rates --> Reports
+
+    DirectWeb --> Res
+    Rates --> DirectWeb
+
+    OTA <--> CM
+    GDS <--> CM
+    CM <--> Res
+    Rates --> CM
+    RoomMgmt --> CM
+
+    Folio --> PG
+    POS --> Folio
+    GuestProf --> CRM
+
+    FrontOffice --> DB
+    CorePMS --> DB
+    BackOffice --> DB
+    Distribution --> DB
+
+    classDef front fill:#fef3c7,stroke:#f59e0b
+    classDef core fill:#dbeafe,stroke:#3b82f6
+    classDef back fill:#dcfce7,stroke:#10b981
+    classDef dist fill:#fce7f3,stroke:#ec4899
+    classDef ext fill:#e0e7ff,stroke:#6366f1
+    classDef data fill:#f3e8ff,stroke:#a855f7
+
+    class FD,Res,Concierge front
+    class RoomMgmt,GuestProf,Folio,Rates core
+    class HK,Maint,Acct,Invent,Reports back
+    class DirectWeb,CM,OTA,GDS dist
+    class PG,POS,CRM ext
+    class DB data

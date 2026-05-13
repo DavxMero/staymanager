@@ -1,0 +1,60 @@
+flowchart TB
+    subgraph Page["Halaman Publik StayManager"]
+        direction TB
+        subgraph Header["Header / Navigation Bar"]
+            direction LR
+            Logo[Logo<br/>StayManager]
+            Nav[Nav Menu<br/>Beranda Fasilitas Galeri Kontak]
+            Auth[Login Sign Up Buttons]
+        end
+
+        subgraph Hero["Hero Section"]
+            direction TB
+            Title[Judul Utama<br/>Penginapan Asni Hotel]
+            Sub[Sub-headline<br/>Reservasi mudah via chatbot AI 24/7]
+            CTA[Tombol CTA<br/>Cek Ketersediaan Buka Chatbot]
+            Bg[Background Image / Gradient<br/>biru-indigo]
+        end
+
+        subgraph Features["Section Fitur Unggulan"]
+            direction LR
+            F1[Card 1<br/>Booking via AI]
+            F2[Card 2<br/>Real-time Availability]
+            F3[Card 3<br/>Pembayaran Aman]
+        end
+
+        subgraph Gallery["Galeri Kamar"]
+            direction LR
+            G1[Foto 1<br/>Deluxe]
+            G2[Foto 2<br/>Standard]
+            G3[Foto 3<br/>Suite]
+            G4[Foto 4<br/>Family]
+        end
+
+        subgraph Contact["Section Kontak / Lokasi"]
+            direction LR
+            Map[Map Embed]
+            Info[Alamat<br/>Telepon Email]
+        end
+
+        subgraph Footer["Footer"]
+            direction LR
+            Links[Quick Links]
+            Social[Social Media Icons]
+            Copy[Copyright]
+        end
+
+        Header --> Hero
+        Hero --> Features
+        Features --> Gallery
+        Gallery --> Contact
+        Contact --> Footer
+    end
+
+    classDef section fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef element fill:#e0e7ff,stroke:#6366f1
+    classDef cta fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+
+    class Header,Hero,Features,Gallery,Contact,Footer section
+    class Logo,Nav,Title,Sub,Bg,F1,F2,F3,G1,G2,G3,G4,Map,Info,Links,Social,Copy element
+    class Auth,CTA cta
