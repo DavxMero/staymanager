@@ -1,0 +1,196 @@
+classDiagram
+    direction LR
+
+    class Room {
+        +string id
+        +string number
+        +string type
+        +number floor
+        +number base_price
+        +RoomStatus status
+        +string image_url
+        +string created_at
+    }
+
+    class CustomRoomType {
+        +number id
+        +string name
+        +string description
+        +number base_price
+        +number max_occupancy
+        +jsonb amenities
+        +jsonb images
+        +jsonb features
+        +number room_size
+        +string bed_configuration
+        +boolean is_active
+    }
+
+    class Guest {
+        +string id
+        +string full_name
+        +string email
+        +string phone "nullable DB / required UI"
+        +string id_number "opsional - saat check-in"
+        +string nationality
+        +string user_id
+    }
+
+    class Reservation {
+        +string id
+        +string booking_id
+        +string booking_reference
+        +string guest_id
+        +string guest_name
+        +string guest_email
+        +string guest_phone
+        +string room_id
+        +string room_number
+        +string room_type
+        +string check_in
+        +string check_out
+        +number adults
+        +number children
+        +number guest_count
+        +number room_rate
+        +number room_total
+        +number total_amount
+        +number total_price
+        +ReservationStatus status
+        +string payment_status
+        +boolean breakfast_included
+        +number breakfast_pax
+        +number breakfast_price
+        +number breakfast_total
+        +string notes
+        +string actual_check_in
+        +string actual_check_out
+    }
+
+    class Invoice {
+        +number id
+        +string invoice_number
+        +string reservation_id
+        +string guest_id
+        +number subtotal
+        +number tax_amount
+        +number total_amount
+        +string status
+        +string payment_method
+        +string created_by
+    }
+
+    class BillingItem {
+        +number id
+        +string reservation_id
+        +string room_id
+        +string guest_id
+        +string item_name
+        +string category
+        +number quantity
+        +number unit_price
+        +number total_price
+        +string status
+    }
+
+    class Payment {
+        +string id
+        +string reservation_id
+        +number amount
+        +string payment_method
+        +string payment_date
+        +string transaction_id
+    }
+
+    class Deposit {
+        +number id
+        +number reservation_id
+        +number amount
+        +string status
+        +string collected_by
+        +string refunded_by
+    }
+
+    class Profile {
+        +string id
+        +string user_id
+        +string employee_id
+        +string full_name
+        +string role
+        +boolean is_active
+    }
+
+    class Role {
+        +string id
+        +string name
+        +string display_name
+        +jsonb permissions
+    }
+
+    class UserRole {
+        +string id
+        +string user_id
+        +string role_id
+        +string assigned_by
+    }
+
+    class HousekeepingTask {
+        +number id
+        +string room_id
+        +number staff_id
+        +TaskType task_type
+        +TaskStatus status
+        +TaskPriority priority
+        +string started_at
+        +string completed_at
+    }
+
+    class InventoryItem {
+        +number id
+        +string name
+        +string category
+        +number current_stock
+        +number min_stock
+        +number unit_cost
+    }
+
+    class InventoryTransaction {
+        +number id
+        +number item_id
+        +string transaction_type
+        +number quantity
+    }
+
+    class FinancialTransaction {
+        +number id
+        +string expense_date
+        +string category
+        +number amount
+        +string vendor
+        +string status
+    }
+
+    class ChatSession {
+        +string id
+        +string user_id
+        +jsonb messages
+        +string created_at
+    }
+
+    Room "1" ..> "0..1" CustomRoomType : soft ref by name
+    Reservation "*" --> "1" Guest : booked by
+    Reservation "*" --> "1" Room : assigned
+    Invoice "*" --> "1" Reservation : invoices
+    BillingItem "*" --> "1" Reservation : line item
+    Deposit "*" --> "1" Reservation : holds
+    Payment "*" --> "1" Reservation : settles
+    HousekeepingTask "*" --> "1" Room : target
+    InventoryTransaction "*" --> "1" InventoryItem : changes stock
+    Profile "1" -- "*" UserRole : assigned
+    Role "1" -- "*" UserRole : grants
+    Profile ..> Invoice : creates
+    Profile ..> Deposit : handles
+
+    note for Room "rooms.type (varchar) cocok ke<br/>custom_room_types.name (varchar)<br/>SOFT REFERENCE — bukan FK formal"
+    note for Reservation "Status enum:<br/>pending, confirmed, checked-in,<br/>checked-out, cancelled, no_show<br/>Catatan: total_amount & total_price<br/>keduanya ada (transitional fields);<br/>guest_*, room_* didenormalisasi<br/>untuk performa list view; notes<br/>untuk catatan tambahan (BUKAN<br/>special_requests / created_by)"
+    note for Role "6 roles aktif (DB):<br/>super_admin, manager, front_desk,<br/>housekeeping, finance, guest.<br/>Operasi inventaris dilakukan oleh<br/>manager / super_admin (tidak ada<br/>role 'inventory' terpisah)"

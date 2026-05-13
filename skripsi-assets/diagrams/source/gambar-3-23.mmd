@@ -1,0 +1,41 @@
+flowchart TB
+    subgraph Page["Halaman Login StayManager"]
+        direction LR
+
+        subgraph LeftPanel["Panel Kiri - Branding"]
+            direction TB
+            Logo[Logo + Nama<br/>StayManager]
+            Tagline[Tagline<br/>Smart Hotel Management]
+            Bg[Background<br/>Gradient biru-indigo<br/>+ ilustrasi hotel]
+        end
+
+        subgraph RightPanel["Panel Kanan - Form Login"]
+            direction TB
+            Title[Heading<br/>Selamat datang]
+            Sub[Sub-text<br/>Masuk untuk mengelola hotel]
+
+            subgraph Form["Form Fields"]
+                direction TB
+                EmailLbl[Label: Email]
+                EmailIn[Input email<br/>placeholder example@hotel.com]
+                PassLbl[Label: Password]
+                PassIn[Input password<br/>+ toggle show/hide]
+                Forgot[Link: Lupa password?]
+            end
+
+            SubmitBtn[Tombol Sign In<br/>full-width primary]
+
+            Sep[--- atau ---]
+            SignupLink[Link: Belum punya akun?<br/>Daftar sebagai tamu]
+        end
+    end
+
+    classDef section fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef element fill:#e0e7ff,stroke:#6366f1
+    classDef cta fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef link fill:#dcfce7,stroke:#10b981
+
+    class LeftPanel,RightPanel,Form section
+    class Logo,Tagline,Bg,Title,Sub,EmailLbl,EmailIn,PassLbl,PassIn,Sep element
+    class SubmitBtn cta
+    class Forgot,SignupLink link

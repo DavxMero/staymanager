@@ -1,0 +1,54 @@
+sequenceDiagram
+    autonumber
+    actor Tamu as Tamu Hotel
+    participant ChatUI as Chatbot UI<br/>(/chatbot/page.tsx)
+    participant ChatAPI as Chat Route<br/>(/api/chat/route.ts)
+    participant Gemini as Google Gemini<br/>(gemini-2.5-flash)
+    participant Tool as Tool: createBooking
+    participant DB as Supabase PostgreSQL
+    participant UI as LoginPromptCard
+
+    Tamu->>ChatUI: Pilih kamar dari ROOM_CARDS<br/>klik "Book This Room"
+    ChatUI->>ChatAPI: POST /api/chat<br/>{messages, userContext:<br/>{isLoggedIn, ...}}
+
+    ChatAPI->>Gemini: streamText({<br/>system: hotelConcierge + userContext,<br/>tools: {createBooking, ...}})
+
+    Note over Gemini: Auth Gate Check<br/>(driven by system prompt rules)
+
+    alt userContext.isLoggedIn = false<br/>(ANONYMOUS USER)
+        Gemini->>Gemini: Emit SHOW_LOGIN_PROMPT_JSON<br/>marker — DO NOT invoke createBooking
+        Gemini-->>ChatAPI: "Untuk lanjut reservasi, login dulu<br/>SHOW_LOGIN_PROMPT_JSON:<br/>{reason:'membuat reservasi'}"
+        ChatAPI-->>ChatUI: stream response
+        ChatUI->>UI: Render <LoginPromptCard /><br/>(ShieldCheck + benefit bullets +<br/>tombol Login / Daftar)
+        UI-->>Tamu: Tampilkan login wall card<br/>→ klik Login → redirect /login
+    else userContext.isLoggedIn = true<br/>(AUTHENTICATED)
+        Gemini->>Gemini: Validate guest info complete<br/>(name + email wajib, phone opsional)<br/>auto-fill dari user_metadata
+
+        Gemini->>Tool: invoke createBooking({<br/>guestName, guestEmail, guestPhone,<br/>roomId, roomNumber, roomType,<br/>checkIn, checkOut, adults, children,<br/>roomRate, breakfastIncluded<br/>})
+
+        Tool->>Tool: bookingRef = "BK" + Date.now().slice(-8)<br/>bookingId = "BOOK-" + Date.now()<br/>nights = (checkOut - checkIn) / 86400000<br/>roomTotal = roomRate × nights<br/>breakfastTotal = pax × 50000 × nights<br/>totalAmount = roomTotal + breakfastTotal
+
+        Tool->>DB: SELECT id FROM guests<br/>WHERE email = ?
+        DB-->>Tool: existingGuest (atau null)
+
+        alt Guest belum ada
+            Tool->>DB: INSERT INTO guests<br/>(full_name, email, phone)
+            DB-->>Tool: newGuest.id
+        else Guest sudah terdaftar
+            Tool->>Tool: guestId = existingGuest.id
+        end
+
+        Tool->>DB: INSERT INTO reservations (<br/>booking_id, booking_reference,<br/>guest_id, room_id,<br/>check_in, check_out, adults, children,<br/>room_rate, total_amount,<br/>status='confirmed',<br/>payment_status='pending')
+        DB-->>Tool: reservation row
+
+        Tool-->>Gemini: { success: true,<br/>bookingReference, reservationId,<br/>totalAmount, status: 'confirmed',<br/>paymentStatus: 'pending' }
+
+        Gemini->>Gemini: Generate response<br/>+ append SHOW_PAYMENT_OPTIONS_JSON
+
+        Gemini-->>ChatAPI: stream chunks (SSE)
+        ChatAPI-->>ChatUI: stream response
+        ChatUI->>ChatUI: Render <PaymentOptions /><br/>(Bank Transfer / Credit / E-Wallet)
+        ChatUI-->>Tamu: Ringkasan booking + opsi pembayaran<br/>(booking code TIDAK diungkap)
+    end
+
+    Note over Tool: Booking code di-hold sampai<br/>pembayaran dikonfirmasi via<br/>tool confirmPayment.

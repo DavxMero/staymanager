@@ -1,0 +1,63 @@
+flowchart TB
+    subgraph UserLayer["User Interface Layer"]
+        Web[Web Application]
+        Mobile[Mobile Apps]
+        Kiosk[Self-Service Kiosk]
+    end
+
+    subgraph AppLayer["Application Layer (PMS Core)"]
+        Reservation[Reservation Management]
+        Frontdesk[Front Desk Operations<br/>Check-in/Check-out]
+        Housekeeping[Housekeeping Module]
+        Billing[Billing & Invoicing]
+        Reporting[Reporting & Analytics]
+    end
+
+    subgraph IntegLayer["Integration Layer"]
+        OTA[OTA Channel<br/>Manager]
+        Payment[Payment Gateway]
+        POS[Point of Sale]
+        CRM[CRM System]
+    end
+
+    subgraph DataLayer["Data Layer"]
+        DB[(Centralized<br/>Database)]
+        Cache[(Cache Layer)]
+        Files[(File Storage)]
+    end
+
+    Web --> Reservation
+    Web --> Frontdesk
+    Web --> Billing
+    Mobile --> Reservation
+    Mobile --> Frontdesk
+    Kiosk --> Frontdesk
+
+    Reservation --> DB
+    Frontdesk --> DB
+    Housekeeping --> DB
+    Billing --> DB
+    Reporting --> DB
+    Reporting --> Cache
+
+    Reservation -.-> OTA
+    Billing -.-> Payment
+    Billing -.-> POS
+    Reservation -.-> CRM
+
+    OTA --> DB
+    Payment --> DB
+    POS --> DB
+    CRM --> DB
+
+    DB --> Files
+
+    classDef ui fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef app fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef integ fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+    classDef data fill:#dcfce7,stroke:#10b981,stroke-width:2px
+
+    class Web,Mobile,Kiosk ui
+    class Reservation,Frontdesk,Housekeeping,Billing,Reporting app
+    class OTA,Payment,POS,CRM integ
+    class DB,Cache,Files data

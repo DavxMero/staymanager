@@ -1,0 +1,50 @@
+flowchart LR
+    PB[(Product Backlog<br/>Prioritized<br/>User Stories)]
+
+    subgraph SprintCycle["Sprint Cycle (2 minggu)"]
+        direction TB
+        SP[Sprint Planning<br/>Pilih backlog items]
+        SB[(Sprint Backlog<br/>Selected items)]
+        Daily[Daily Scrum<br/>15 menit standup]
+        Dev[Development<br/>Code Test Review]
+        Inc[(Product<br/>Increment)]
+        SR[Sprint Review<br/>Demo to stakeholder]
+        Retro[Sprint Retrospective<br/>Improve process]
+
+        SP --> SB
+        SB --> Daily
+        Daily --> Dev
+        Dev --> Daily
+        Dev --> Inc
+        Inc --> SR
+        SR --> Retro
+    end
+
+    PB -->|Refinement<br/>oleh Product Owner| SP
+    Retro -->|Update backlog<br/>improvements| PB
+
+    subgraph Roles["Tim Scrum"]
+        PO[Product Owner<br/>kelola backlog]
+        SM[Scrum Master<br/>fasilitator proses]
+        DT[Development Team<br/>cross-functional]
+    end
+
+    PO -.-> PB
+    PO -.-> SP
+    SM -.-> SP
+    SM -.-> Daily
+    SM -.-> SR
+    SM -.-> Retro
+    DT -.-> SP
+    DT -.-> Daily
+    DT -.-> Dev
+
+    classDef bl fill:#fef3c7,stroke:#f59e0b
+    classDef event fill:#dbeafe,stroke:#3b82f6
+    classDef artifact fill:#dcfce7,stroke:#10b981
+    classDef role fill:#e0e7ff,stroke:#6366f1
+
+    class PB,SB bl
+    class SP,Daily,Dev,SR,Retro event
+    class Inc artifact
+    class PO,SM,DT role
