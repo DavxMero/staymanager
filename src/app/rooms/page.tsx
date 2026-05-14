@@ -66,7 +66,8 @@ import {
   Building,
   Search,
   Star,
-  RefreshCw
+  RefreshCw,
+  ImageIcon
 } from "lucide-react"
 import { Room } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
@@ -123,9 +124,12 @@ export default function RoomsPage() {
   const [roomType, setRoomType] = useState("")
   const [roomPrice, setRoomPrice] = useState("")
   const [roomStatus, setRoomStatus] = useState<string>("available")
+  const [roomImageUrl, setRoomImageUrl] = useState<string>("")
+  const [imageUploading, setImageUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [customRoomTypes, setCustomRoomTypes] = useState<string[]>([])
+  const [typeImagesByName, setTypeImagesByName] = useState<Record<string, string[]>>({})
   const [isAddingCustomType, setIsAddingCustomType] = useState(false)
   const [newCustomType, setNewCustomType] = useState("")
 
@@ -230,10 +234,29 @@ export default function RoomsPage() {
     }
   }
 
+  const fetchTypeImages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('custom_room_types')
+        .select('name, images')
+      if (error) throw error
+      const map: Record<string, string[]> = {}
+      for (const row of (data || []) as { name: string; images: unknown }[]) {
+        if (Array.isArray(row.images)) {
+          map[row.name] = (row.images as string[]).filter((u) => typeof u === 'string')
+        }
+      }
+      setTypeImagesByName(map)
+    } catch (err) {
+      console.error('Error fetching custom_room_types images:', err)
+    }
+  }
+
   useEffect(() => {
     const fetchAllData = async () => {
       await fetchRooms()
       await fetchHousekeepingData()
+      await fetchTypeImages()
       loadCustomRoomTypes()
     }
     fetchAllData()
@@ -534,6 +557,7 @@ export default function RoomsPage() {
     setRoomType("")
     setRoomPrice("")
     setRoomStatus("available")
+    setRoomImageUrl("")
     setIsAddingCustomType(false)
     setNewCustomType('')
     setError(null)
@@ -546,10 +570,51 @@ export default function RoomsPage() {
     setRoomType(room.type)
     setRoomPrice((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0).toString())
     setRoomStatus(room.status || "available")
+    setRoomImageUrl(room.image_url || "")
     setIsAddingCustomType(false)
     setNewCustomType('')
     setError(null)
     setIsDialogOpen(true)
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Ukuran file harus < 5MB')
+      return
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Format file harus JPEG, PNG, atau WebP')
+      return
+    }
+
+    setImageUploading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      if (currentRoom?.id) formData.append('roomId', String(currentRoom.id))
+
+      const res = await fetch('/api/rooms/upload-image', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Upload gagal')
+      }
+
+      setRoomImageUrl(data.url)
+    } catch (err) {
+      setError('Gagal upload gambar: ' + (err as Error).message)
+    } finally {
+      setImageUploading(false)
+      // Reset input so user bisa pilih file yang sama lagi kalau perlu
+      e.target.value = ''
+    }
   }
 
   const handleSaveRoom = async () => {
@@ -562,7 +627,8 @@ export default function RoomsPage() {
             type: roomType,
             base_price: parseFloat(roomPrice),
             floor: roomNumber ? parseInt(roomNumber.charAt(0)) : null,
-            status: roomStatus
+            status: roomStatus,
+            image_url: roomImageUrl || null
           })
           .eq('id', currentRoom.id)
           .select()
@@ -581,7 +647,8 @@ export default function RoomsPage() {
             type: roomType,
             base_price: parseFloat(roomPrice),
             floor: roomNumber ? parseInt(roomNumber.charAt(0)) : null,
-            status: roomStatus
+            status: roomStatus,
+            image_url: roomImageUrl || null
           })
           .select()
 
@@ -1360,10 +1427,59 @@ export default function RoomsPage() {
             </Card>
           )}
 
-          {/* Rooms Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRooms.map((room) => (
-              <Card key={room.id}>
+          {/* Rooms Grid — auto-rows-fr memastikan semua row punya tinggi sama (max tinggi card) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+            {(() => {
+              // Build per-type image fallback dari rooms lain: kalau Room 305 Presidential
+              // belum punya foto, ambil dari kamar Presidential lain yang sudah ada foto.
+              const firstImageByType: Record<string, string> = {}
+              for (const r of rooms) {
+                if (r.image_url && !firstImageByType[r.type]) {
+                  firstImageByType[r.type] = r.image_url
+                }
+              }
+              return filteredRooms.map((room) => {
+              // Fallback chain:
+              // 1. image per kamar (room.image_url)
+              // 2. images dari custom_room_types (per tipe, kalau di-setup)
+              // 3. image kamar lain dengan tipe sama (auto-borrow)
+              // 4. placeholder icon
+              const typeImages = typeImagesByName[room.type] || []
+              const displayImage =
+                room.image_url ||
+                typeImages[0] ||
+                firstImageByType[room.type] ||
+                null
+              const statusKey = (room.status || "available") as "available"|"occupied"|"reserved"|"cleaning"|"maintenance"|"out-of-order"
+              const statusLabel = room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'
+
+              return (
+              <Card key={room.id} className="overflow-hidden h-full flex flex-col min-h-[480px]">
+                {/* Hero image — fixed h-56 (224px) untuk konsistensi pixel-perfect lintas card */}
+                {displayImage ? (
+                  <div className="relative w-full h-56 bg-muted shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={displayImage}
+                      alt={`Room ${room.number}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                    <Badge className={`absolute top-2 right-2 ${statusVariants[statusKey]}`}>
+                      {statusLabel}
+                    </Badge>
+                  </div>
+                ) : (
+                  <div className="relative w-full h-56 bg-linear-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 flex items-center justify-center shrink-0">
+                    <ImageIcon className="h-12 w-12 text-blue-300 dark:text-blue-700" />
+                    <Badge className={`absolute top-2 right-2 ${statusVariants[statusKey]}`}>
+                      {statusLabel}
+                    </Badge>
+                  </div>
+                )}
+
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Room {room.number}
@@ -1373,11 +1489,8 @@ export default function RoomsPage() {
                       </span>
                     )}
                   </CardTitle>
-                  <Badge className={statusVariants[(room.status || "available") as "available"|"occupied"|"reserved"|"cleaning"|"maintenance"|"out-of-order"]}>
-                    {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'}
-                  </Badge>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1 flex flex-col">
                   <div className="text-2xl font-bold">{room.type}</div>
                   <p className="text-xs text-muted-foreground">
                     {formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0))} per night
@@ -1386,8 +1499,8 @@ export default function RoomsPage() {
                     <span className="font-medium">Status:</span> {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'} (Auto-managed)
                   </div>
 
-                  {/* Room Actions */}
-                  <div className="flex mt-4 space-x-1">
+                  {/* Room Actions — pushed to bottom for consistent alignment across cards */}
+                  <div className="flex mt-auto pt-4 space-x-1">
                     <Button
                       variant="outline"
                       size="sm"
@@ -1437,7 +1550,9 @@ export default function RoomsPage() {
                   )}
                 </CardContent>
               </Card>
-            ))}
+              )
+            })
+            })()}
           </div>
         </TabsContent>
 
@@ -1917,6 +2032,57 @@ export default function RoomsPage() {
                   <SelectItem value="out-of-order">Out of Order</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-3">
+              <Label htmlFor="roomImage" className="text-sm font-medium">
+                Foto Kamar
+              </Label>
+              {roomImageUrl ? (
+                <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={roomImageUrl}
+                    alt="Room preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setRoomImageUrl("")}
+                    className="absolute top-2 right-2 h-7 px-2 text-xs"
+                  >
+                    Hapus
+                  </Button>
+                </div>
+              ) : (
+                <label
+                  htmlFor="roomImage"
+                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  {imageUploading ? (
+                    <span className="text-sm text-muted-foreground">Mengupload...</span>
+                  ) : (
+                    <>
+                      <Plus className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-sm text-muted-foreground">Klik untuk pilih foto</span>
+                      <span className="text-xs text-muted-foreground/70 mt-1">JPEG / PNG / WebP, max 5MB</span>
+                    </>
+                  )}
+                </label>
+              )}
+              <input
+                id="roomImage"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageUpload}
+                disabled={imageUploading}
+                className="hidden"
+              />
+              {error && error.includes('gambar') && (
+                <p className="text-sm text-red-600">{error}</p>
+              )}
             </div>
           </div>
 

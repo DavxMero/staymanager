@@ -88,12 +88,13 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
                         type="email"
                     />
                     <InfoField
-                        label="ID Number (No. KTP)"
+                        label="No. Telepon"
                         value={localInfo.guestPhone}
                         editMode={editMode}
                         onChange={(v) => setLocalInfo({ ...localInfo, guestPhone: v })}
-                        icon="🪪"
-                        type="text"
+                        icon="📱"
+                        type="tel"
+                        placeholder="Opsional — untuk konfirmasi reservasi"
                     />
                 </div>
 
@@ -188,9 +189,10 @@ interface InfoFieldProps {
     onChange: (value: string) => void;
     icon?: string;
     type?: string;
+    placeholder?: string;
 }
 
-function InfoField({ label, value, editMode, onChange, icon, type = 'text' }: InfoFieldProps) {
+function InfoField({ label, value, editMode, onChange, icon, type = 'text', placeholder }: InfoFieldProps) {
     if (editMode) {
         return (
             <div>
@@ -202,6 +204,7 @@ function InfoField({ label, value, editMode, onChange, icon, type = 'text' }: In
                     type={type}
                     value={value || ''}
                     onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
                     className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
             </div>

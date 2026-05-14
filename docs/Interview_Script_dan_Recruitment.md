@@ -1,182 +1,314 @@
-# Interview Script + Recruitment Strategy — StayManager
+# Interview Script + Recruitment Strategy — StayManager (v2 Strategi B)
 
-**Strategi**: 1 hotel teman = case study primer. Hindari overhead cari banyak hotel.
+> **Strategi B**: reduced scope dari 4 narasumber → **1-2 hotel teman dengan multi-role per session**. Jaringan responden mayoritas non-perhotelan (mahasiswa, guru, karyawan) → wawancara tetap perlu staf hotel real untuk validasi domain operasional, tapi sample size dikecilkan agar realistic. UAT staf akan di-supplement dengan **5-7 mahasiswa IT/karyawan kantor** sebagai "system evaluator" (lihat `UAT_SUS_Questionnaire.md` Form 1B).
 
-**Target Responden** (mengakomodasi klaim skripsi original):
-- 4 narasumber wawancara (1 hotel, 4 peran)
-- 10 staf UAT (1 hotel + jaringan kontak hotel teman)
-- 20 tamu UAT (mix: tamu real hotel teman + test users via WA broadcast)
+## Target Responden Final
 
-**Total**: 30 responden riil sesuai claim asli skripsi. Akui di Bab Limitasi: "Penelitian menggunakan single-case study di [Nama Hotel] sebagai konteks utama."
+| Metode | Jumlah | Profil | Bagian Skripsi |
+|---|---|---|---|
+| Wawancara mendalam | **2 hotel teman, 2-4 narasumber total** | Owner/Manager + Front Desk (multi-role OK) | Tabel 3.3 + Bab 3 metodologi |
+| Form 1A UAT Staf Hotel | 3-5 | Staf hotel teman | Tabel 4.13 (primary) |
+| Form 1B UAT System Evaluator | 5-7 | Mahasiswa IT / karyawan kantor | Tabel 4.13 (supplementary) |
+| Form 2 UAT Tamu/Chatbot | 20+ | Mahasiswa / guru / karyawan umum | Tabel 4.14 |
+| Form 3 SUS | semua (28-32) | Universal | Tabel 4.15 |
 
----
-
-## A. Wawancara 4 Narasumber (Tabel 3.3)
-
-**Format**: Tatap muka di hotel (kalau dekat) ATAU video call 30-45 menit.
-**Cara dokumentasi**: Rekam audio (minta izin) → transkrip ke teks → pilih kutipan paling representatif untuk Tabel 3.3.
-
-### Persiapan sebelum wawancara
-1. Minta izin tertulis ke pemilik hotel (informed consent ringkas)
-2. Persiapan rekorder + notebook
-3. Brief narasumber 1-2 hari sebelumnya: durasi, topik, tujuan akademik
-4. Bawa laptop kalau mau demo aplikasi sambil wawancara (optional, lebih engaging)
-
-### Script Wawancara — 6 Pertanyaan Inti (sesuai Tabel 3.3)
-
-**Pembukaan** (3 menit):
-> "Selamat pagi/siang Bapak/Ibu. Terima kasih sudah meluangkan waktu. Saya [Nama] dari Universitas Bina Nusantara, sedang riset Property Management System untuk hotel kecil-menengah. Ada 6 pertanyaan utama, total sekitar 30 menit. Boleh saya rekam suaranya untuk akurasi catatan? Data hanya untuk skripsi, identitas bisa diinisialkan."
-
-**Q1 — Sistem yang sekarang dipakai**
-> "Sistem atau alat apa yang Bapak/Ibu pakai sekarang untuk mengelola operasional hotel? Misalnya untuk reservasi, status kamar, koordinasi staf, atau pencatatan keuangan."
->
-> *Probe*: Excel? WhatsApp? Aplikasi khusus? Buku catatan manual? Kombinasi?
-
-**Q2 — Kendala utama**
-> "Apa kendala terbesar yang dihadapi dengan sistem yang berjalan saat ini?"
->
-> *Probe per peran*:
-> - Manager: "Bagaimana visibility ke data operasional secara realtime?"
-> - Front Desk: "Berapa lama biasanya proses check-in tamu? Pernah double booking?"
-> - Housekeeping: "Bagaimana koordinasi tugas antar staf?"
-> - Finance: "Berapa lama waktu rekap keuangan harian/bulanan? Pernah ada selisih?"
-
-**Q3 — Fitur yang paling dibutuhkan**
-> "Kalau ada sistem digital baru, fitur apa yang paling penting menurut Bapak/Ibu? Yang akan benar-benar membantu kerja sehari-hari."
-
-**Q4 — Pengelolaan tamu/reservasi**
-> "Bagaimana proses reservasi dan pengelolaan data tamu sekarang? Tamu biasanya pesan lewat mana — telepon, WhatsApp, OTA, walk-in?"
-
-**Q5 — Akses data antar departemen (RBAC)**
-> "Apakah perlu pembatasan akses staf berdasarkan tugasnya? Misalnya, apakah front desk perlu lihat data keuangan? Atau housekeeping perlu lihat detail tamu?"
-
-**Q6 — Layanan chatbot untuk tamu**
-> "Kalau ada chatbot AI yang bisa jawab pertanyaan tamu 24/7 dan terima reservasi via chat, menurut Bapak/Ibu seberapa berguna untuk hotel ini?"
-
-**Penutup**:
-> "Terima kasih sangat banyak. Apakah ada hal lain yang menurut Bapak/Ibu penting tapi belum saya tanyakan?"
-
-### Mapping Peran → Narasumber Hotel Teman
-
-Hotel kecil biasanya punya struktur fleksibel. Kalau hotel teman tidak punya posisi spesifik, gunakan padanan ini:
-
-| Peran skripsi | Padanan di hotel kecil |
-|---|---|
-| Manajer Hotel | Owner / General Manager |
-| Front Desk / Resepsionis | Receptionist / Front office staff |
-| Supervisor Housekeeping | Senior housekeeping staff / Lead cleaner |
-| Staf Keuangan | Bookkeeper / Owner sekaligus pegang keuangan |
-
-Kalau pemilik hotel pegang 2 peran sekaligus (mis. owner + finance), tetap hitung 1 narasumber tapi tanya kedua sudut pandangnya. Catat di metodologi.
+**Total**: ~30-35 responden riil. Akui di Bab Limitasi: *"Single-case study di [Nama Hotel] sebagai konteks primer untuk wawancara dan UAT staf real. UAT staf di-extend dengan evaluator non-hotel (mahasiswa IT, karyawan kantor) untuk validasi usability sesuai framework Nielsen + Schneiderman. Pemisahan ini karena keterbatasan jaringan industri perhotelan peneliti dan justified oleh framework usability yang general-purpose."*
 
 ---
 
-## B. UAT Staf — 10 Responden
+# 🎤 A. Wawancara Hotel Teman (1-2 hotel, 2-4 narasumber)
+
+## Setup & Prinsip
+
+**Format**: Tatap muka di hotel (kalau dekat) ATAU video call (Google Meet/Zoom).
+**Durasi per sesi**: 45-60 menit (lebih lama dari skenario lama karena multi-role).
+**Dokumentasi**: Rekam audio (minta izin verbal di awal) → transkrip ke teks → pilih kutipan paling representatif untuk Tabel 3.3.
+
+**Prinsip multi-role**: Hotel kecil/menengah sering ada **role overlap** (owner = manager + finance, atau resepsionis = housekeeping supervisor). Jangan paksakan struktur 4-peran terpisah. Wawancarai per orang, **lalu tanya semua perspektif yang dia pegang** dalam satu sesi.
+
+## Persiapan Sebelum Wawancara
+
+1. **Hubungi pemilik hotel** via WA/telepon 3-7 hari sebelum sesi:
+   > "Halo Pak/Bu [Nama], saya [Anda] dari [kampus]. Saya sedang riset skripsi tentang sistem manajemen hotel berbasis web dengan AI chatbot. Boleh saya minta waktu sekitar 45-60 menit untuk wawancara Bapak/Ibu (dan 1-2 staf kalau memungkinkan) tentang operasional hotel? Data hanya untuk skripsi, identitas akan disamarkan. Kira-kira hari/jam apa yang cocok?"
+
+2. **Konfirmasi 1 hari sebelumnya** + kirim:
+   - Informed consent ringkas (1 halaman — bisa template gratis online)
+   - Garis besar 6 pertanyaan (supaya narasumber bisa siapkan)
+   - Link demo StayManager kalau mau coba dulu
+
+3. **Bawa peralatan**:
+   - HP/recorder (test rekaman dulu di rumah)
+   - Notebook + pulpen (catat keyword sambil rekam)
+   - Laptop (optional — untuk demo sambil wawancara)
+   - Konsumsi kecil (snack/kopi) sebagai apresiasi
+
+## Script Wawancara — 6 Pertanyaan Inti
+
+### Pembukaan (3-5 menit)
+
+> *"Selamat pagi/siang Bapak/Ibu. Terima kasih sudah meluangkan waktu. Saya [Nama] dari [Universitas/Kampus], sedang mengerjakan skripsi tentang **sistem manajemen hotel (Property Management System) berbasis web yang dilengkapi chatbot AI untuk membantu hotel kecil-menengah**.*
+>
+> *Saya akan tanya 6 pertanyaan utama, total sekitar 45 menit. Boleh saya rekam suaranya untuk akurasi catatan? Data hanya untuk skripsi, identitas Bapak/Ibu akan disamarkan (cukup pakai inisial).*
+>
+> *Sebelum mulai — Bapak/Ibu di hotel ini pegang peran apa saja? Karena di hotel kecil sering 1 orang pegang banyak peran, saya akan tanya dari beberapa sudut pandang sekaligus."*
+
+**[CATAT peran yang dipegang → akan jadi probe customization di Q2]**
+
+### Q1 — Sistem yang Sekarang Dipakai
+
+> **Pertanyaan**: *"Sistem atau alat apa yang Bapak/Ibu pakai sekarang untuk mengelola operasional hotel? Misalnya untuk reservasi, status kamar, koordinasi staf, atau pencatatan keuangan."*
+>
+> **Probe (kejar detail)**:
+> - Excel? Google Sheets? WhatsApp? Aplikasi PMS spesifik? Buku catatan manual?
+> - Kombinasi alat berapa?
+> - Siapa yang paling sering pakai alat tersebut?
+> - Sudah berapa lama pakai cara ini?
+
+### Q2 — Kendala Utama (Multi-Role Probe)
+
+> **Pertanyaan**: *"Apa kendala terbesar yang dihadapi dengan sistem yang berjalan saat ini? Saya akan tanya dari beberapa sudut pandang berdasarkan peran yang Bapak/Ibu pegang."*
+>
+> **Probe per peran (gunakan yang relevan berdasarkan jawaban pembukaan)**:
+>
+> *Sebagai Manager/Owner*:
+> > "Bagaimana visibility Bapak/Ibu ke data operasional secara realtime? Misalnya, kalau mau tahu berapa kamar kosong sekarang, gampang nggak?"
+>
+> *Sebagai Front Desk*:
+> > "Berapa lama biasanya proses check-in tamu? Pernah double booking atau bentrok kamar? Bagaimana mencegahnya?"
+>
+> *Sebagai Housekeeping*:
+> > "Bagaimana koordinasi tugas antar staf cleaning? Bagaimana tahu kamar mana yang harus dibersihkan duluan?"
+>
+> *Sebagai Finance/Keuangan*:
+> > "Berapa lama waktu untuk rekap keuangan harian/bulanan? Pernah ada selisih atau invoice yang kelewat?"
+
+### Q3 — Fitur yang Paling Dibutuhkan
+
+> **Pertanyaan**: *"Kalau ada sistem digital baru yang Bapak/Ibu bisa pakai, fitur apa yang paling penting? Yang akan benar-benar membantu kerja sehari-hari."*
+>
+> **Probe**:
+> - Prioritaskan 3 fitur teratas
+> - Tanya kenapa dia rangking begitu
+> - Tanya: kalau ada fitur X tapi tidak ada Y, dia pilih yang mana?
+
+### Q4 — Pengelolaan Tamu / Reservasi
+
+> **Pertanyaan**: *"Bagaimana proses reservasi dan pengelolaan data tamu sekarang? Tamu biasanya pesan lewat mana — telepon, WhatsApp, OTA seperti Traveloka, atau walk-in?"*
+>
+> **Probe**:
+> - Persentase reservasi via channel apa (estimasi kasar)
+> - Bagaimana data tamu disimpan? Buku tamu? Excel? Aplikasi?
+> - Pernah ada masalah kehilangan data tamu? Tamu komplain karena data salah?
+
+### Q5 — Akses Data Antar Departemen (RBAC)
+
+> **Pertanyaan**: *"Apakah Bapak/Ibu merasa perlu pembatasan akses staf berdasarkan tugasnya? Misalnya, apakah front desk perlu lihat data keuangan? Atau housekeeping perlu lihat detail tamu seperti nomor kontak dan ID?"*
+>
+> **Probe**:
+> - Kenapa perlu/tidak perlu
+> - Apakah pernah ada masalah akses (staf lihat data yang tidak perlu, atau sebaliknya)?
+> - Kalau ada sistem yang membatasi akses otomatis, apakah berguna?
+
+### Q6 — Layanan Chatbot AI untuk Tamu
+
+> **Pertanyaan**: *"Kalau ada chatbot AI yang bisa menjawab pertanyaan tamu 24/7 dalam Bahasa Indonesia dan bisa menerima reservasi via chat, menurut Bapak/Ibu seberapa berguna untuk hotel ini?"*
+>
+> **Probe**:
+> - Tamu hotel ini biasanya tipe apa (umur, asal, frekuensi nginap)?
+> - Mereka familiar dengan teknologi chatbot?
+> - Apa yang paling sering ditanyakan tamu sebelum reservasi? (untuk validasi use-case chatbot)
+> - Kalau ada chatbot, Bapak/Ibu lebih nyaman chatbot independen atau yang bisa diawasi staf?
+
+### Penutup (3-5 menit)
+
+> *"Terima kasih sangat banyak Bapak/Ibu. Sebelum saya tutup, apakah ada hal lain yang menurut Bapak/Ibu penting tapi belum saya tanyakan? Atau ada masukan untuk sistem yang akan saya bangun?*
+>
+> *Setelah ini saya akan punya 2 follow-up:*
+> 1. *Kalau berkenan, kuesioner singkat untuk Bapak/Ibu dan beberapa staf — ~15 menit. Bisa via WA atau saya kirim link Google Form.*
+> 2. *Kalau hotel ini berkenan jadi case study di skripsi (boleh disamarkan), saya akan kirim draft Bab 4 untuk dicek dulu sebelum dimasukkan ke naskah final.*
+>
+> *Apakah Bapak/Ibu bersedia? Sekali lagi terima kasih."*
+
+---
+
+## Mapping Peran → Narasumber Hotel Teman
+
+Hotel kecil biasanya punya struktur fleksibel. Kalau hotel teman tidak punya posisi spesifik, gunakan padanan berikut:
+
+| Peran skripsi | Padanan di hotel kecil | Catatan |
+|---|---|---|
+| Manajer Hotel | Owner / General Manager | Sering merangkap Finance |
+| Front Desk / Resepsionis | Receptionist / Front office staff | Sering merangkap input data tamu |
+| Supervisor Housekeeping | Senior housekeeping staff / Lead cleaner | Bisa juga owner kalau hotel sangat kecil |
+| Staf Keuangan | Bookkeeper / Owner | Hotel kecil biasanya owner pegang sendiri |
+
+**Aturan praktis**:
+- 1 narasumber yang pegang 2-3 peran = **1 sesi panjang 45-60 menit**, dapatkan semua perspektif
+- 2-4 narasumber dari 1 hotel = lebih bagus untuk variasi sudut pandang
+- Kalau hanya 1 hotel teman → sesi multi-narasumber lebih kuat dari single narasumber
+- **2 hotel teman** = ideal untuk komparasi cross-case (1 hotel kecil + 1 hotel sedang/villa kecil)
+
+---
+
+## Strategi Recruitment Hotel Teman
+
+### Hotel Teman Tier 1 (paling reachable)
+
+- **Kenalan langsung pemilik hotel**: keluarga, alumni SMA/kampus, teman kerja yang punya hotel keluarga
+- **Hotel kecil/villa di lingkungan**: villa bisnis kecil, guest house, hostel — sama-sama PMS use case
+
+### Hotel Teman Tier 2 (via intro)
+
+- **Minta intro dari hotel teman Tier 1**: "Pak, ada kenalan pemilik hotel lain yang bisa saya wawancarai?"
+- **Komunitas hospitality**: WA Group PHRI (Persatuan Hotel dan Restoran Indonesia) regional, asosiasi villa, dll. — minta dosen pembimbing kalau punya kontak
+
+### Tier 3 (cold outreach — terakhir)
+
+- DM Instagram hotel kecil/villa di area Anda — pendek, sopan, profesional
+- Email ke info@hotel-namanya.com — sertakan informed consent + jangka waktu
+
+**Ekspektasi realistic**: dari 10 hotel yang Anda hubungi, mungkin 1-2 yang bersedia. **Mulai outreach 2 minggu sebelum target wawancara**.
+
+---
+
+# 📝 B. Pelaksanaan UAT Staf (Form 1A + 1B)
+
+> Detail pertanyaan: lihat `UAT_SUS_Questionnaire.md` Form 1A (hotel real) dan Form 1B (system evaluator non-hotel).
+
+## Form 1A — UAT Staf Hotel Real (3-5 responden)
 
 **Strategi pengumpulan**:
-1. **Hotel teman** (5-7 staf) — primary
-2. **Jaringan teman** (3-5 staf) — minta hotel teman intro ke kenalan industri (hotel/villa lain)
-3. Distribusi via Google Form link, broadcast di WhatsApp Group hotel teman
+1. **Hotel teman primary** — saat wawancara Bagian A selesai, lanjut Form 1A untuk narasumber yang sama (mereka SUDAH familiar konteks)
+2. **Staf lain di hotel teman** — minta narasumber utama intro ke 2-3 staf lain (front desk lain, housekeeping)
+3. **Brief sebelum isi form**: kasih 10 menit demo aplikasi, lalu kasih tablet/laptop untuk isi form
 
-### Skenario yang dilakukan responden sebelum mengisi form
+**Distribusi**:
+- Print Google Form (jaga-jaga kalau internet hotel lambat) ATAU akses via tablet
+- Berikan kompensasi: makan siang gratis, voucher OVO/Gopay 50rb, atau bingkisan kecil
+- Target: 3-5 staf dari 1-2 hotel teman
 
-Kasih staf akses 30 menit untuk explore aplikasi, dengan task list:
-1. Login dengan akun yang disediakan
-2. Lihat dashboard
-3. Tambah 1 kamar dummy
-4. Tambah 1 reservasi dummy
-5. Lakukan check-in pada reservasi tersebut
-6. Buka modul billing / financial
-7. Logout
-
-Setelah itu mereka isi form (template di [`UAT_SUS_Questionnaire.md`](UAT_SUS_Questionnaire.md) FORM 1).
-
-### Recruitment message (copy ke WhatsApp)
-
-```
-Halo [Nama],
-
-Saya [Nama] sedang menyelesaikan skripsi tentang Property 
-Management System untuk hotel. Saya butuh bantuan Bapak/Ibu 
-untuk mencoba aplikasi yang saya kembangkan dan mengisi 
-kuesioner singkat (8 pertanyaan, 5-7 menit).
-
-Detail:
-🔗 Link aplikasi: [https://staymanager.vercel.app/login]
-🔑 Akun trial: [email] / [password]
-📋 Form kuesioner: [link Google Form]
-
-Total waktu yang dibutuhkan: 30-40 menit (eksplorasi 
-aplikasi 30 menit + isi form 10 menit). Identitas akan 
-dijaga rahasia, hanya dipakai untuk keperluan akademik.
-
-Terima kasih banyak atas bantuannya 🙏
-```
-
----
-
-## C. UAT Tamu / Chatbot — 20 Responden
+## Form 1B — UAT System Evaluator (5-7 responden non-hotel)
 
 **Strategi pengumpulan**:
-1. **Tamu real hotel teman** (5-10 orang) — minta hotel teman pasang stiker QR code di lobby/kamar yang link ke chatbot test
-2. **Test users via WA broadcast** (10-15 orang) — broadcast ke teman/keluarga, minta coba booking dummy
+1. **Teman kampus jurusan SI/Informatika** — paling cocok karena familiar evaluasi UX
+2. **Karyawan kantor di bidang IT/business analyst** — alumni atau kenalan profesional
+3. **Mahasiswa lain yang aktif pakai dashboard/CRM** — anak organisasi kampus, asisten dosen
 
-### Brief untuk test user (sebelum mereka coba chatbot)
-
-```
-Halo, saya butuh bantuan singkat untuk skripsi tentang 
-chatbot AI untuk reservasi hotel. 
-
-Yang perlu dilakukan (10-15 menit total):
-1. Buka link: [https://staymanager.vercel.app/chatbot]
-2. Coba 3 hal:
-   - Tanya info fasilitas hotel
-   - Tanya ketersediaan kamar untuk tanggal X-Y (terserah)
-   - Coba pesan kamar via chat (data tamu boleh palsu)
-3. Isi form penilaian: [link Google Form]
-
-Identitas Anda dirahasiakan. Terima kasih 🙏
-```
-
-### Tips agar UAT tamu kredibel
-
-- **Pastikan setiap responden benar-benar interact dengan chatbot, jangan hanya isi form mentah**. Cara verifikasi: di Google Form tambahkan pertanyaan attention check seperti "Apa pertanyaan terakhir yang Anda tanyakan ke chatbot?"
-- Kumpulkan timestamp pengisian → buktikan distribusi waktu yang masuk akal (bukan semua dalam 5 menit)
-- Simpan log percakapan chatbot di tabel `ai_messages` Supabase sebagai bukti pendukung
+**Distribusi**:
+- WA personal (bukan broadcast group — terlalu impersonal): "Eh [Nama], aku lagi skripsi tentang sistem hotel berbasis web. Aku butuh kamu coba demo aplikasinya selama 15 menit terus isi kuesioner sekitar 10 menit. Bisa minta tolong? Nanti aku traktir kopi"
+- Brief 10 menit awal: jelasin mereka bukan harus jadi staf hotel, tapi mengevaluasi **kemudahan penggunaan** sistem
+- Kasih URL demo + akun + URL Google Form
+- Follow up 2-3 hari kalau belum isi
 
 ---
 
-## D. SUS — Tambah ke Form UAT yang Sama
+# 🌐 C. Pelaksanaan UAT Tamu (Form 2) — 20+ Responden
 
-10 pertanyaan SUS sudah ada di [`UAT_SUS_Questionnaire.md`](UAT_SUS_Questionnaire.md) FORM 3. Tinggal tambahkan ke FORM 1 (UAT Staf) sebagai bagian terakhir form. Skor SUS dihitung otomatis lewat formula di file itu.
+> Detail pertanyaan: lihat `UAT_SUS_Questionnaire.md` Form 2.
 
-**Target SUS**: ≥ 68 (kategori "Good"). Skor antara 51-68 masih OK tapi perlu narasi limitasi.
+**Strategi pengumpulan**:
+
+### Channel 1: Broadcast WhatsApp Group
+- WA Group teman kampus (jurusan apapun, bukan hanya IT)
+- WA Group alumni SMA / SMP
+- WA Group keluarga besar / arisan
+- WA Group teman kantor (kalau Anda sudah kerja part-time)
+
+**Template pesan WA**:
+> *Halo teman-teman! 🙏*
+>
+> *Aku [Nama] lagi skripsi tentang aplikasi pesan hotel pakai chatbot AI Bahasa Indonesia. Aku butuh banget bantuan kalian untuk uji coba — cuma 15-20 menit, bisa dari HP:*
+>
+> *1. Buka [URL demo] — coba chatbot-nya, pesan kamar simulasi (cuma simulasi, nggak ada commitment beli)*
+> *2. Isi Google Form ini: [URL form]*
+>
+> *Insentif: aku undi 3 pemenang Gopay 50rb dari semua responden 🎁*
+>
+> *Deadline: [tanggal]. Makasih banget! 🙏*
+
+### Channel 2: Instagram Story / WA Status
+- Posting recap singkat tugas + URL Bitly
+- Re-share 2-3x dalam 2 minggu untuk reach orang yang berbeda
+
+### Channel 3: Forum komunitas
+- Forum kampus (kalau ada)
+- Subreddit r/indonesia (kalau berani — tag riset)
+- Twitter dengan tag #skripsi #mahasiswa
+
+**Target**: 20-30 responden dalam 2 minggu. Realistic kalau Anda persisten dengan reminder.
+
+**Tip insentif**: doorprize 3x Gopay 50rb = 150rb total = murah. Bisa juga voucher Shopee, atau e-book gratis (kalau Anda punya). Tanpa insentif response rate ~10%. Dengan insentif bisa ~30%.
 
 ---
 
-## E. Timeline Realistic — 2 Minggu
+# 📊 D. Analisis Data Pasca-Pengumpulan
+
+## Kuantitatif (Likert + SUS)
+
+| Form | Cara hitung | Output |
+|---|---|---|
+| Form 1A/1B Likert | Rata-rata per item, lalu rata-rata seluruh item | 1 angka per item (0-5) + 1 angka agregat |
+| Form 2 Likert | Sama | Sama |
+| Form 3 SUS | Rumus SUS (lihat `UAT_SUS_Questionnaire.md` bagian SUS scoring) | Skor 0-100, target ≥ 68 |
+
+## Kualitatif (open-ended)
+
+1. **Coding tematik**: baca semua jawaban "kritik & saran", kelompokkan ke 3-5 tema utama
+   - Contoh tema: "Kebutuhan multi-bahasa", "Mobile responsiveness", "Notifikasi push", dll
+2. **Kutipan representatif**: pilih 1-2 kalimat per tema untuk dimasukkan ke Bab 4
+3. **Triangulasi**: bandingkan apa yang muncul di wawancara vs kuesioner — kalau sama, kuat. Kalau beda, diskusikan kenapa.
+
+## Wawancara
+
+1. **Transkrip** semua rekaman ke teks (bisa pakai Whisper / Google Recorder otomatis, lalu edit manual)
+2. **Coding kualitatif**: tandai kalimat-kalimat yang mengandung **6 tema** sesuai 6 pertanyaan inti
+3. **Tabel 3.3 mapping**: pilih kutipan paling representatif per pertanyaan untuk dimasukkan ke Tabel 3.3
+4. **Narasi**: buat ringkasan 2-3 paragraf per pertanyaan untuk Bab 3 sub-bab "Analisis Kebutuhan"
+
+---
+
+# ⏱️ Timeline Lengkap (Strategi B)
 
 | Minggu | Aktivitas | Output |
 |---|---|---|
-| Minggu 1, hari 1-2 | Setup hotel teman: izin tertulis, demo aplikasi ke owner, deploy app ke production stable | Aplikasi live + akun trial siap |
-| Minggu 1, hari 3-4 | Wawancara 4 narasumber (semua di hotel teman atau via call) | 4 transkrip, isi Tabel 3.3 |
-| Minggu 1, hari 5-7 | Black Box Testing 34 skenario solo + screenshot bukti | Tabel 4.4-4.12 terisi |
-| Minggu 2, hari 8-10 | UAT staf (broadcast + reminder), kumpulkan minimal 10 respons | Tabel 4.13 terisi |
-| Minggu 2, hari 11-13 | UAT tamu (broadcast + reminder), kumpulkan minimal 20 respons | Tabel 4.14 terisi + skor SUS |
-| Minggu 2, hari 14 | Analisis data, hitung rata-rata, narasi 4.7 dan Bab 5 | Skripsi siap untuk pembimbing |
+| 1 | Setup Google Form (4 form), test internal 2-3 teman. Hubungi 1-2 hotel teman | Form siap distribusi |
+| 1-2 | Wawancara hotel teman (1-2 sesi panjang). Rekam + transkrip kasar | Transcript siap kode |
+| 1-2 | Form 1A: staf hotel teman isi langsung saat kunjungan | 3-5 respons |
+| 2-3 | Form 1B: broadcast ke 5-7 mahasiswa IT/karyawan via WA personal | 5-7 respons |
+| 2-3 | Form 2: broadcast luas ke jaringan + Insta story + reminder | 20+ respons |
+| 3 | Tutup form, export ke Spreadsheet, mulai analisis kuantitatif | Tabel rata-rata |
+| 3-4 | Coding kualitatif: kritik & saran + transkrip wawancara | Tema utama + kutipan |
+| 4 | Tulis Bab 3 sub-bab Analisis Kebutuhan + Bab 4 Evaluasi | Draft Bab 3-4 |
 
 ---
 
-## F. Yang Saya Butuhkan dari Kamu
+# 🔒 Informed Consent Template (Wawancara)
 
-Untuk eksekusi tahap selanjutnya, kasih saya info berikut:
+Buat dokumen 1 halaman sebelum wawancara:
 
-1. **Nama hotel teman** (untuk dokumentasi case study) — boleh disamarkan kalau ada permintaan privacy
-2. **Lokasi & jumlah kamar** (≤30 = small property, sesuai target StayManager)
-3. **Estimasi jumlah staf** dari hotel itu (untuk planning UAT staf)
-4. **Apakah hotel teman setuju** jadi case study (perlu informed consent)
+```
+INFORMED CONSENT — Wawancara Penelitian Skripsi
 
-Setelah itu saya bantu:
-- Buat dokumen Informed Consent yang siap di-sign
-- Buat Google Form lengkap (UAT staf + tamu + SUS) yang siap di-share
-- Bikin landing page demo dengan akun trial pre-seeded
+Judul: Pengembangan Property Management System Berbasis Web dengan
+Integrasi Chatbot AI untuk Hotel Kecil dan Menengah
+
+Peneliti: [Nama lengkap] · [Email] · [Nomor HP]
+Institusi: [Universitas] · [Program Studi]
+Pembimbing: [Nama dosen pembimbing]
+
+Saya, ___________________ (nama narasumber), menyatakan:
+☐ Bersedia diwawancarai dalam rangka penelitian skripsi tersebut di atas.
+☐ Bersedia rekaman audio digunakan untuk transkripsi penelitian.
+☐ Identitas saya akan disamarkan (cukup pakai inisial atau pseudonym).
+☐ Data hanya akan digunakan untuk skripsi dan tidak disebar di luar konteks akademik.
+☐ Saya berhak menghentikan wawancara kapan saja tanpa konsekuensi.
+☐ Saya berhak meminta data saya dihapus setelah penelitian selesai.
+
+Tanggal: ___________
+Tanda tangan narasumber: ___________
+Tanda tangan peneliti: ___________
+```
+
+---
+
+**End of Interview_Script_dan_Recruitment.md v2 (Strategi B)** · 2026-05-13

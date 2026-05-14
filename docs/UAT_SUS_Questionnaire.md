@@ -1,127 +1,404 @@
-# Template Kuesioner UAT + SUS — StayManager
+# Kuesioner UAT + SUS — StayManager (v2 Strategi B)
 
-**Tujuan**: Replace data dummy di Tabel 4.13 (UAT staf) dan Tabel 4.14 (UAT tamu) dengan responden nyata. SUS ditambahkan sebagai metode evaluasi tambahan yang lebih kredibel di mata penguji.
+> **Strategi B Hybrid**: 4 form pisah untuk akomodasi jaringan responden yang mayoritas non-perhotelan (mahasiswa, guru, karyawan kantor) + tetap valid akademik. Total target ~30-35 responden riil. Setiap **SECTION** di bawah = **section break di Google Form** (Form → Add section).
 
-**Format**: copy ke Google Forms → distribusikan via WA/email → export hasil ke Excel → hitung rata-rata → masuk ke skripsi.
+| Form | Target | Jumlah Responden | Bagian Skripsi |
+|---|---|---|---|
+| **Form 1A** Staf Hotel Real | Hotel teman (real industry) | 3-5 | Tabel 4.13 UAT Staf (primary) |
+| **Form 1B** System Evaluator | Mahasiswa IT / karyawan kantor | 5-7 | Tabel 4.13 UAT Staf (supplementary) |
+| **Form 2** Tamu / Chatbot Umum | Mahasiswa / guru / karyawan / umum | 20+ | Tabel 4.14 UAT Tamu |
+| **Form 3** SUS Universal | Semua responden Form 1A+1B+2 | 28-32 | Bab 4 evaluasi standar industri |
+
+Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hotel mitra, n=3-5) untuk validasi domain hotel, dan evaluator usability (mahasiswa/karyawan, n=5-7) untuk validasi prinsip Nielsen + Schneiderman. Pemisahan ini karena keterbatasan jaringan industri perhotelan peneliti."
 
 ---
 
-## FORM 1 — UAT Staf Hotel (Target: minimal 10 responden)
+# 🏨 FORM 1A — UAT Staf Hotel Real
 
-### Bagian A — Identitas Responden
-1. Nama (boleh inisial): _______
-2. Posisi/Departemen di hotel:
-   - ⃝ Front Desk / Resepsionis
-   - ⃝ Housekeeping
-   - ⃝ Keuangan / Finance
-   - ⃝ Manager / Supervisor
-   - ⃝ Lainnya: _______
+> **Target**: 3-5 staf hotel teman (Front Desk / Housekeeping / Owner / Manager / Finance)
+> **Distribusi**: tatap muka di hotel, isi via tablet atau print, ~20 menit
+> **Insentif**: bingkisan kecil / makan siang
+
+## SECTION 1 — Identitas Responden
+
+> *Saya akan menanyakan beberapa pertanyaan dasar tentang latar belakang Anda di industri perhotelan untuk konteks evaluasi.*
+
+1. Nama (boleh inisial):  ___
+2. Posisi/Departemen Anda saat ini:
+   - ☐ Front Desk / Resepsionis
+   - ☐ Housekeeping
+   - ☐ Keuangan / Finance
+   - ☐ Manager / Supervisor
+   - ☐ Owner / General Manager
+   - ☐ Lainnya: ___
 3. Lama bekerja di industri perhotelan:
-   - ⃝ < 1 tahun
-   - ⃝ 1–3 tahun
-   - ⃝ 3–5 tahun
-   - ⃝ > 5 tahun
+   - ☐ < 1 tahun
+   - ☐ 1-3 tahun
+   - ☐ 3-5 tahun
+   - ☐ > 5 tahun
+4. Hotel tempat bekerja (boleh disamarkan, mis. "Hotel bintang 3 area Jakarta Selatan"):  ___
 
-### Bagian B — Evaluasi Sistem (Skala Likert 1-5)
-Skala: 1=Sangat Tidak Setuju, 2=Tidak Setuju, 3=Netral, 4=Setuju, 5=Sangat Setuju
+## SECTION 2 — Pengalaman Sistem yang Sedang Dipakai
+
+> *Bagian ini tentang sistem/alat yang Anda pakai sekarang untuk pekerjaan sehari-hari, BUKAN tentang StayManager. Jawaban Anda akan saya bandingkan dengan StayManager nanti.*
+
+1. Sistem/alat yang Anda pakai sehari-hari untuk operasional hotel (boleh pilih lebih dari satu):
+   - ☐ Microsoft Excel / Google Sheets
+   - ☐ Aplikasi PMS spesifik (sebutkan: ___)
+   - ☐ WhatsApp untuk koordinasi staf
+   - ☐ Buku/catatan manual
+   - ☐ Aplikasi accounting (mis. Accurate, Jurnal)
+   - ☐ Lainnya: ___
+2. Berapa lama biasanya proses check-in tamu di hotel Anda?
+   - ☐ < 5 menit
+   - ☐ 5-10 menit
+   - ☐ 10-20 menit
+   - ☐ > 20 menit
+3. Kendala terbesar dengan sistem yang Anda pakai sekarang (jawab bebas):  ___
+
+## SECTION 3 — Evaluasi StayManager: Antarmuka & Navigasi
+
+> *Setelah Anda melihat demo StayManager (~10 menit eksplorasi), mohon nilai antarmuka sistem. Skala: 1=Sangat Tidak Setuju, 5=Sangat Setuju.*
 
 | No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|
-| 1 | Sistem StayManager mudah dipelajari dan digunakan | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 2 | Antarmuka sistem bersih, terorganisir, dan konsisten di seluruh halaman | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 3 | Proses check-in dan check-out tamu berjalan efisien dengan sistem ini | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 4 | Modul keuangan membantu pengelolaan billing dan pengeluaran operasional | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 5 | Laporan yang dihasilkan sistem akurat dan informatif | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 6 | Sistem manajemen inventaris membantu pengelolaan stok perlengkapan | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 7 | Kontrol akses berbasis peran (RBAC) berjalan sesuai kebijakan hotel | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 8 | Secara keseluruhan sistem ini meningkatkan efisiensi operasional hotel | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
+| 1 | Tampilan antarmuka StayManager bersih dan tidak membingungkan | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Navigasi antar modul (Kamar, Tamu, Keuangan, dll) mudah dipahami | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Label tombol dan menu jelas dalam Bahasa Indonesia | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Sistem memberi feedback yang jelas saat saya melakukan aksi (mis. notifikasi sukses/error) | ☐ | ☐ | ☐ | ☐ | ☐ |
 
-### Bagian C — Kritik & Saran (open-ended, optional)
-- Fitur yang paling membantu: _______
-- Fitur yang membingungkan / perlu diperbaiki: _______
-- Saran fitur tambahan: _______
+## SECTION 4 — Evaluasi StayManager: Fungsionalitas Operasional
+
+> *Bagian ini fokus pada fitur-fitur yang relevan dengan pekerjaan operasional hotel Anda. Skala 1-5 seperti di atas.*
+
+| No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| 1 | Modul Manajemen Kamar membantu mengelola status kamar (available/occupied/cleaning) | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Proses check-in tamu di sistem ini lebih cepat daripada cara yang dipakai sekarang | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Modul Keuangan memudahkan pencatatan billing, deposit, dan pengeluaran | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Generate invoice dan laporan keuangan otomatis menghemat waktu kerja | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 5 | Modul Housekeeping membantu koordinasi tugas antar staf cleaning | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## SECTION 5 — Evaluasi StayManager: Chatbot AI untuk Tamu
+
+> *StayManager menyediakan chatbot AI berbahasa Indonesia yang bisa melayani pertanyaan tamu 24/7 dan menerima reservasi via chat. Mohon evaluasi konsep ini.*
+
+| No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| 1 | Konsep chatbot AI untuk reservasi tamu berguna untuk hotel kami | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Chatbot dapat mengurangi beban kerja front desk dalam menjawab pertanyaan tamu | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Tamu di hotel kami kemungkinan akan menggunakan fitur chatbot ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## SECTION 6 — Kontrol Akses & Keamanan (RBAC)
+
+> *StayManager menerapkan Role-Based Access Control dengan 6 peran: Super Admin, Manager, Front Desk, Housekeeping, Finance, Guest. Setiap peran punya akses berbeda ke modul-modul tertentu.*
+
+| No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| 1 | Pembagian akses berdasarkan peran sesuai dengan struktur hotel kami | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Sistem memberi akses yang tepat untuk peran saya (tidak terlalu sempit/luas) | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## SECTION 7 — Kritik & Saran
+
+> *Bagian ini opsional tapi sangat berharga. Jawab sesuai pengalaman Anda.*
+
+1. Fitur StayManager yang paling membantu pekerjaan Anda:  ___
+2. Fitur yang membingungkan atau perlu diperbaiki:  ___
+3. Fitur tambahan yang Anda butuhkan tapi belum ada:  ___
+4. Apakah Anda akan merekomendasikan sistem ini ke hotel lain? Mengapa?  ___
+
+> **Setelah ini lanjut ke Form 3 — SUS** (10 pertanyaan tambahan, ~3 menit)
 
 ---
 
-## FORM 2 — UAT Tamu / Pengguna Chatbot (Target: minimal 20 responden)
+# 💻 FORM 1B — UAT System Evaluator (Non-Hotel)
 
-### Bagian A — Identitas Responden
-1. Nama (boleh inisial): _______
+> **Target**: 5-7 mahasiswa IT/Sistem Informasi atau karyawan kantor yang familiar aplikasi web
+> **Distribusi**: WhatsApp + Google Form, sebelumnya brief responden bahwa mereka mengevaluasi **kemudahan penggunaan**, bukan operational fit hotel
+> **Durasi**: ~25 menit (15 menit eksplorasi + 10 menit isi form)
+
+## SECTION 1 — Identitas Responden
+
+> *Saya butuh tahu latar belakang Anda untuk konteks evaluasi. Tidak ada jawaban yang salah.*
+
+1. Nama (boleh inisial):  ___
+2. Status Anda saat ini:
+   - ☐ Mahasiswa (jurusan: ___, semester: ___)
+   - ☐ Karyawan (bidang: ___)
+   - ☐ Freelancer / Wiraswasta
+   - ☐ Lainnya: ___
+3. Anda sering pakai aplikasi web (mis. dashboard, ERP, CRM, Notion, Trello)?
+   - ☐ Setiap hari
+   - ☐ Beberapa kali seminggu
+   - ☐ Sesekali
+   - ☐ Jarang
+4. Apakah Anda familiar dengan istilah usability/UX?
+   - ☐ Sangat familiar
+   - ☐ Familiar sebatas pernah dengar
+   - ☐ Belum familiar
+
+## SECTION 2 — Konteks Eksperimen
+
+> *Brief Anda akan saya beri URL demo StayManager + akun login. Tugas Anda: **eksplorasi minimal 10-15 menit**, coba semua menu utama (Dashboard, Kamar, Tamu, Reservasi, Keuangan, Chatbot). Jangan ragu mengklik tombol — sistem ini sandbox demo, tidak ada konsekuensi data nyata.*
+>
+> *Setelah eksplorasi, jawab pertanyaan berikut.*
+
+1. Berapa lama Anda mengeksplorasi StayManager sebelum mengisi form ini?  ___ menit
+2. Apakah Anda mencoba semua modul utama?
+   - ☐ Ya, semua
+   - ☐ Sebagian (sebutkan yang tidak dicoba: ___)
+   - ☐ Hanya 1-2 modul
+3. Apakah Anda mencoba chatbot di /chatbot?
+   - ☐ Ya
+   - ☐ Tidak
+
+## SECTION 3 — Lima Faktor Manusia Terukur (Nielsen)
+
+> *Lima dimensi standar usability menurut Nielsen (1993): Learnability, Efficiency, Memorability, Error Rate, Satisfaction. Skala 1-5.*
+
+| No | Faktor | Pernyataan | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|---|
+| 1 | Learnability | Saya bisa langsung memahami cara pakai sistem ini tanpa tutorial | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Efficiency | Setelah saya tahu caranya, tugas bisa diselesaikan dengan cepat | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Memorability | Kalau saya tinggalkan sistem ini lalu balik 1 minggu lagi, saya yakin masih ingat cara pakainya | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Error Rate | Sistem jarang membiarkan saya membuat kesalahan; kalau salah, mudah dikoreksi | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 5 | Satisfaction | Secara keseluruhan saya nyaman menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## SECTION 4 — Delapan Aturan Emas (Schneiderman)
+
+> *Delapan prinsip desain antarmuka menurut Schneiderman (2018). Tetap skala 1-5.*
+
+| No | Aturan | Pernyataan | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|---|
+| 1 | Konsistensi Desain | Tampilan tombol, warna, font konsisten di semua halaman | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Pintasan Navigasi | Tersedia sidebar/shortcut untuk akses cepat antar fitur | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Umpan Balik Informatif | Setiap aksi saya direspons sistem dengan jelas (loading, sukses, error) | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Dialog Closure | Setiap pop-up/modal mudah ditutup, dan jelas kapan suatu task selesai | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 5 | Penanganan Kesalahan | Sistem mencegah kesalahan saya (mis. form validation) sebelum di-submit | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 6 | Pembatalan Aksi | Tersedia tombol Cancel/Kembali yang konsisten di setiap dialog | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 7 | Kendali Internal | Saya merasa "yang mengontrol" sistem, bukan sebaliknya | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 8 | Informasi Tampil Langsung | Data penting (KPI, status) terlihat di dashboard tanpa harus klik banyak | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## SECTION 5 — Chatbot AI (Berperan sebagai Tamu)
+
+> *Anggap Anda adalah tamu hotel yang ingin memesan kamar. Coba interaksi chatbot di /chatbot — tanya ketersediaan, browsing tipe kamar, atau coba lanjut sampai tahap reservasi.*
+
+| No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| 1 | Chatbot memahami pertanyaan saya dalam Bahasa Indonesia | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Respons chatbot relevan dengan pertanyaan saya | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Saya bisa menyelesaikan proses pemesanan kamar tanpa kebingungan | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Waktu respons chatbot terasa cepat (< 3 detik per pesan) | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## SECTION 6 — Kritik & Saran
+
+> *Bagian terakhir, opsional tapi sangat berharga untuk perbaikan.*
+
+1. 3 hal terbaik dari StayManager:  ___
+2. 3 hal yang perlu diperbaiki:  ___
+3. Sebagai pengguna umum (non-staf hotel), apakah Anda merasa sistem ini approachable atau intimidating?  ___
+
+> **Setelah ini lanjut ke Form 3 — SUS** (10 pertanyaan tambahan, ~3 menit)
+
+---
+
+# 🤖 FORM 2 — UAT Tamu / Chatbot Umum
+
+> **Target**: 20+ mahasiswa / guru / karyawan / umum (siapa saja yang berpotensi memesan hotel)
+> **Distribusi**: WhatsApp broadcast + Google Form link
+> **Insentif (opsional)**: doorprize Gopay 50rb untuk 3 responden random
+
+## SECTION 1 — Identitas Responden
+
+> *Pertanyaan dasar untuk demografi.*
+
+1. Nama (inisial OK):  ___
 2. Usia:
-   - ⃝ 17–24
-   - ⃝ 25–34
-   - ⃝ 35–44
-   - ⃝ 45+
-3. Frekuensi reservasi hotel per tahun:
-   - ⃝ Belum pernah / jarang
-   - ⃝ 1–3 kali
-   - ⃝ 4–10 kali
-   - ⃝ > 10 kali
+   - ☐ 17-24
+   - ☐ 25-34
+   - ☐ 35-44
+   - ☐ 45+
+3. Status:
+   - ☐ Mahasiswa
+   - ☐ Guru / Dosen
+   - ☐ Karyawan (bidang: ___)
+   - ☐ Wiraswasta
+   - ☐ Lainnya: ___
 
-### Bagian B — Evaluasi Chatbot (Skala Likert 1-5)
+## SECTION 2 — Pengalaman Memesan Hotel
+
+> *Saya ingin tahu pengalaman Anda sebagai konsumen yang pernah atau mungkin memesan hotel.*
+
+1. Frekuensi memesan hotel per tahun:
+   - ☐ Belum pernah / jarang (< 1x)
+   - ☐ 1-3 kali
+   - ☐ 4-10 kali
+   - ☐ > 10 kali
+2. Aplikasi/cara yang biasa Anda pakai (boleh pilih lebih dari satu):
+   - ☐ Traveloka
+   - ☐ Booking.com
+   - ☐ Agoda
+   - ☐ Tiket.com
+   - ☐ Langsung telepon hotel / WhatsApp
+   - ☐ Walk-in
+   - ☐ Belum pernah pesan hotel
+3. Pernah pakai chatbot AI (di aplikasi apapun: e-commerce, banking, layanan publik) untuk berinteraksi?
+   - ☐ Ya, sering
+   - ☐ Ya, kadang-kadang
+   - ☐ Belum pernah
+
+## SECTION 3 — Ekspektasi Sebelum Coba StayManager
+
+> *Sebelum Anda coba chatbot StayManager, sebutkan ekspektasi Anda.*
+
+1. Menurut Anda, fitur ideal chatbot pemesanan hotel itu seperti apa?  ___
+2. Hal yang paling Anda hindari saat pesan hotel online:  ___
+
+## SECTION 4 — Eksperimen: Pesan Kamar via Chatbot StayManager
+
+> *TUGAS Anda: kunjungi [URL /chatbot]. Coba reservasi kamar untuk tanggal apapun (simulasi saja — tidak ada commitment). Mulai dengan menanyakan ketersediaan, lanjut sampai langkah konfirmasi pemesanan. Setelah selesai, jawab pertanyaan berikut.*
+
+1. Apakah Anda berhasil sampai tahap "konfirmasi pemesanan" tanpa stuck?
+   - ☐ Ya, lancar
+   - ☐ Sebagian (stuck di tahap tertentu)
+   - ☐ Tidak berhasil
+2. Berapa lama proses dari mulai sampai selesai?  ___ menit (estimasi)
+3. Pada langkah mana Anda merasa paling lancar?  ___
+4. Pada langkah mana Anda merasa bingung atau stuck? (boleh kosong jika tidak ada)  ___
+
+## SECTION 5 — Evaluasi Chatbot (Skala Likert 1-5)
+
+> *Berdasarkan eksperimen di Section 4, nilai aspek-aspek berikut. Skala 1=Sangat Tidak Setuju, 5=Sangat Setuju.*
 
 | No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|
-| 1 | Chatbot StayManager mudah digunakan untuk bertanya informasi hotel | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 2 | Chatbot memberikan respons yang relevan dan akurat | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 3 | Proses reservasi melalui chatbot mudah dan tidak membingungkan | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 4 | Chatbot memahami pertanyaan dalam Bahasa Indonesia dengan baik | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 5 | Waktu respons chatbot cepat | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 6 | Informasi ketersediaan dan harga kamar yang diberikan akurat | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 7 | Saya merasa nyaman berinteraksi dengan chatbot | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 8 | Chatbot meningkatkan pengalaman saya memesan kamar hotel | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
+| 1 | Chatbot mudah dimulai dan diakses | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Bahasa Indonesia chatbot natural dan mudah dipahami | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Respons chatbot cepat (< 3 detik per pesan) | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Informasi yang diberikan (harga, ketersediaan, kebijakan) lengkap | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 5 | Proses dari tanya → cek ketersediaan → pemesanan terasa mulus | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 6 | Saya merasa nyaman tanpa harus bicara dengan manusia | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 7 | Saya akan menggunakan chatbot ini lagi untuk pemesanan berikutnya | ☐ | ☐ | ☐ | ☐ | ☐ |
 
-### Bagian C — Kritik & Saran
-- Hal terbaik dari chatbot: _______
-- Yang masih bingung / kurang: _______
+## SECTION 6 — Perbandingan dengan Pengalaman Sebelumnya
+
+> *Bandingkan dengan aplikasi pemesanan hotel yang biasa Anda pakai (Traveloka, Booking, dll).*
+
+1. Dibanding aplikasi yang biasa Anda pakai, StayManager chatbot terasa:
+   - ☐ Jauh lebih mudah
+   - ☐ Sedikit lebih mudah
+   - ☐ Sama saja
+   - ☐ Sedikit lebih ribet
+   - ☐ Jauh lebih ribet
+2. Alasan jawaban di atas:  ___
+
+## SECTION 7 — Kritik & Saran
+
+> *Bagian terakhir.*
+
+1. Hal terbaik dari chatbot StayManager:  ___
+2. Hal yang masih bingung atau kurang menurut Anda:  ___
+3. Saran perbaikan:  ___
+
+> **Setelah ini lanjut ke Form 3 — SUS** (10 pertanyaan tambahan, ~3 menit)
 
 ---
 
-## FORM 3 — System Usability Scale (SUS) — opsional, untuk penguji yang strict
+# 📊 FORM 3 — SUS (System Usability Scale) Universal
 
-**Standar Brooke (1996), 10 pertanyaan, skala Likert 1-5**. Hitungan SUS lebih kredibel daripada skor rata-rata mentah karena ada normalisasi 0-100.
+> **Target**: SEMUA responden Form 1A + 1B + 2 (28-32 total)
+> **Durasi**: ~3 menit (10 pertanyaan)
+> **Tujuan**: dapat skor SUS standar industri (0-100), bandingkan dengan rata-rata 68
+
+## SECTION 1 — Pengantar SUS
+
+> *System Usability Scale (SUS) adalah instrument standar industri untuk mengukur kemudahan penggunaan sistem. 10 pertanyaan, skala 1-5 (1=Sangat Tidak Setuju, 5=Sangat Setuju). Jawab berdasarkan kesan keseluruhan Anda terhadap StayManager yang baru saja Anda evaluasi.*
+>
+> *Catatan: pertanyaan ganjil bersifat positif, pertanyaan genap bersifat negatif. Jawab apa adanya — sistem skoring sudah memperhitungkan polaritas.*
+
+## SECTION 2 — Identitas Singkat
+
+> *Untuk korelasi dengan demographic responden.*
+
+1. Form mana yang baru saja Anda isi sebelum SUS ini?
+   - ☐ Form 1A — Staf Hotel
+   - ☐ Form 1B — System Evaluator
+   - ☐ Form 2 — Tamu / Chatbot
+
+## SECTION 3 — 10 Item SUS (Terjemahan Indonesia Standar)
 
 | No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|
-| 1 | Saya berpikir akan sering menggunakan sistem ini | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 2 | Saya merasa sistem ini terlalu rumit | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 3 | Saya pikir sistem ini mudah digunakan | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 4 | Saya butuh bantuan teknis untuk menggunakan sistem ini | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 5 | Berbagai fungsi dalam sistem ini terintegrasi dengan baik | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 6 | Saya merasa terlalu banyak inkonsistensi dalam sistem ini | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 7 | Kebanyakan orang akan belajar menggunakan sistem ini dengan cepat | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 8 | Saya merasa sistem ini sangat merepotkan untuk digunakan | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 9 | Saya merasa percaya diri saat menggunakan sistem ini | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
-| 10 | Saya perlu mempelajari banyak hal sebelum dapat menggunakan sistem ini | ⃝ | ⃝ | ⃝ | ⃝ | ⃝ |
+| 1 | Saya pikir saya akan ingin sering menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Saya merasa sistem ini terlalu kompleks/rumit | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 3 | Saya pikir sistem ini mudah digunakan | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 4 | Saya pikir saya akan butuh bantuan teknisi untuk menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 5 | Saya merasa berbagai fungsi di sistem ini terintegrasi dengan baik | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 6 | Saya merasa terlalu banyak inkonsistensi dalam sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 7 | Saya pikir kebanyakan orang akan belajar sistem ini dengan cepat | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 8 | Saya merasa sistem ini sangat merepotkan untuk digunakan | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 9 | Saya merasa percaya diri saat menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 10 | Saya perlu belajar banyak hal sebelum bisa menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
 
-### Cara Hitung SUS
-- **Soal ganjil (1, 3, 5, 7, 9)**: skor responden − 1
-- **Soal genap (2, 4, 6, 8, 10)**: 5 − skor responden
-- **Total per responden**: jumlahkan semua, kalikan 2.5 → skor 0-100
-- **Skor rata-rata**: rata-rata dari semua responden
+## SECTION 4 — Penutup
 
-**Interpretasi SUS** (Bangor et al., 2008):
-- > 80.3 = Excellent
-- 68–80.3 = Good
-- 51–68 = OK
-- 35–51 = Poor
-- < 35 = Awful
-
-Target StayManager: ≥ 68 (Good).
+> *Terima kasih banyak atas waktu dan masukan Anda. Hasil evaluasi ini akan digunakan dalam skripsi saya untuk penelitian sistem PMS berbasis web + AI chatbot. Identitas akan dijaga kerahasiaannya.*
 
 ---
 
-## Strategi Distribusi (untuk efisiensi waktu)
+# 📈 Cara Hitung Skor SUS
 
-1. **UAT Staf** — paling cepat kalau kamu kenal/punya akses ke 1 hotel kecil. 10 staf bisa terkumpul dalam 1-2 hari kalau distribusi via WA Group.
-2. **UAT Tamu / Chatbot** — bisa via teman/keluarga + share link aplikasi, minta mereka coba booking dummy (jangan pakai data real).
-3. **SUS** — gabung dengan UAT staf di form yang sama (10 pertanyaan tambahan).
+Untuk **setiap responden**:
 
-## Metode Evaluasi Alternatif (kalau wawancara/kuesioner susah dilakukan)
+1. **Item ganjil (positif)**: skor = jawaban − 1
+   - Q1 jawab 4 → skor = 3
+   - Q3 jawab 5 → skor = 4
+   - dst. untuk Q5, Q7, Q9
+2. **Item genap (negatif)**: skor = 5 − jawaban
+   - Q2 jawab 2 → skor = 3
+   - Q4 jawab 1 → skor = 4
+   - dst. untuk Q6, Q8, Q10
+3. **Total individu** = (jumlah 10 skor) × 2.5 → hasil 0-100
 
-Kalau memang tidak ada akses ke 30 responden, konsultasi ke pembimbing untuk ganti dengan:
-1. **Heuristic Evaluation** — penulis sendiri evaluasi sistem berdasarkan 10 Heuristik Nielsen (1994) — sah secara akademik, sering dipakai di skripsi sistem informasi
-2. **Cognitive Walkthrough** — simulasi 4-5 task scenarios dari perspektif user, dokumentasikan friction points
-3. **Performance Benchmark** — ukur waktu loading halaman, response time chatbot, throughput API. Bandingkan dengan target di Bab 3.2.4 (kebutuhan non-fungsional)
+Untuk **agregat penelitian**:
 
-Ketiga metode di atas TIDAK butuh responden eksternal, tapi tetap memberikan evidence empiris untuk Bab 4. Saya bisa bantu generate template-nya kalau kamu pilih jalur ini.
+- Hitung rata-rata SUS score dari seluruh responden
+- Interpretasi:
+  - ≥ 80 = "Excellent" (top 10% sistem industri)
+  - 68-80 = "Good" (di atas rata-rata)
+  - = 68 = rata-rata industri
+  - 51-68 = "OK / Marginal" (perlu perbaikan)
+  - < 51 = "Poor"
+
+**Target StayManager**: skor SUS ≥ 70 (di atas rata-rata industri).
+
+---
+
+# 🗓️ Timeline Pengumpulan Data (Strategi B)
+
+| Minggu | Aktivitas |
+|---|---|
+| 1 | Setup 4 Google Form (Form 1A, 1B, 2, 3 SUS). Test internal dengan 2-3 teman dulu. |
+| 1-2 | Hubungi 1-2 hotel teman → schedule wawancara (lihat `Interview_Script_dan_Recruitment.md`) + isi Form 1A |
+| 1-2 | Broadcast Form 1B ke 5-7 mahasiswa IT/karyawan (target dosen/teman jurusan SI) |
+| 2-3 | Broadcast Form 2 luas via WA Group teman kuliah/kantor/alumni |
+| 3 | Tutup form, export Google Form ke Spreadsheet |
+| 3-4 | Analisis: rata-rata Likert per item, hitung SUS, kompilasi kritik & saran |
+| 4 | Isi Tabel 4.13 (Staf), 4.14 (Tamu), 4.15 (SUS) di Bab 4 skripsi |
+
+---
+
+# 🎯 Mapping Form → Bagian Skripsi
+
+| Bagian Skripsi | Sumber Data | Format Output |
+|---|---|---|
+| Tabel 4.13 UAT Staf | Form 1A + 1B agregat | Tabel rata-rata Likert per item |
+| Tabel 4.14 UAT Tamu | Form 2 agregat | Tabel rata-rata Likert per item |
+| Tabel 4.15 SUS Score | Form 3 (semua) | Skor SUS individu + rata-rata agregat |
+| Subbab Kritik & Saran | Form 1A/1B/2 SECTION akhir (open-ended) | Tematik coding → 3-5 tema utama |
+| Subbab Wawancara | Interview transcripts | Lihat `Interview_Script_dan_Recruitment.md` |
+| Bab Limitasi | — | Pernyataan eksplisit: "UAT staf hybrid (3-5 hotel real + 5-7 evaluator) karena keterbatasan jaringan industri perhotelan" |
+
+---
+
+**End of UAT_SUS_Questionnaire.md v2 (Strategi B)** · 2026-05-13
