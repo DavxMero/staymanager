@@ -11,12 +11,23 @@ const supabase = createClient(
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, userContext } = await req.json();
+
+  const userContextSection = userContext?.isLoggedIn
+    ? `\n\nUSER CONTEXT (this conversation):
+- Login status: LOGGED IN
+- Name from profile: ${userContext.fullName || '(empty)'}
+- Email from profile: ${userContext.email || '(empty)'}
+- Phone from profile: ${userContext.phone || '(empty)'}
+- Action: Use these values to PRE-FILL guest info — do NOT ask name/email again, just confirm. Ask phone politely once if empty, then proceed.\n`
+    : `\n\nUSER CONTEXT (this conversation):
+- Login status: NOT LOGGED IN (anonymous browsing)
+- Action: For any booking request, emit SHOW_LOGIN_PROMPT_JSON marker (see GUEST BROWSING MODE rules below). Do NOT call createBooking.\n`;
 
   const result = await streamText({
     model: google('gemini-2.5-flash') as any,
 
-    system: `You are a professional hotel concierge at StayManager Hotel, a premium hospitality establishment. 
+    system: `You are a professional hotel concierge at StayManager Hotel, a premium hospitality establishment.${userContextSection}
 
 MULTILINGUAL SUPPORT:
 - You MUST respond in the SAME LANGUAGE the guest uses
@@ -50,14 +61,16 @@ GUEST BROWSING MODE (User NOT Logged In):
 - You can answer ALL questions about the hotel (facilities, amenities, location, policies)
 - You can check room availability using 'cekKetersediaan' tool
 - You can show room prices and types
-- **CRITICAL**: If user wants to BOOK/RESERVE, you MUST say:
-  "Untuk membuat reservasi, Anda perlu login terlebih dahulu. Silakan klik tombol Login di atas untuk melanjutkan booking."
+- **CRITICAL**: If user wants to BOOK/RESERVE, you MUST respond with a short friendly message AND append the login prompt marker at the END:
+  Example: "Untuk lanjut reservasi, kamu perlu login dulu ya. Setelah login, data kamu akan otomatis terisi.\n\nSHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
+- The frontend will render a styled login/signup card when it sees \`SHOW_LOGIN_PROMPT_JSON\` — do NOT include any URL or button text yourself
 - DO NOT attempt to collect guest information or create bookings for non-logged users
 - DO NOT call 'createBooking' tool if user is not logged in
 
 LOGGED-IN USER MODE (User IS Logged In):
 - Follow the full booking workflow below
-- Guest information may already be available from their profile
+- Guest information (name, email) is auto-filled from their profile — DO NOT ask for it again, just confirm
+- Phone number is optional; if missing, you may ask politely once but proceed even if not provided
 - Proceed with booking creation using 'createBooking' tool
 
 BOOKING WORKFLOW (MUST FOLLOW IN ORDER):
@@ -177,12 +190,12 @@ Please save this booking reference for check-in. See you soon!"
 **IMPORTANT - ROOM CARD DISPLAY FORMAT:**
 When showing available rooms after using 'cekKetersediaan' tool, you MUST include the room data in this EXACT JSON format at the END of your response:
 
-ROOM_CARDS_JSON:{\"rooms\":[{\"id\":\"room-id\",\"number\":\"101\",\"type\":\"Deluxe Room\",\"base_price\":250000}]}
+ROOM_CARDS_JSON:{\"rooms\":[{\"id\":\"room-id\",\"number\":\"101\",\"type\":\"Deluxe Room\",\"base_price\":250000,\"image_url\":\"https://...\",\"images\":[\"https://...\"],\"amenities\":[\"WiFi\",\"AC\"],\"max_occupancy\":2,\"room_size\":32,\"bed_configuration\":\"King\",\"description\":null}]}
 
 Example full response:
 "Tentu, dengan senang hati saya akan membantu Anda. Untuk besok, tanggal 2 Desember 2025, hingga tanggal 3 Desember 2025, kami memiliki beberapa pilihan kamar yang tersedia:
 
-ROOM_CARDS_JSON:{\"rooms\":[{\"id\":\"abc-123\",\"number\":\"101\",\"type\":\"Kamar Standard\",\"base_price\":200000},{\"id\":\"def-456\",\"number\":\"103\",\"type\":\"Kamar Deluxe\",\"base_price\":250000}]}
+ROOM_CARDS_JSON:{\"rooms\":[{\"id\":\"abc-123\",\"number\":\"101\",\"type\":\"Kamar Standard\",\"base_price\":200000,\"image_url\":null,\"images\":[],\"amenities\":[\"WiFi\"],\"max_occupancy\":2,\"room_size\":null,\"bed_configuration\":null,\"description\":null},{\"id\":\"def-456\",\"number\":\"103\",\"type\":\"Kamar Deluxe\",\"base_price\":250000,\"image_url\":\"https://example.com/deluxe.jpg\",\"images\":[\"https://example.com/deluxe.jpg\"],\"amenities\":[\"WiFi\",\"AC\",\"TV\",\"Breakfast\"],\"max_occupancy\":2,\"room_size\":32,\"bed_configuration\":\"King\",\"description\":\"Spacious room with city view\"}]}
 
 Silakan pilih kamar yang Anda inginkan dengan mengklik tombol \"Book This Room\" pada card."
 
@@ -190,9 +203,10 @@ Rules for ROOM_CARDS_JSON:
 - MUST be placed at the very END of your message
 - MUST start with exactly "ROOM_CARDS_JSON:" (no spaces before)
 - MUST be valid JSON with "rooms" array
-- Each room MUST have: id, number, type, base_price
-- Use the EXACT data from 'cekKetersediaan' tool response
-- This allows the widget to render interactive room cards
+- Each room MUST include ALL fields from 'cekKetersediaan' tool result: id, number, type, base_price, image_url, images, amenities, max_occupancy, room_size, bed_configuration, description
+- For missing fields, use null or empty array — DO NOT omit fields
+- Use the EXACT data from 'cekKetersediaan' tool response (do not invent images or amenities)
+- This allows the widget to render rich room cards with photos and details
 
 Today's date is ${new Date().toLocaleDateString('id-ID', {
       weekday: 'long',
@@ -253,7 +267,7 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
 
           let query = supabase
             .from('rooms')
-            .select('id, number, type, base_price')
+            .select('id, number, type, base_price, image_url')
             .eq('status', 'available');
 
           if (busyRoomIds.length > 0) {
@@ -273,9 +287,39 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
             };
           }
 
+          // Enrich with custom_room_types metadata, joined by name (no FK exists)
+          const uniqueTypes = Array.from(new Set(availableRooms.map((r) => r.type)));
+          const { data: typeMeta } = await supabase
+            .from('custom_room_types')
+            .select('name, images, amenities, max_occupancy, room_size, bed_configuration, description')
+            .in('name', uniqueTypes);
+
+          const metaByName = new Map(
+            (typeMeta || []).map((t: Record<string, unknown>) => [t.name as string, t]),
+          );
+
+          const enrichedRooms = availableRooms.map((r) => {
+            const ct = (metaByName.get(r.type) ?? {}) as Record<string, unknown>;
+            const typeImages = Array.isArray(ct.images) ? (ct.images as string[]) : [];
+            const allImages = [r.image_url, ...typeImages].filter(Boolean) as string[];
+            return {
+              id: r.id,
+              number: r.number,
+              type: r.type,
+              base_price: r.base_price,
+              image_url: r.image_url || typeImages[0] || null,
+              images: Array.from(new Set(allImages)),
+              amenities: Array.isArray(ct.amenities) ? ct.amenities : [],
+              max_occupancy: ct.max_occupancy ?? null,
+              room_size: ct.room_size ?? null,
+              bed_configuration: ct.bed_configuration ?? null,
+              description: ct.description ?? null,
+            };
+          });
+
           return {
             status: 'available',
-            rooms: availableRooms
+            rooms: enrichedRooms
           };
         },
       }),

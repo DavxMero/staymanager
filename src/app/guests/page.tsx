@@ -956,7 +956,9 @@ export default function GuestsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">No. Telepon</Label>
+                <Label htmlFor="phone">
+                  No. Telepon <span className="text-red-500">*</span>
+                </Label>
                 <div className="relative">
                   <PhoneInput
                     id="phone"
@@ -965,9 +967,15 @@ export default function GuestsPage() {
                     placeholder="812-3456-7890"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Kontak utama untuk konfirmasi reservasi & komunikasi.
+                </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="idNumber">No. Identitas (KTP/Paspor) <span className="text-red-500">*</span></Label>
+                <Label htmlFor="idNumber" className="text-muted-foreground">
+                  No. Identitas (KTP/Paspor)
+                  <span className="ml-2 text-xs font-normal">— opsional</span>
+                </Label>
                 <div className="relative">
                   <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -975,10 +983,12 @@ export default function GuestsPage() {
                     className="pl-10"
                     value={idNumber}
                     onChange={(e) => setIdNumber(e.target.value)}
-                    placeholder="Masukkan NIK KTP atau Nomor Paspor"
-                    required
+                    placeholder="Diisi saat tamu check-in (NIK / No. Paspor)"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Hanya wajib saat proses check-in di front desk untuk verifikasi identitas.
+                </p>
               </div>
             </div>
           )}

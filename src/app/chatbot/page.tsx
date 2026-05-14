@@ -10,6 +10,7 @@ import { MarkdownMessage } from '@/components/chatbot/MarkdownMessage';
 import { InteractiveBookingCard } from '@/components/chatbot/InteractiveBookingCard';
 import { DateSelectionCard } from '@/components/chatbot/DateSelectionCard';
 import { PaymentOptionsCard } from '@/components/chatbot/PaymentOptionsCard';
+import { LoginPromptCard } from '@/components/chatbot/LoginPromptCard';
 
 import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
@@ -54,6 +55,16 @@ export default function ChatbotPage() {
     api: '/api/chat',
     maxSteps: 5,
     initialMessages: initialMessages.length > 0 ? initialMessages : undefined,
+    body: {
+      userContext: user
+        ? {
+            isLoggedIn: true,
+            fullName: (user.user_metadata?.full_name as string | undefined) || '',
+            email: user.email || '',
+            phone: (user.user_metadata?.phone as string | undefined) || '',
+          }
+        : { isLoggedIn: false },
+    },
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -408,6 +419,7 @@ Phone: ${info.guestPhone}`
 
     cleanContent = cleanContent.replace(/UPDATE_TRACKER_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/SHOW_GUEST_FORM_JSON:\s*\{[\s\S]*?\}/g, '');
+    cleanContent = cleanContent.replace(/SHOW_LOGIN_PROMPT_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/SHOW_DATE_SELECTOR_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/SHOW_PAYMENT_OPTIONS_JSON:\s*\{[\s\S]*?\}/g, '');
 
@@ -668,9 +680,20 @@ Phone: ${info.guestPhone}`
           <AnimatePresence>
             {messages.map((m, index) => {
               const rooms = m.role === 'assistant' ? parseRoomsFromMessage(m.content) : null;
-              const guestForm = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_GUEST_FORM_JSON') : null;
+              const rawGuestForm = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_GUEST_FORM_JSON') : null;
               const dateSelector = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_DATE_SELECTOR_JSON') : null;
               const paymentOptions = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_PAYMENT_OPTIONS_JSON') : null;
+              const loginPrompt = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_LOGIN_PROMPT_JSON') : null;
+
+              // Auto-fill guest form dari user profile kalau sudah login
+              const guestForm = rawGuestForm
+                ? {
+                    ...rawGuestForm,
+                    guestName: rawGuestForm.guestName || (user?.user_metadata?.full_name as string | undefined) || '',
+                    guestEmail: rawGuestForm.guestEmail || user?.email || '',
+                    guestPhone: rawGuestForm.guestPhone || (user?.user_metadata?.phone as string | undefined) || '',
+                  }
+                : null;
 
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
               const cleanedContent = cleanMessageContent(m.content);
@@ -786,6 +809,12 @@ Phone: ${info.guestPhone}`
                           totalAmount={paymentOptions.totalAmount}
                           onPaymentSelect={handlePaymentSelect}
                         />
+                      </div>
+                    )}
+
+                    {loginPrompt && !user && (
+                      <div className="mt-4 max-w-md">
+                        <LoginPromptCard reason={loginPrompt.reason || 'membuat reservasi'} />
                       </div>
                     )}
                   </div>
