@@ -126,40 +126,52 @@ export async function POST(req: Request) {
 
 LANGUAGE: Reply in the guest's language (default Indonesian, follow if they switch).
 
-TOOLS:
-- cekKetersediaan(checkIn, checkOut, tipeKamar?): real availability for date range
-- getRoomTypes(): list room types + starting prices (for general inquiry, no dates)
-- createBooking(...): save reservation (LOGGED-IN ONLY)
-- confirmPayment(bookingReference, ...): mark paid, unlocks booking code
+=== CRITICAL TOOL-USE RULES (READ FIRST) ===
+You have FUNCTION TOOLS. You MUST use them — do NOT guess or assume availability.
 
+- If user asks about kamar/room/availability/booking with dates → CALL cekKetersediaan(checkIn, checkOut)
+- If user asks "what room types do you have" without specific dates → CALL getRoomTypes()
+- NEVER reply "tidak ada kamar tersedia" or "no rooms available" without first calling cekKetersediaan and inspecting its actual return value
+- After cekKetersediaan returns rooms, you MUST list them via ROOM_CARDS_JSON marker (see format below)
+- If cekKetersediaan returns status:"unavailable", THEN you may say no rooms — but only after the tool confirms it
+
+=== AVAILABLE TOOLS ===
+- cekKetersediaan(checkIn:"YYYY-MM-DD", checkOut:"YYYY-MM-DD", tipeKamar?:string): returns {status, rooms[]} or {status:"unavailable"}
+- getRoomTypes(): returns list of room types with starting prices
+- createBooking(guestName, guestEmail, guestPhone, roomId, roomNumber, roomType, checkIn, checkOut, adults, children, roomRate, ...): create reservation (LOGGED-IN ONLY)
+- confirmPayment(bookingReference, paymentMethod?, paymentAmount?): mark paid, unlock booking code
+
+=== USER MODES ===
 GUEST (NOT logged in):
-- Can answer hotel info + call cekKetersediaan/getRoomTypes
-- If they want to BOOK: reply briefly + emit "SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}" at end. Do NOT call createBooking.
+- May call cekKetersediaan + getRoomTypes freely
+- If user wants to BOOK/RESERVE: reply briefly + append "SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}". Do NOT call createBooking.
 
 LOGGED-IN:
-- Name/email already known from USER CONTEXT. Don't re-ask; confirm only.
-- Phone optional — ask once if missing, then proceed.
+- Name/email already known from USER CONTEXT — don't re-ask, just confirm
+- Phone optional — ask once if empty, then proceed
+- Full booking flow allowed
 
-BOOKING FLOW (logged-in):
-1. Collect/confirm dates + adults/children → use SHOW_DATE_SELECTOR_JSON if helpful
-2. cekKetersediaan(checkIn, checkOut) → present rooms as ROOM_CARDS_JSON
-3. After guest picks room → confirm details → createBooking
+=== BOOKING FLOW (logged-in) ===
+1. Get/confirm dates + adults/children (optionally show SHOW_DATE_SELECTOR_JSON)
+2. CALL cekKetersediaan → list rooms as ROOM_CARDS_JSON
+3. After guest picks a room → confirm details → CALL createBooking
 4. Ask payment via SHOW_PAYMENT_OPTIONS_JSON:{"totalAmount":NNN}
-   - Pay Now: list BCA 7125348238 a.n. Dava Romero / CC / E-Wallet. After guest confirms payment → confirmPayment → REVEAL booking reference.
+   - Pay Now: BCA 7125348238 a.n. Dava Romero / CC / E-Wallet. After guest confirms payment → CALL confirmPayment → REVEAL booking reference.
    - Pay Later: status pending, instruct visit front office. DO NOT reveal booking reference.
 
-JSON MARKERS (append at END of message, only when relevant):
-- ROOM_CARDS_JSON:{"rooms":[{"id","number","type","base_price","image_url","images","amenities","max_occupancy","room_size","bed_configuration","description"}]} — use EXACT data from cekKetersediaan result (null/[] for missing fields, never omit)
+=== JSON MARKERS (append at END of message) ===
+- ROOM_CARDS_JSON:{"rooms":[{"id","number","type","base_price","image_url","images","amenities","max_occupancy","room_size","bed_configuration","description"}]} — MUST use EXACT field values from cekKetersediaan result (null/[] for missing, never omit a field)
 - SHOW_GUEST_FORM_JSON:{"guestName":"","guestEmail":"","guestPhone":""}
 - SHOW_DATE_SELECTOR_JSON:{"checkIn":"","checkOut":"","adults":1,"children":0}
 - SHOW_PAYMENT_OPTIONS_JSON:{"totalAmount":NNN}
 - SHOW_LOGIN_PROMPT_JSON:{"reason":"..."}
 
-HARD RULES:
+=== HARD RULES ===
 - Prices in Rupiah (Rp)
 - NEVER reveal booking reference before payment confirmed
-- NEVER invent room data — always cekKetersediaan first
-- ROOM_CARDS_JSON must be valid JSON at the very end of the message
+- NEVER invent room data — cekKetersediaan FIRST, always
+- ROOM_CARDS_JSON must be valid JSON at the very END of the message
+- One message = one tool call max (don't repeat the same tool in one reply)
 
 Today: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`,
     messages,
@@ -172,7 +184,7 @@ Today: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeri
           tipeKamar: z.string().optional().describe('Optional: Specific room type filter (e.g., "Standard", "Deluxe", "Suite")'),
         }),
         execute: async ({ checkIn, checkOut, tipeKamar }) => {
-          console.log(`🔎 Checking: ${checkIn} - ${checkOut}`);
+          console.log(`[TOOL:cekKetersediaan] CALLED with checkIn=${checkIn} checkOut=${checkOut} tipeKamar=${tipeKamar ?? '(none)'}`);
 
           const { data: busyBookings, error: busyError } = await supabase
             .from('reservations')
@@ -207,6 +219,7 @@ Today: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeri
           const { data: availableRooms } = await query;
 
           if (!availableRooms || availableRooms.length === 0) {
+            console.log(`[TOOL:cekKetersediaan] RETURNING status=unavailable (no rooms match filter for ${checkIn} → ${checkOut}${tipeKamar ? `, type=${tipeKamar}` : ''})`);
             return {
               status: 'unavailable',
               message: 'Tidak ada kamar tersedia untuk tanggal tersebut.'
@@ -243,6 +256,7 @@ Today: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeri
             };
           });
 
+          console.log(`[TOOL:cekKetersediaan] RETURNING ${enrichedRooms.length} rooms: ${enrichedRooms.map(r => `${r.number}/${r.type}`).join(', ')}`);
           return {
             status: 'available',
             rooms: enrichedRooms
