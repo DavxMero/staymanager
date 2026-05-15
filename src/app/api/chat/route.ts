@@ -1,29 +1,66 @@
-import { google } from '@ai-sdk/google';
-import { groq } from '@ai-sdk/groq';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGroq } from '@ai-sdk/groq';
 import { streamText, tool, type LanguageModelV1 } from 'ai';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
-// Pilih provider sesuai modelId — return configError kalau env var provider-nya tidak ada
+// Parse comma-separated API keys dari env var → bisa pakai banyak key untuk multiply rate limit
+// Contoh: GOOGLE_GENERATIVE_AI_API_KEY="key1,key2,key3" → effective 3×20 = 60 req/min
+function parseKeys(envValue: string | undefined): string[] {
+  if (!envValue) return [];
+  return envValue.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+// Round-robin counter (module-level state, persistent across requests dalam 1 Vercel function instance)
+let geminiCounter = 0;
+let groqCounter = 0;
+
+function pickKey(keys: string[], counter: 'gemini' | 'groq'): string | null {
+  if (keys.length === 0) return null;
+  if (counter === 'gemini') {
+    const key = keys[geminiCounter % keys.length];
+    geminiCounter++;
+    return key;
+  } else {
+    const key = keys[groqCounter % keys.length];
+    groqCounter++;
+    return key;
+  }
+}
+
+// Pilih provider sesuai modelId — return configError kalau env var provider-nya tidak ada.
+// Support multi-key round-robin: set GOOGLE_GENERATIVE_AI_API_KEY="key1,key2" untuk 2x rate limit.
 function resolveModel(modelId: string): { model: LanguageModelV1; configError: string | null } | null {
   switch (modelId) {
-    case 'gemini-2.5-flash':
-      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    case 'gemini-2.5-flash': {
+      const keys = parseKeys(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+      const key = pickKey(keys, 'gemini');
+      if (!key) {
         return { model: null as any, configError: 'GOOGLE_GENERATIVE_AI_API_KEY tidak terpasang di environment' };
       }
+      const google = createGoogleGenerativeAI({ apiKey: key });
       return { model: google('gemini-2.5-flash') as unknown as LanguageModelV1, configError: null };
-    case 'llama-3.1-8b-instant':
-      if (!process.env.GROQ_API_KEY) {
+    }
+    case 'llama-3.1-8b-instant': {
+      const keys = parseKeys(process.env.GROQ_API_KEY);
+      const key = pickKey(keys, 'groq');
+      if (!key) {
         return { model: null as any, configError: 'GROQ_API_KEY tidak terpasang di environment' };
       }
+      const groq = createGroq({ apiKey: key });
       return { model: groq('llama-3.1-8b-instant') as unknown as LanguageModelV1, configError: null };
+    }
     case 'llama-3.3-70b-versatile':
-    default:
+    default: {
       // Default: Groq Llama 3.3 70B (gratis, lebih cepat dari Gemini, rate-limit lebih tinggi)
-      if (!process.env.GROQ_API_KEY) {
+      const keys = parseKeys(process.env.GROQ_API_KEY);
+      const key = pickKey(keys, 'groq');
+      if (!key) {
         return { model: null as any, configError: 'GROQ_API_KEY tidak terpasang di environment' };
       }
+      const groq = createGroq({ apiKey: key });
       return { model: groq('llama-3.3-70b-versatile') as unknown as LanguageModelV1, configError: null };
+    }
   }
 }
 
