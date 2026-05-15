@@ -1,17 +1,70 @@
 import { google } from '@ai-sdk/google';
-import { streamText, tool } from 'ai';
+import { groq } from '@ai-sdk/groq';
+import { streamText, tool, type LanguageModelV1 } from 'ai';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
+
+// Pilih provider sesuai modelId — return configError kalau env var provider-nya tidak ada
+function resolveModel(modelId: string): { model: LanguageModelV1; configError: string | null } | null {
+  switch (modelId) {
+    case 'gemini-2.5-flash':
+      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        return { model: null as any, configError: 'GOOGLE_GENERATIVE_AI_API_KEY tidak terpasang di environment' };
+      }
+      return { model: google('gemini-2.5-flash') as unknown as LanguageModelV1, configError: null };
+    case 'llama-3.1-8b-instant':
+      if (!process.env.GROQ_API_KEY) {
+        return { model: null as any, configError: 'GROQ_API_KEY tidak terpasang di environment' };
+      }
+      return { model: groq('llama-3.1-8b-instant') as unknown as LanguageModelV1, configError: null };
+    case 'llama-3.3-70b-versatile':
+    default:
+      // Default: Groq Llama 3.3 70B (gratis, lebih cepat dari Gemini, rate-limit lebih tinggi)
+      if (!process.env.GROQ_API_KEY) {
+        return { model: null as any, configError: 'GROQ_API_KEY tidak terpasang di environment' };
+      }
+      return { model: groq('llama-3.3-70b-versatile') as unknown as LanguageModelV1, configError: null };
+  }
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const { messages, userContext } = await req.json();
+  let messages, userContext, modelId: string;
+  try {
+    const body = await req.json();
+    messages = body.messages;
+    userContext = body.userContext;
+    modelId = body.model || 'llama-3.3-70b-versatile';
+  } catch (parseErr) {
+    console.error('[/api/chat] Failed to parse request body:', parseErr);
+    return new Response(
+      JSON.stringify({ error: 'Invalid request body. Mohon kirim JSON valid.' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const resolved = resolveModel(modelId);
+  if (!resolved || resolved.configError) {
+    const errMsg = resolved?.configError || `Model "${modelId}" tidak didukung.`;
+    console.error('[/api/chat]', errMsg);
+    return new Response(
+      JSON.stringify({ error: `Konfigurasi server tidak lengkap: ${errMsg}` }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'Tidak ada pesan untuk diproses.' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 
   const userContextSection = userContext?.isLoggedIn
     ? `\n\nUSER CONTEXT (this conversation):
@@ -24,8 +77,13 @@ export async function POST(req: Request) {
 - Login status: NOT LOGGED IN (anonymous browsing)
 - Action: For any booking request, emit SHOW_LOGIN_PROMPT_JSON marker (see GUEST BROWSING MODE rules below). Do NOT call createBooking.\n`;
 
-  const result = await streamText({
-    model: google('gemini-2.5-flash') as any,
+  let result;
+  try {
+    result = await streamText({
+    model: resolved.model,
+    // Hindari retry otomatis pada 429 — Gemini free tier 20 req/min, retry justru menghabiskan quota tanpa hasil
+    // dan bikin error "Failed after 3 attempts". Biarkan user retry manual via countdown di UI.
+    maxRetries: 0,
 
     system: `You are a professional hotel concierge at StayManager Hotel, a premium hospitality establishment.${userContextSection}
 
@@ -595,8 +653,33 @@ SHOW_GUEST_FORM_JSON:{\"guestName\":\"\",\"guestEmail\":\"\",\"guestPhone\":\"\"
         },
       }),
     },
-    maxSteps: 5,
+    // Turunkan dari 5 → 3 untuk hemat quota Gemini free tier: 1 user message bisa = up to N tool round-trip.
+    // 3 cukup untuk pola umum: (1) detect intent → (2) call cekKetersediaan/createBooking → (3) compose reply.
+    maxSteps: 3,
   });
+  } catch (initErr) {
+    console.error('[/api/chat] streamText init failed:', initErr);
+    const message = initErr instanceof Error ? initErr.message : 'Unknown init error';
+    return new Response(
+      JSON.stringify({ error: `Inisialisasi LLM gagal: ${message}` }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 
-  return result.toDataStreamResponse();
+  try {
+    return result.toDataStreamResponse({
+      getErrorMessage: (error) => {
+        console.error('[/api/chat] streaming error:', error);
+        const message = error instanceof Error ? error.message : String(error);
+        return `Streaming gagal: ${message}`;
+      },
+    });
+  } catch (streamErr) {
+    console.error('[/api/chat] toDataStreamResponse fatal:', streamErr);
+    const message = streamErr instanceof Error ? streamErr.message : 'Unknown streaming error';
+    return new Response(
+      JSON.stringify({ error: `Streaming gagal: ${message}` }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 }

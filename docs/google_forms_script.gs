@@ -5,18 +5,30 @@
  *   - Branching → 1 dari 3 instrumen (Staf Hotel / System Evaluator / Tamu Umum)
  *   - Konvergen ke SUS (semua responden isi)
  *
- * ============ CARA PAKAI (TIDAK PERLU EDIT APAPUN) ============
+ * ============ CARA PAKAI — DUA MODE ============
+ *
+ * 🆕 MODE A: BUAT FORM BARU (default — kalau belum punya form)
+ * ────────────────────────────────────────────────────────────
  * 1. Buka https://script.google.com/ → New project
  * 2. Hapus isi default Code.gs, paste seluruh isi file ini
  * 3. Save (Ctrl+S), beri nama "StayManager Kuesioner Skripsi"
- * 4. Pilih function "createStayManagerForm" di dropdown → klik Run
- * 5. Authorize akses Google Forms (Review permissions → akun Anda → Advanced → Go to project → Allow)
- * 6. Tunggu ~30-60 detik, buka View → Logs (Ctrl+Enter)
- * 7. Salin Edit URL + Respond URL dari log
- * 8. Buka Edit URL → tombol Send → copy Respond URL → broadcast ke responden
+ * 4. PASTIKAN konstanta EXISTING_FORM_ID di bawah masih kosong ('')
+ * 5. Pilih function "createStayManagerForm" di dropdown → klik Run
+ * 6. Authorize akses Google Forms
+ * 7. View → Logs → salin Edit URL + Respond URL
  *
- * ============ DELETE FORM LAMA (jika pernah run script v1-v4) ============
- * - https://drive.google.com/drive/recent → cari form lama → klik kanan → Move to trash
+ * 🔄 MODE B: REVISI FORM YANG SUDAH ADA (kalau sudah pernah bikin form)
+ * ──────────────────────────────────────────────────────────────────
+ * 1. Buka form Anda yang lama di Drive, salin Form ID dari URL.
+ *    Contoh URL: https://docs.google.com/forms/d/1abc...xyz/edit
+ *                                            └── Form ID ─┘
+ * 2. Paste Form ID di konstanta EXISTING_FORM_ID di bawah.
+ * 3. Pilih function "createStayManagerForm" → Run
+ * 4. Script akan:
+ *    • HAPUS semua pertanyaan lama
+ *    • BUAT ULANG dengan versi terbaru (login flow, dll)
+ *    • URL form TIDAK BERUBAH — link yang sudah Anda share tetap valid
+ * 5. Reset EXISTING_FORM_ID ke '' kalau nanti mau bikin form baru lagi.
  */
 
 // ============================================================================
@@ -51,8 +63,39 @@ const RESEARCH_TITLE_EN =
 
 const DEMO_URL = 'https://staymanager.vercel.app';
 const DEMO_CHATBOT_URL = DEMO_URL + '/chatbot';
-const DEMO_LOGIN_INFO =
-    'Akun demo:\nEmail: demo.guest@hotel-asni.com\nKata sandi: DemoGuest2026!';
+
+// Akun demo untuk Staf Hotel / System Evaluator — akses modul-modul staf hotel
+// (Dashboard, Kamar, Tamu, Reservasi, Keuangan, dst)
+const DEMO_STAFF_LOGIN =
+    'AKUN DEMO STAF (untuk eksplorasi modul hotel):\n' +
+    '  Email: demo.manager@hotel-asni.com\n' +
+    '  Kata sandi: DemoManager2026!\n' +
+    '  Peran: Manager (akses 8 modul utama)';
+
+// Akun demo untuk Tamu — akses chatbot + reservasi
+const DEMO_GUEST_LOGIN =
+    'AKUN DEMO TAMU (untuk eksperimen reservasi chatbot):\n' +
+    '  Email: demo.guest@hotel-asni.com\n' +
+    '  Kata sandi: DemoGuest2026!\n' +
+    '  Peran: Guest';
+
+// ============================================================================
+// MODE: BUAT BARU atau REVISI FORM YANG SUDAH ADA?
+// ============================================================================
+//
+// Kalau kosong ('') → script akan BIKIN FORM BARU
+// Kalau diisi ID form → script akan REVISI form existing (tanpa hapus URL/response)
+//
+// Cara dapat Form ID:
+//   1. Buka form yang sudah Anda buat sebelumnya di Drive
+//   2. Lihat URL: https://docs.google.com/forms/d/[FORM_ID_DI_SINI]/edit
+//   3. Salin bagian setelah /d/ (sebelum /edit) — itulah Form ID-nya
+//
+// Contoh URL form Anda yang lama:
+//   https://docs.google.com/forms/d/1wfO7pOEqk1FBJdbjYc91TGW9nkQgXjTmpRlQi3ky1qs/edit
+//   → Form ID = '1wfO7pOEqk1FBJdbjYc91TGW9nkQgXjTmpRlQi3ky1qs'
+//
+const EXISTING_FORM_ID = '';
 
 // ============================================================================
 // MASTER FUNCTION — run this
@@ -61,7 +104,32 @@ const DEMO_LOGIN_INFO =
 function createStayManagerForm() {
     Logger.log('=== Kuesioner Penelitian Skripsi — StayManager ===\n');
 
-    const form = FormApp.create('Kuesioner Penelitian Skripsi — Evaluasi StayManager');
+    let form;
+    if (EXISTING_FORM_ID) {
+        Logger.log('🔄 Mode REVISI — membuka form yang sudah ada...');
+        try {
+            form = FormApp.openById(EXISTING_FORM_ID);
+        } catch (e) {
+            Logger.log('❌ Form ID tidak valid atau tidak bisa diakses: ' + e.message);
+            Logger.log('   Pastikan Form ID benar dan akun Anda punya akses edit.');
+            return;
+        }
+        Logger.log('   Form ditemukan: "' + form.getTitle() + '"');
+
+        const oldItems = form.getItems();
+        Logger.log('   Menghapus ' + oldItems.length + ' item lama (akan diganti dengan versi baru)...');
+        // Delete dari belakang ke depan supaya index tidak shift
+        for (let i = oldItems.length - 1; i >= 0; i--) {
+            form.deleteItem(oldItems[i]);
+        }
+
+        // Reset title (in case judulnya pernah berbeda)
+        form.setTitle('Kuesioner Penelitian Skripsi — Evaluasi StayManager');
+        Logger.log('   ✓ Item lama berhasil dihapus. Lanjut membangun ulang...\n');
+    } else {
+        Logger.log('🆕 Mode BUAT BARU — membuat form baru di Drive...\n');
+        form = FormApp.create('Kuesioner Penelitian Skripsi — Evaluasi StayManager');
+    }
     form.setDescription(
         '═══════════════════════════════════════════════════════════════\n' +
         'KUESIONER PENELITIAN SKRIPSI\n' +
@@ -290,10 +358,14 @@ function createStayManagerForm() {
     form.addPageBreakItem()
         .setTitle('INSTRUMEN A — Bagian 3 dari 7: Evaluasi Antarmuka Sistem StayManager')
         .setHelpText(
-            'Sebelum menjawab, mohon Bapak/Ibu/Saudara/i mengakses dan mengeksplorasi demo ' +
-            'StayManager (minimal 10-15 menit) di alamat berikut:\n' +
-            DEMO_URL + '\n\n' +
-            'Setelah eksplorasi, mohon berikan penilaian pada skala Likert 5-poin di bawah.\n' +
+            'PETUNJUK EKSPLORASI:\n\n' +
+            '1. Buka alamat demo: ' + DEMO_URL + '\n' +
+            '2. Login menggunakan akun demo berikut:\n\n' +
+            '   ' + DEMO_STAFF_LOGIN.split('\n').join('\n   ') + '\n\n' +
+            '3. Eksplorasi minimal 10-15 menit, coba semua modul utama:\n' +
+            '   Dashboard, Manajemen Kamar, Tamu, Reservasi (Occupancy), Keuangan,\n' +
+            '   Billing, Laporan, dan Pengaturan.\n' +
+            '4. Setelah eksplorasi, mohon berikan penilaian pada skala Likert 5-poin di bawah.\n\n' +
             'Keterangan skala: 1 = Sangat Tidak Setuju, 2 = Tidak Setuju, 3 = Netral, ' +
             '4 = Setuju, 5 = Sangat Setuju.'
         );
@@ -419,13 +491,18 @@ function createStayManagerForm() {
         .setTitle('INSTRUMEN B — Bagian 2 dari 6: Eksperimen Eksplorasi Sistem')
         .setHelpText(
             'PETUNJUK PELAKSANAAN EKSPERIMEN:\n\n' +
-            '1. Buka tautan demo sistem: ' + DEMO_URL + '\n' +
-            '2. Login menggunakan kredensial berikut:\n   ' + DEMO_LOGIN_INFO + '\n' +
+            '1. Buka tautan demo sistem: ' + DEMO_URL + '\n\n' +
+            '2. Login menggunakan akun demo MANAGER untuk dapat mengakses\n' +
+            '   seluruh modul staf hotel:\n\n' +
+            '   ' + DEMO_STAFF_LOGIN.split('\n').join('\n   ') + '\n\n' +
             '3. Eksplorasi sistem MINIMAL 10-15 menit, coba semua modul utama:\n' +
-            '   Dashboard, Manajemen Kamar, Manajemen Tamu, Reservasi, Keuangan, Chatbot.\n' +
-            '4. Jangan ragu untuk mengklik berbagai tombol — sistem ini sandbox demo, tidak ada ' +
-            'konsekuensi data nyata.\n' +
-            '5. Setelah eksplorasi, lanjutkan menjawab pertanyaan-pertanyaan berikut.'
+            '   Dashboard, Manajemen Kamar, Manajemen Tamu, Reservasi (Occupancy),\n' +
+            '   Keuangan, Billing, Laporan, Pengaturan.\n\n' +
+            '4. Jangan ragu untuk mengklik berbagai tombol — sistem ini sandbox demo,\n' +
+            '   tidak ada konsekuensi data nyata.\n\n' +
+            '5. TETAP LOGIN sebagai manager — Anda akan menggunakan akun yang sama\n' +
+            '   pada Bagian 5 (Evaluasi Chatbot) untuk testing reservasi.\n\n' +
+            '6. Setelah selesai eksplorasi, lanjutkan menjawab pertanyaan-pertanyaan berikut.'
         );
 
     form.addTextItem()
@@ -482,9 +559,24 @@ function createStayManagerForm() {
     form.addPageBreakItem()
         .setTitle('INSTRUMEN B — Bagian 5 dari 6: Evaluasi Chatbot AI (Berperan sebagai Tamu)')
         .setHelpText(
-            'Mohon Anda berperan sebagai tamu hotel yang ingin memesan kamar. Buka tautan chatbot ' +
-            'di ' + DEMO_CHATBOT_URL + ' dan lakukan interaksi sebagai berikut: tanya ketersediaan ' +
-            'kamar, lihat tipe kamar yang tersedia, lanjutkan hingga tahap reservasi.'
+            'PETUNJUK PELAKSANAAN:\n\n' +
+            '1. TETAP LOGIN menggunakan akun manager dari Bagian 2 — tidak perlu logout.\n' +
+            '   Akun manager sudah terautentikasi, sehingga fitur reservasi chatbot dapat\n' +
+            '   diakses tanpa hambatan tambahan.\n\n' +
+            '2. Buka tautan chatbot: ' + DEMO_CHATBOT_URL + '\n\n' +
+            '3. Berperan sebagai tamu hotel yang ingin memesan kamar. Lakukan interaksi:\n' +
+            '   a. Tanyakan ketersediaan kamar untuk tanggal apa pun\n' +
+            '      Contoh: "Ada kamar tersedia 20-22 Juli?"\n' +
+            '   b. Lihat tipe kamar yang muncul dalam kartu interaktif (buka galeri\n' +
+            '      foto, baca detail amenities)\n' +
+            '   c. Pilih salah satu kamar lalu klik "Book This Room"\n' +
+            '   d. Isi atau konfirmasi formulir reservasi (nama, email auto-fill dari\n' +
+            '      akun manager) dan lanjutkan hingga TAHAP KONFIRMASI pemesanan\n\n' +
+            '4. Berikan penilaian pada skala 1-5 untuk aspek-aspek berikut.\n\n' +
+            'CATATAN: Reservasi yang Anda buat hanyalah simulasi pengujian dengan akun demo.\n' +
+            'Tidak ada transaksi pembayaran nyata terjadi. Evaluasi pola "auth gate"\n' +
+            '(yaitu Login Prompt Card yang muncul saat pengunjung anonim mencoba memesan)\n' +
+            'akan dievaluasi oleh responden kategori Tamu/Pengguna Umum di Instrumen C.'
         );
 
     addLikertGrid(form, 'Penilaian Chatbot AI', [
@@ -492,6 +584,8 @@ function createStayManagerForm() {
         'Respons chatbot relevan dengan pertanyaan yang saya ajukan',
         'Saya dapat menyelesaikan proses pemesanan kamar tanpa kebingungan',
         'Waktu respons chatbot terasa cepat (kurang dari 3 detik per pesan)',
+        'Formulir reservasi otomatis terisi dengan data akun saya — fitur ini membantu mempercepat proses',
+        'Alur dari mengecek ketersediaan, memilih kamar, hingga konfirmasi pemesanan terasa mulus secara keseluruhan',
     ]);
 
     // ---- Eval B6: Kritik ----
@@ -580,25 +674,74 @@ function createStayManagerForm() {
     form.addPageBreakItem()
         .setTitle('INSTRUMEN C — Bagian 4 dari 7: Eksperimen Reservasi via Chatbot')
         .setHelpText(
-            'PETUNJUK PELAKSANAAN:\n\n' +
-            '1. Buka tautan chatbot StayManager: ' + DEMO_CHATBOT_URL + '\n' +
-            '2. Lakukan SIMULASI reservasi kamar untuk tanggal apa pun (tidak ada konsekuensi nyata).\n' +
-            '3. Alur yang disarankan:\n' +
-            '   a. Tanyakan ketersediaan kamar pada tanggal tertentu\n' +
-            '   b. Lihat tipe kamar yang tersedia\n' +
-            '   c. Pilih salah satu kamar\n' +
-            '   d. Lanjutkan hingga tahap konfirmasi pemesanan\n' +
-            '4. Setelah selesai, jawab pertanyaan-pertanyaan berikut secara objektif berdasarkan ' +
-            'pengalaman aktual Anda.'
+            'PETUNJUK PELAKSANAAN EKSPERIMEN (BACA SEKSAMA):\n\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            'TAHAP 1 — Cek Ketersediaan (TANPA login)\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            '1. Buka tautan chatbot: ' + DEMO_CHATBOT_URL + '\n' +
+            '2. Anda akan masuk sebagai pengunjung anonim (tanpa login).\n' +
+            '3. Tanyakan kepada chatbot ketersediaan kamar untuk tanggal apa pun,\n' +
+            '   contoh: "Ada kamar tersedia 20-22 Juli?"\n' +
+            '4. Chatbot akan menampilkan daftar kamar yang tersedia dalam bentuk\n' +
+            '   kartu interaktif. Anda dapat membuka galeri foto dan melihat detail.\n\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            'TAHAP 2 — Coba Pesan Kamar (akan muncul Login Prompt)\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            '5. Klik tombol "Book This Room" pada salah satu kartu kamar, ATAU\n' +
+            '   ketik di chatbot: "Saya mau pesan kamar ini".\n' +
+            '6. PERHATIAN: chatbot akan menampilkan LOGIN PROMPT CARD karena\n' +
+            '   pemesanan hanya bisa dilakukan oleh tamu terdaftar. INI BAGIAN\n' +
+            '   PENTING DARI EKSPERIMEN — mohon perhatikan dan nilai pengalaman ini.\n\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            'TAHAP 3 — Login & Selesaikan Reservasi\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            '7. Klik tombol "Login" pada Login Prompt Card.\n' +
+            '8. Gunakan akun demo tamu berikut:\n\n' +
+            '   ' + DEMO_GUEST_LOGIN.split('\n').join('\n   ') + '\n\n' +
+            '9. Setelah berhasil login, Anda akan otomatis kembali ke chatbot.\n' +
+            '10. Lanjutkan percakapan dengan chatbot — formulir reservasi akan\n' +
+            '    muncul dengan data nama/email yang sudah otomatis ter-isi dari\n' +
+            '    akun demo.\n' +
+            '11. Selesaikan hingga tahap KONFIRMASI PEMESANAN (Anda akan melihat\n' +
+            '    kode booking dan instruksi pembayaran simulasi).\n\n' +
+            '═══════════════════════════════════════════════════════════════\n' +
+            'CATATAN ETIKA:\n' +
+            '• Akun demo dibagikan untuk seluruh responden — tidak masalah ada\n' +
+            '  beberapa reservasi simulasi atas nama akun yang sama.\n' +
+            '• Tidak ada transaksi pembayaran nyata terjadi.\n' +
+            '• Setelah eksperimen selesai, jawab pertanyaan-pertanyaan berikut\n' +
+            '  secara objektif berdasarkan pengalaman aktual Anda.'
         );
 
     form.addMultipleChoiceItem()
-        .setTitle('Apakah Anda berhasil menyelesaikan simulasi pemesanan hingga tahap konfirmasi?')
-        .setChoiceValues(['Ya, berhasil dengan lancar', 'Sebagian (mengalami kendala di tahap tertentu)', 'Tidak berhasil'])
+        .setTitle('Apakah Anda berhasil menyelesaikan simulasi pemesanan hingga tahap KONFIRMASI (mendapat kode booking)?')
+        .setChoiceValues([
+            'Ya, berhasil dengan lancar',
+            'Sebagian (mengalami kendala pada tahap tertentu)',
+            'Tidak berhasil sampai konfirmasi',
+        ])
         .setRequired(true);
 
     form.addTextItem()
-        .setTitle('Estimasi durasi total proses simulasi pemesanan (dalam menit)')
+        .setTitle('Estimasi durasi total proses dari awal hingga konfirmasi (dalam menit)')
+        .setRequired(true);
+
+    form.addMultipleChoiceItem()
+        .setTitle(
+            'Saat Anda mencoba memesan kamar SEBELUM login, chatbot menampilkan ' +
+            '"Login Prompt Card" yang meminta Anda login terlebih dahulu. ' +
+            'Bagaimana penilaian Anda terhadap pendekatan ini?'
+        )
+        .setHelpText(
+            'Pertanyaan ini mengevaluasi pola desain "auth gate" — yaitu strategi sistem ' +
+            'untuk meminta otentikasi sebelum transaksi penting dilakukan.'
+        )
+        .setChoiceValues([
+            'Sangat membantu (saya jadi tahu harus login sebelum lanjut, tidak membuang waktu mengisi formulir kosong)',
+            'Cukup membantu, namun bisa lebih jelas instruksinya',
+            'Mengganggu alur — saya berharap bisa langsung pesan tanpa login',
+            'Membingungkan — saya tidak yakin harus melakukan apa',
+        ])
         .setRequired(true);
 
     form.addParagraphTextItem()
@@ -625,6 +768,14 @@ function createStayManagerForm() {
         'Proses dari menanyakan ketersediaan hingga konfirmasi pemesanan terasa mulus',
         'Saya merasa nyaman menggunakan chatbot tanpa harus berbicara dengan staf manusia',
         'Saya akan menggunakan chatbot ini lagi untuk pemesanan hotel di masa mendatang',
+    ]);
+
+    addLikertGrid(form, 'Penilaian Alur Login Saat Memesan Kamar', [
+        'Munculnya Login Prompt Card saat saya mencoba memesan kamar terasa wajar (sesuai ekspektasi)',
+        'Saya mudah memahami bahwa saya harus login untuk dapat menyelesaikan reservasi',
+        'Proses perpindahan dari chatbot ke halaman login dan kembali lagi berjalan mulus',
+        'Setelah login, formulir reservasi otomatis terisi dengan data akun saya — fitur ini membantu',
+        'Saya merasa data pribadi saya aman karena reservasi memerlukan otentikasi',
     ]);
 
     // ---- Tamu C6: Perbandingan ----
@@ -728,14 +879,21 @@ function createStayManagerForm() {
     // OUTPUT
     // ========================================================================
 
-    Logger.log('\n=== KUESIONER PENELITIAN BERHASIL DIBUAT ===\n');
+    const action = EXISTING_FORM_ID ? 'BERHASIL DIREVISI' : 'BERHASIL DIBUAT';
+    Logger.log('\n=== KUESIONER PENELITIAN ' + action + ' ===\n');
     Logger.log('📋 ' + form.getTitle());
     Logger.log('\n   Edit URL:    ' + form.getEditUrl());
     Logger.log('   Respond URL: ' + form.getPublishedUrl());
-    Logger.log('\n✅ Langkah Distribusi:');
-    Logger.log('   1. Buka Edit URL → tombol "Send" (kanan atas)');
-    Logger.log('   2. Copy "Respond URL" → broadcast via WhatsApp/Instagram/Email');
-    Logger.log('   3. Tab "Responses" → ikon Sheets → buat linked spreadsheet untuk export hasil');
+
+    if (EXISTING_FORM_ID) {
+        Logger.log('\n♻️ URL form TIDAK BERUBAH — link yang sudah Anda share masih valid.');
+        Logger.log('   Responden yang belum mengisi akan melihat versi BARU saat membuka link.');
+    } else {
+        Logger.log('\n✅ Langkah Distribusi:');
+        Logger.log('   1. Buka Edit URL → tombol "Send" (kanan atas)');
+        Logger.log('   2. Copy "Respond URL" → broadcast via WhatsApp/Instagram/Email');
+        Logger.log('   3. Tab "Responses" → ikon Sheets → buat linked spreadsheet untuk export hasil');
+    }
     Logger.log('\n📊 Analisis Data Nanti:');
     Logger.log('   - Filter responses berdasarkan kolom "Kategori responden Anda adalah:"');
     Logger.log('   - Instrumen A (Staf Hotel) → Tabel 4.13 skripsi (UAT staf)');

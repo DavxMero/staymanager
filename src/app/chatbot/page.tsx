@@ -16,15 +16,118 @@ import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LogIn, UserPlus, LayoutDashboard, History, PanelLeft } from 'lucide-react';
+import { LogIn, UserPlus, LayoutDashboard, History, PanelLeft, Sparkles, Check, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useSidebar } from '@/components/ui/sidebar';
 import { toLocalDateString } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Room {
   id: string;
   number: string;
   type: string;
   base_price: number;
+}
+
+type ParsedChatbotError = {
+  title: string;
+  description: string;
+  isKnown: boolean;
+  retrySec?: number; // hanya untuk error quota/rate-limit
+};
+
+// Map error message dari useChat → toast title + description ramah-pengguna
+function parseChatbotError(raw: string): ParsedChatbotError {
+  const msg = raw.toLowerCase();
+
+  if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('limit: 20')) {
+    // Coba ekstrak "Please retry in X.Xs"
+    const retryMatch = raw.match(/retry in ([\d.]+)s/i);
+    const retrySec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 30;
+    return {
+      title: 'Batas penggunaan AI tercapai',
+      description: `Free tier Gemini terbatas 20 request/menit. Mohon tunggu sekitar ${retrySec} detik lalu kirim ulang.`,
+      isKnown: true,
+      retrySec,
+    };
+  }
+
+  if (msg.includes('api key') || msg.includes('llm api key missing') || msg.includes('konfigurasi server')) {
+    // Coba deteksi provider mana yang missing key
+    let provider = 'AI';
+    let envVar = 'GOOGLE_GENERATIVE_AI_API_KEY';
+    if (msg.includes('groq')) {
+      provider = 'Groq (Llama)';
+      envVar = 'GROQ_API_KEY';
+    } else if (msg.includes('google') || msg.includes('gemini')) {
+      provider = 'Gemini (Google)';
+      envVar = 'GOOGLE_GENERATIVE_AI_API_KEY';
+    }
+    return {
+      title: `API key ${provider} belum diset`,
+      description: `Model yang dipilih butuh API key. Tambahkan env var ${envVar} di .env.local, atau pilih model lain dari dropdown.`,
+      isKnown: true,
+    };
+  }
+
+  if (msg.includes('failed to fetch') || msg.includes('network')) {
+    return {
+      title: 'Koneksi terputus',
+      description: 'Periksa koneksi internet Anda lalu coba kirim ulang.',
+      isKnown: true,
+    };
+  }
+
+  if (msg.includes('timeout') || msg.includes('timed out')) {
+    return {
+      title: 'Permintaan timeout',
+      description: 'AI butuh waktu lebih lama dari biasanya. Coba kirim pesan yang lebih singkat.',
+      isKnown: true,
+    };
+  }
+
+  return {
+    title: 'Chatbot bermasalah',
+    description: raw.length > 140 ? raw.slice(0, 140) + '…' : raw || 'Tidak dapat menerima balasan dari server.',
+    isKnown: false,
+  };
+}
+
+// Live countdown buat toast quota error
+function QuotaCountdown({ initialSec }: { initialSec: number }) {
+  const [secLeft, setSecLeft] = useState(initialSec);
+
+  useEffect(() => {
+    if (secLeft <= 0) return;
+    const id = setInterval(() => {
+      setSecLeft((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [secLeft]);
+
+  if (secLeft <= 0) {
+    return (
+      <span>
+        <span className="font-semibold text-green-600 dark:text-green-400">Bisa coba lagi sekarang.</span>{' '}
+        Free tier Gemini 20 request/menit.
+      </span>
+    );
+  }
+
+  return (
+    <span>
+      Free tier Gemini 20 request/menit tercapai. Coba lagi dalam{' '}
+      <span className="font-bold tabular-nums text-amber-600 dark:text-amber-400">{secLeft}</span> detik.
+    </span>
+  );
 }
 
 interface BookingData {
@@ -36,6 +139,15 @@ interface BookingData {
   guestPhone: string;
 }
 
+// Pilihan model yang ditampilkan di selector — semua gratis. Groq diprioritaskan (default).
+const MODEL_OPTIONS = [
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)', hint: 'Gratis · 30 req/menit · default & direkomendasikan', accent: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant (Groq)', hint: 'Gratis · 30 req/menit · 14.400 req/hari · paling cepat', accent: 'text-teal-600 dark:text-teal-400' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Gratis · 20 req/menit · backup', accent: 'text-blue-600 dark:text-blue-400' },
+] as const;
+
+type ModelId = typeof MODEL_OPTIONS[number]['id'];
+
 export default function ChatbotPage() {
   const [mounted, setMounted] = useState(false);
   const [showBooking, setShowBooking] = useState<BookingData | null>(null);
@@ -43,6 +155,41 @@ export default function ChatbotPage() {
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  // Model selector — persist ke localStorage supaya pilihan user bertahan antar session.
+  // Default: Llama 3.3 70B via Groq (gratis, lebih cepat dari Gemini, rate-limit lebih tinggi)
+  const [selectedModel, setSelectedModel] = useState<ModelId>('llama-3.3-70b-versatile');
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = window.localStorage.getItem('staymanager:chatbot:model') as ModelId | null;
+    if (saved && MODEL_OPTIONS.some((m) => m.id === saved)) {
+      setSelectedModel(saved);
+    }
+  }, []);
+  const updateModel = (id: ModelId) => {
+    setSelectedModel(id);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('staymanager:chatbot:model', id);
+    }
+  };
+  // Rate limit hold: disable Send selama countdown supaya user tidak nge-spam dan habisin quota
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [nowTick, setNowTick] = useState(Date.now());
+  const isRateLimited = rateLimitedUntil !== null && nowTick < rateLimitedUntil;
+  const secUntilUnlock = rateLimitedUntil ? Math.max(0, Math.ceil((rateLimitedUntil - nowTick) / 1000)) : 0;
+
+  useEffect(() => {
+    if (!rateLimitedUntil) return;
+    const id = setInterval(() => {
+      const now = Date.now();
+      setNowTick(now);
+      if (now >= rateLimitedUntil) {
+        setRateLimitedUntil(null);
+        clearInterval(id);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [rateLimitedUntil]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -56,6 +203,7 @@ export default function ChatbotPage() {
     maxSteps: 5,
     initialMessages: initialMessages.length > 0 ? initialMessages : undefined,
     body: {
+      model: selectedModel,
       userContext: user
         ? {
             isLoggedIn: true,
@@ -64,6 +212,49 @@ export default function ChatbotPage() {
             phone: (user.user_metadata?.phone as string | undefined) || '',
           }
         : { isLoggedIn: false },
+    },
+    onError: (error) => {
+      const raw = error?.message || '';
+      const parsed = parseChatbotError(raw);
+      // Pakai console.warn untuk known/handled errors → tidak trigger Next.js dev error overlay
+      if (parsed.isKnown) {
+        console.warn('[useChat onError]', parsed.title, '—', raw);
+      } else {
+        console.error('[useChat onError]', error);
+      }
+      // Quota error → tampilkan live countdown sebagai description, dan biarkan toast
+      // bertahan sampai countdown selesai + 2 detik buffer biar user lihat "bisa coba lagi"
+      const isQuota = typeof parsed.retrySec === 'number';
+      if (isQuota) {
+        // Set rate-limit hold supaya Send button auto-disabled selama countdown
+        setRateLimitedUntil(Date.now() + parsed.retrySec! * 1000);
+      }
+      const toastId = `chatbot-error-${parsed.title}`; // pakai ID stable supaya error berulang merge ke toast yang sama
+      toast.error(parsed.title, {
+        id: toastId,
+        description: isQuota
+          ? <QuotaCountdown initialSec={parsed.retrySec!} />
+          : parsed.description,
+        duration: isQuota
+          ? Math.max(8000, (parsed.retrySec! + 3) * 1000)
+          : parsed.isKnown ? 8000 : 6000,
+      });
+    },
+    onResponse: (response) => {
+      if (!response.ok) {
+        console.warn('[useChat onResponse] non-OK response:', response.status, response.statusText);
+      }
+    },
+    onFinish: (message) => {
+      const text = (message?.content || '').trim();
+      const hasTools = !!(message?.toolInvocations && message.toolInvocations.length > 0);
+      if (!text && !hasTools) {
+        console.warn('[useChat onFinish] empty assistant reply', message);
+        toast.warning('Balasan kosong', {
+          description: 'AI tidak mengirim balasan. Coba kirim ulang pesan atau periksa koneksi.',
+          duration: 6000,
+        });
+      }
     },
   });
 
@@ -103,30 +294,54 @@ export default function ChatbotPage() {
     setMounted(true);
 
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      try {
+        // Coba dapat session dulu (sync-ish dari cookie/storage, lebih cepat dari getUser yang verify ke server)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+        }
 
-      if (user) {
-        loadChatHistory(user.id);
+        // Verifikasi via getUser untuk konsistensi dengan komponen lain (sidebar dll)
+        const { data: { user: verifiedUser } } = await supabase.auth.getUser();
+        setUser(verifiedUser);
 
-        const { data: userRoles } = await supabase
-          .from('user_roles')
-          .select(`
-            role:roles(name)
-          `)
-          .eq('user_id', user.id);
+        if (verifiedUser) {
+          loadChatHistory(verifiedUser.id);
 
-        const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
-        const isGuestOnly = hasGuestRole && userRoles?.length === 1;
+          const { data: userRoles } = await supabase
+            .from('user_roles')
+            .select(`
+              role:roles(name)
+            `)
+            .eq('user_id', verifiedUser.id);
 
-        setUserRole(isGuestOnly ? 'guest' : 'staff');
+          const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
+          const isGuestOnly = hasGuestRole && userRoles?.length === 1;
+
+          setUserRole(isGuestOnly ? 'guest' : 'staff');
+        }
+      } catch (err) {
+        console.warn('[chatbot checkUser] auth fetch failed:', err);
+      } finally {
+        setAuthChecked(true);
       }
     };
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Hanya null-kan user pada SIGNED_OUT eksplisit. Event lain
+      // (INITIAL_SESSION, TOKEN_REFRESHED, USER_UPDATED) bisa fire dengan
+      // session=null sementara cache belum sync — jangan clobber state
+      // yang sudah diisi oleh checkUser()→getUser().
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setChatHistory([]);
+        setUserRole(null);
+        return;
+      }
+
       if (session?.user) {
+        setUser(session.user);
         loadChatHistory(session.user.id);
 
         const { data: userRoles } = await supabase
@@ -140,10 +355,8 @@ export default function ChatbotPage() {
         const isGuestOnly = hasGuestRole && userRoles?.length === 1;
 
         setUserRole(isGuestOnly ? 'guest' : 'staff');
-      } else {
-        setChatHistory([]);
-        setUserRole(null);
       }
+      // else: ignore — biarkan state existing dari getUser() bertahan
     });
 
     return () => subscription.unsubscribe();
@@ -534,23 +747,61 @@ Phone: ${info.guestPhone}`
               </Button>
             )}
 
-            {/* Auth Buttons */}
-            {user ? (
-              <>
-                {/* Dashboard Button - Only for non-guest users */}
-                {userRole !== 'guest' && (
-                  <Link href="/dashboard">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </Button>
-                  </Link>
-                )}
-              </>
+            {/* Model Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  title="Pilih model AI"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden md:inline">
+                    {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.label ?? 'Model'}
+                  </span>
+                  <ChevronDown className="h-3 w-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                  Pilih model AI untuk percakapan
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={selectedModel}
+                  onValueChange={(v) => updateModel(v as ModelId)}
+                >
+                  {MODEL_OPTIONS.map((m) => (
+                    <DropdownMenuRadioItem key={m.id} value={m.id} className="cursor-pointer py-2">
+                      <div className="flex-1 ml-2">
+                        <div className={`text-sm font-medium ${m.accent}`}>{m.label}</div>
+                        <div className="text-xs text-muted-foreground">{m.hint}</div>
+                      </div>
+                      {selectedModel === m.id && <Check className="h-4 w-4 opacity-80" />}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Auth Buttons — render hanya setelah auth resolved untuk hindari flash Login/Sign Up saat sudah login.
+                Saat masih loading: render nothing (bukan skeleton) supaya tidak ada kotak kosong yang mengganggu. */}
+            {!authChecked ? null : user ? (
+              /* Dashboard Button — hanya tampil saat role sudah dikonfirmasi 'staff'.
+                 Pakai kondisi positif (=== 'staff') supaya state loading (null) tidak menampilkan tombol kosong. */
+              userRole === 'staff' ? (
+                <Link href="/dashboard">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : null
             ) : (
               <>
                 <Link href="/login">
@@ -606,8 +857,8 @@ Phone: ${info.guestPhone}`
         </div>
       </header>
 
-      {/* Guest Mode Banner */}
-      {!user && (
+      {/* Guest Mode Banner — hanya tampil setelah auth resolved supaya tidak flash saat user sudah login */}
+      {authChecked && !user && (
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white px-6 py-3 shadow-md">
           <div className="max-w-6xl mx-auto flex items-center justify-center gap-3">
             <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -696,11 +947,27 @@ Phone: ${info.guestPhone}`
                 : null;
 
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
+              const hasCompletedToolInvocations = m.toolInvocations && m.toolInvocations.length > 0;
+              const hasInteractiveComponent = !!(rooms || guestForm || dateSelector || paymentOptions || loginPrompt);
               const cleanedContent = cleanMessageContent(m.content);
 
-              if (m.role === 'assistant' && !cleanedContent && !hasActiveToolInvocations) {
+              // Only skip a truly empty assistant message — keep it if there are any markers/tools/components to render
+              const isTrulyEmpty =
+                m.role === 'assistant' &&
+                !cleanedContent &&
+                !hasActiveToolInvocations &&
+                !hasCompletedToolInvocations &&
+                !hasInteractiveComponent;
+
+              if (isTrulyEmpty) {
                 return null;
               }
+
+              // Fallback text when LLM produced no readable content but did stream a tool result / marker
+              const fallbackContent =
+                m.role === 'assistant' && !cleanedContent && !hasInteractiveComponent && hasCompletedToolInvocations
+                  ? '_Lihat hasil di bawah._'
+                  : cleanedContent;
 
               return (
                 <motion.div
@@ -735,13 +1002,17 @@ Phone: ${info.guestPhone}`
                       <div className="font-inter">
                         {m.role === 'user' ? (
                           <div className="text-sm leading-relaxed font-medium">{m.content}</div>
-                        ) : (
+                        ) : fallbackContent ? (
                           <MarkdownMessage
-                            content={cleanMessageContent(m.content)}
+                            content={fallbackContent}
                             isStreaming={isLoading}
                             isLatestMessage={index === messages.length - 1}
                           />
-                        )}
+                        ) : hasInteractiveComponent ? (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                            Silakan lengkapi form di bawah ini.
+                          </div>
+                        ) : null}
                       </div>
 
                       {/* Tool Invocations */}
@@ -829,29 +1100,41 @@ Phone: ${info.guestPhone}`
 
       {/* Input Area */}
       <footer className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 p-4 md:p-6 sticky bottom-0 z-10">
+        {/* Rate-limit cooldown banner */}
+        {isRateLimited && (
+          <div className="max-w-4xl mx-auto mb-3 flex items-center justify-center gap-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+            <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>
+              Cooldown <span className="font-bold tabular-nums">{secUntilUnlock}s</span> — batas request Gemini free tier
+              tercapai, tunggu sebentar.
+            </span>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex gap-3 items-end">
             <textarea
               ref={textareaRef}
-              className="flex-1 px-5 py-4 bg-gray-50 dark:bg-[#1a1a1a] border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-gray-500 focus:border-transparent transition-all text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-400 resize-none custom-scrollbar"
+              className="flex-1 px-5 py-4 bg-gray-50 dark:bg-[#1a1a1a] border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-gray-500 focus:border-transparent transition-all text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-400 resize-none custom-scrollbar disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ minHeight: '56px', maxHeight: '200px', overflowY: 'hidden' }}
               value={input}
               onChange={handleInputChange}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  handleSubmit(e as any);
+                  if (!isRateLimited) handleSubmit(e as any);
                 }
               }}
-              placeholder="Type your message... (Shift+Enter for new line)"
-              disabled={isLoading}
+              placeholder={isRateLimited ? `Tunggu ${secUntilUnlock}s sebelum mengirim lagi...` : "Type your message... (Shift+Enter for new line)"}
+              disabled={isLoading || isRateLimited}
               rows={1}
             />
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isRateLimited ? 1 : 1.02 }}
+              whileTap={{ scale: isRateLimited ? 1 : 0.98 }}
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || isRateLimited}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-[#2a2a2a] dark:disabled:to-[#222222] disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-semibold transition-all shadow-lg disabled:shadow-none flex items-center justify-center gap-2 h-[56px] flex-shrink-0"
             >
               {isLoading ? (

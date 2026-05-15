@@ -67,7 +67,8 @@ import {
   Search,
   Star,
   RefreshCw,
-  ImageIcon
+  ImageIcon,
+  AlertTriangle
 } from "lucide-react"
 import { Room } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
@@ -127,6 +128,7 @@ export default function RoomsPage() {
   const [roomImageUrl, setRoomImageUrl] = useState<string>("")
   const [imageUploading, setImageUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null)
 
   const [customRoomTypes, setCustomRoomTypes] = useState<string[]>([])
   const [typeImagesByName, setTypeImagesByName] = useState<Record<string, string[]>>({})
@@ -708,6 +710,12 @@ export default function RoomsPage() {
         setError('Failed to delete room: ' + (err as Error).message)
       }
     }
+  }
+
+  const confirmDeleteRoom = async () => {
+    if (!roomToDelete) return
+    await handleDeleteRoom(String(roomToDelete.id))
+    setRoomToDelete(null)
   }
 
   const formatCurrency = (amount: number) => {
@@ -1511,7 +1519,7 @@ export default function RoomsPage() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteRoom(String(room.id))}
+                      onClick={() => setRoomToDelete(room)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -2099,6 +2107,66 @@ export default function RoomsPage() {
               className="flex-1 sm:flex-none"
             >
               {currentRoom ? "Update Room" : "Add Room"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Room Confirmation Dialog — double verification */}
+      <Dialog open={!!roomToDelete} onOpenChange={(open) => !open && setRoomToDelete(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+            <DialogTitle className="text-center text-xl">
+              Hapus Kamar?
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm">
+              Apakah Anda yakin ingin menghapus kamar ini? Tindakan ini tidak dapat dibatalkan dan dapat mempengaruhi data reservasi yang terkait.
+            </DialogDescription>
+          </DialogHeader>
+
+          {roomToDelete && (
+            <div className="my-2 rounded-lg border bg-muted/50 p-4">
+              <div className="grid gap-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Nomor Kamar:</span>
+                  <span className="font-semibold">{roomToDelete.number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tipe:</span>
+                  <span className="font-semibold">{roomToDelete.type}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Harga:</span>
+                  <span className="font-semibold">
+                    {formatCurrencyCompat(Number(roomToDelete.price) || Number(roomToDelete.base_price) || 0)}/malam
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className="font-semibold capitalize">{roomToDelete.status || 'available'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setRoomToDelete(null)}
+              className="flex-1"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteRoom}
+              className="flex-1"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Ya, Hapus Permanen
             </Button>
           </DialogFooter>
         </DialogContent>

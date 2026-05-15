@@ -180,20 +180,26 @@ export default function GuestsPage() {
             } : null
 
             if (currentBooking) {
-              const { data: roomData, error: roomError } = await supabase
-                .from('rooms')
-                .select('number, type')
-                .eq('id', currentBooking.room_id)
-                .single()
+              let mappedRoomData: { room_number: string; type: string } | null = null
 
-              if (roomError) {
-                console.error('Error fetching room for booking:', currentBooking.id, roomError)
+              if (currentBooking.room_id) {
+                const { data: roomData, error: roomError } = await supabase
+                  .from('rooms')
+                  .select('number, type')
+                  .eq('id', currentBooking.room_id)
+                  .single()
+
+                if (roomError) {
+                  console.error('Error fetching room for booking:', currentBooking.id, roomError)
+                }
+
+                if (roomData) {
+                  mappedRoomData = {
+                    room_number: roomData.number,
+                    type: roomData.type
+                  }
+                }
               }
-
-              const mappedRoomData = roomData ? {
-                room_number: roomData.number,
-                type: roomData.type
-              } : null
 
               const { data: paymentsData, error: paymentsError } = await supabase
                 .from('payments')
@@ -533,13 +539,20 @@ export default function GuestsPage() {
 
                         {/* Guest Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{guest.full_name}</h3>
-                            {room && (
+                            {room ? (
                               <span className="text-sm text-muted-foreground">
                                 • {room.type} • Kamar {room.room_number}
                               </span>
-                            )}
+                            ) : booking ? (
+                              <Badge
+                                variant="outline"
+                                className="border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 text-[10px] font-medium"
+                              >
+                                ⚠️ Data Kamar Tidak Lengkap
+                              </Badge>
+                            ) : null}
                           </div>
 
                           {/* Contact Info */}
@@ -751,6 +764,16 @@ export default function GuestsPage() {
                         {currentGuest.currentBooking.status === 'checked-out' ? 'Checked Out' : 'Active'}
                       </Badge>
                     </div>
+
+                    {!currentGuest.currentBooking.rooms && (
+                      <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                        <span className="leading-none">⚠️</span>
+                        <span>
+                          Data kamar tidak tercatat untuk reservasi ini (kemungkinan kamar telah dihapus
+                          atau data legacy). Field kamar di bawah akan menampilkan <code>N/A</code>.
+                        </span>
+                      </div>
+                    )}
 
                     <Separator />
 
