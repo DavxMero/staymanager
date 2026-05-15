@@ -952,19 +952,42 @@ Phone: ${info.guestPhone}`
               const paymentOptions = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_PAYMENT_OPTIONS_JSON') : null;
               const loginPrompt = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_LOGIN_PROMPT_JSON') : null;
 
+              // Fallback heuristics: kalau LLM (terutama Llama) lupa emit marker JSON tapi
+              // text-nya ngomongin form biodata / pilih tanggal, kita render card-nya tetap.
+              // Hanya aktif di message terakhir + setelah loading selesai (supaya tidak flash).
+              const isLastAssistantMsg = m.role === 'assistant' && index === messages.length - 1 && !isLoading;
+              const lc = (m.content || '').toLowerCase();
+              const fallbackGuestForm =
+                !rawGuestForm && isLastAssistantMsg && user && (
+                  /\b(nomor (telepon|hp|tlp)|phone( number)?|nomor kontak|kontak anda|nomor anda|isi (data|biodata)|lengkapi (data|biodata|profil))\b/.test(lc) ||
+                  /\b(telepon|whatsapp|wa)\b.*\b(aktif|berapa|anda|kamu)\b/.test(lc)
+                )
+                  ? { guestName: '', guestEmail: '', guestPhone: '' }
+                  : null;
+              const fallbackDateSelector =
+                !dateSelector && isLastAssistantMsg && (
+                  /\b(tanggal|check.?in|check.?out|kapan|when|pilih hari|date)\b/.test(lc) &&
+                  /\b(berapa|kapan|silakan|please|tolong|mohon)\b/.test(lc) &&
+                  !rooms // jangan tampilkan date picker kalau room cards sudah ada
+                )
+                  ? { checkIn: '', checkOut: '', adults: 1, children: 0 }
+                  : null;
+
+              const baseGuestForm = rawGuestForm || fallbackGuestForm;
               // Auto-fill guest form dari user profile kalau sudah login
-              const guestForm = rawGuestForm
+              const guestForm = baseGuestForm
                 ? {
-                    ...rawGuestForm,
-                    guestName: rawGuestForm.guestName || (user?.user_metadata?.full_name as string | undefined) || '',
-                    guestEmail: rawGuestForm.guestEmail || user?.email || '',
-                    guestPhone: rawGuestForm.guestPhone || (user?.user_metadata?.phone as string | undefined) || '',
+                    ...baseGuestForm,
+                    guestName: baseGuestForm.guestName || (user?.user_metadata?.full_name as string | undefined) || '',
+                    guestEmail: baseGuestForm.guestEmail || user?.email || '',
+                    guestPhone: baseGuestForm.guestPhone || (user?.user_metadata?.phone as string | undefined) || '',
                   }
                 : null;
+              const effectiveDateSelector = dateSelector || fallbackDateSelector;
 
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
               const hasCompletedToolInvocations = m.toolInvocations && m.toolInvocations.length > 0;
-              const hasInteractiveComponent = !!(rooms || guestForm || dateSelector || paymentOptions || loginPrompt);
+              const hasInteractiveComponent = !!(rooms || guestForm || effectiveDateSelector || paymentOptions || loginPrompt);
               const cleanedContent = cleanMessageContent(m.content);
 
               // Only skip a truly empty assistant message — keep it if there are any markers/tools/components to render
@@ -1081,10 +1104,10 @@ Phone: ${info.guestPhone}`
                       </div>
                     )}
 
-                    {dateSelector && (
+                    {effectiveDateSelector && (
                       <div className="mt-4 max-w-md">
                         <DateSelectorWrapper
-                          initialData={dateSelector}
+                          initialData={effectiveDateSelector}
                           onConfirm={handleDateUpdate}
                         />
                       </div>
