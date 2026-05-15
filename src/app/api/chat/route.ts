@@ -550,9 +550,41 @@ Today: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeri
 
   try {
     return result.toDataStreamResponse({
-      getErrorMessage: (error) => {
-        console.error('[/api/chat] streaming error:', error);
-        const message = error instanceof Error ? error.message : String(error);
+      getErrorMessage: (error: unknown) => {
+        // Log raw error untuk Vercel logs — biar kelihatan structure aslinya
+        console.error('[/api/chat] streaming error (raw):', error);
+        console.error('[/api/chat] streaming error (typeof):', typeof error);
+        if (error && typeof error === 'object') {
+          console.error('[/api/chat] streaming error (keys):', Object.keys(error as object));
+          console.error('[/api/chat] streaming error (json):', (() => {
+            try { return JSON.stringify(error, null, 2); } catch { return '<unstringifiable>'; }
+          })());
+        }
+
+        // Serialize untuk user-facing message
+        let message = 'unknown error';
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'string') {
+          message = error;
+        } else if (error && typeof error === 'object') {
+          const err = error as Record<string, unknown>;
+          // Try common error shapes from AI SDK / Groq / Gemini
+          if (typeof err.message === 'string') {
+            message = err.message;
+          } else if (typeof err.error === 'string') {
+            message = err.error;
+          } else if (err.error && typeof err.error === 'object') {
+            const nested = err.error as Record<string, unknown>;
+            if (typeof nested.message === 'string') message = nested.message;
+          } else {
+            try {
+              message = JSON.stringify(error).slice(0, 500);
+            } catch {
+              message = '[object — could not stringify]';
+            }
+          }
+        }
         return `Streaming gagal: ${message}`;
       },
     });
