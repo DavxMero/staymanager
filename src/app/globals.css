@@ -236,4 +236,16 @@
       background-color: rgb(107 114 128);
     }
   }
+
+  /* UI fit-to-screen: zoom otomatis berdasarkan lebar viewport.
+     - >=1600px: scale 1.0 (normal)
+     - 1280–1600px: scale antara 0.8 dan 1.0 proporsional (1366→0.85, 1440→0.9, dst)
+     - <1280px tablet/desktop: clamp ke 0.8 minimum
+     - <768px (mobile): zoom dibiarkan 1.0 supaya tetap responsive native
+     Pakai zoom (bukan transform: scale) supaya layout/click events tidak break. */
+  @media (min-width: 768px) {
+    html {
+      zoom: clamp(0.8, calc(100vw / 1600), 1);
+    }
+  }
 }
