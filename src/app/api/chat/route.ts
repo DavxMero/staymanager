@@ -114,6 +114,15 @@ export async function POST(req: Request) {
 - Login status: NOT LOGGED IN (anonymous browsing)
 - Action: For any booking request, emit SHOW_LOGIN_PROMPT_JSON marker (see GUEST BROWSING MODE rules below). Do NOT call createBooking.\n`;
 
+  // Detect intent dari last user message — kalau ada kata kunci availability/booking,
+  // paksa AI SDK pakai tool (workaround Llama 70B yang sering hallucinate "tidak ada kamar"
+  // tanpa benar-benar memanggil cekKetersediaan).
+  const lastUserMessage = [...messages].reverse().find((m: { role: string }) => m.role === 'user');
+  const lastText = typeof lastUserMessage?.content === 'string' ? lastUserMessage.content.toLowerCase() : '';
+  const availabilityKeywords = ['kamar', 'room', 'available', 'tersedia', 'booking', 'reservasi', 'reservation', 'check.?in', 'tanggal', 'besok', 'hari ini', 'tomorrow', 'today', 'tonight', 'malam ini', 'weekend'];
+  const isAvailabilityIntent = availabilityKeywords.some((kw) => new RegExp(kw).test(lastText));
+  console.log(`[/api/chat] lastUserMessage="${lastText.slice(0, 100)}" isAvailabilityIntent=${isAvailabilityIntent} model=${modelId}`);
+
   let result;
   try {
     result = await streamText({
@@ -121,19 +130,29 @@ export async function POST(req: Request) {
     // Hindari retry otomatis pada 429 — Gemini free tier 20 req/min, retry justru menghabiskan quota tanpa hasil
     // dan bikin error "Failed after 3 attempts". Biarkan user retry manual via countdown di UI.
     maxRetries: 0,
+    // Paksa tool-use kalau user nanya availability — workaround Llama yang sering hallucinate
+    toolChoice: isAvailabilityIntent ? 'required' : 'auto',
 
     system: `You are StayManager Hotel's AI concierge. Warm, concise, professional.${userContextSection}
 
 LANGUAGE: Reply in the guest's language (default Indonesian, follow if they switch).
 
-=== CRITICAL TOOL-USE RULES (READ FIRST) ===
-You have FUNCTION TOOLS. You MUST use them — do NOT guess or assume availability.
+=== CRITICAL TOOL-USE RULES (READ FIRST — DO NOT IGNORE) ===
+You have FUNCTION TOOLS. You MUST INVOKE them. You CANNOT see hotel data without invoking tools.
 
-- If user asks about kamar/room/availability/booking with dates → CALL cekKetersediaan(checkIn, checkOut)
-- If user asks "what room types do you have" without specific dates → CALL getRoomTypes()
-- NEVER reply "tidak ada kamar tersedia" or "no rooms available" without first calling cekKetersediaan and inspecting its actual return value
-- After cekKetersediaan returns rooms, you MUST list them via ROOM_CARDS_JSON marker (see format below)
-- If cekKetersediaan returns status:"unavailable", THEN you may say no rooms — but only after the tool confirms it
+ABSOLUTE PROHIBITION: You are FORBIDDEN from saying any of these without first calling cekKetersediaan:
+- "tidak ada kamar tersedia" / "no rooms available"
+- "maaf tidak ada kamar"
+- "sorry no rooms"
+- Any statement about availability
+
+If user mentions availability/rooms/kamar/booking/tomorrow/today/check-in → IMMEDIATELY invoke cekKetersediaan. Do NOT ask follow-up questions first. Do NOT ask for phone first. Date is the ONLY required input.
+
+Phone number is OPTIONAL — do NOT block availability check on missing phone. Check rooms first; ask phone later when actually creating booking (createBooking step).
+
+After cekKetersediaan returns rooms[], you MUST emit ROOM_CARDS_JSON marker with the rooms array at the END of your message (see format below).
+
+If user gives a relative date like "tomorrow" / "besok" / "next week", convert it to absolute YYYY-MM-DD using today's date (provided at the bottom).
 
 === AVAILABLE TOOLS ===
 - cekKetersediaan(checkIn:"YYYY-MM-DD", checkOut:"YYYY-MM-DD", tipeKamar?:string): returns {status, rooms[]} or {status:"unavailable"}
