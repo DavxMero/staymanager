@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -8,21 +8,77 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Building, Mail, Lock, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Map Supabase auth error → pesan Indonesia yang ramah ke user
+function friendlyAuthError(error: any): string {
+    const msg = String(error?.message || '').toLowerCase();
+    if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
+        return 'Email atau kata sandi yang Anda masukkan salah. Mohon periksa kembali.';
+    }
+    if (msg.includes('email not confirmed')) {
+        return 'Email Anda belum terverifikasi. Mohon cek inbox email untuk link konfirmasi.';
+    }
+    if (msg.includes('too many requests') || msg.includes('rate limit')) {
+        return 'Terlalu banyak percobaan login. Mohon tunggu beberapa menit lalu coba lagi.';
+    }
+    if (msg.includes('user not found')) {
+        return 'Akun dengan email ini tidak ditemukan. Pastikan email benar atau daftar akun baru.';
+    }
+    if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
+        return 'Koneksi gagal. Mohon periksa internet Anda dan coba lagi.';
+    }
+    return error?.message || 'Terjadi kesalahan saat login. Mohon coba lagi.';
+}
+
+// Map URL error code (?error=...) dari OAuth callback → pesan Indonesia
+function friendlyUrlError(code: string | null): string | null {
+    if (!code) return null;
+    switch (code) {
+        case 'auth_failed':
+            return 'Login Google gagal. Coba klik "Create account" untuk mendaftar dulu, atau pastikan akun Google Anda sudah terdaftar di sistem.';
+        case 'access_denied':
+            return 'Akses ditolak. Anda membatalkan proses login Google.';
+        case 'server_error':
+            return 'Server bermasalah saat memproses login. Mohon coba lagi sebentar.';
+        case 'session_expired':
+            return 'Sesi Anda telah berakhir. Mohon login kembali.';
+        default:
+            return `Login gagal (kode: ${code}). Mohon coba lagi.`;
+    }
+}
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const router = useRouter();
-    const { toast } = useToast();
     const supabase = createClient();
+
+    // Surface ?error=... dari OAuth callback redirect
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const errCode = params.get('error');
+        const msg = friendlyUrlError(errCode);
+        if (msg) {
+            setErrorMessage(msg);
+            toast.error(msg, { duration: 7000 });
+            // bersihkan query param supaya tidak muncul lagi saat refresh
+            const url = new URL(window.location.href);
+            url.searchParams.delete('error');
+            window.history.replaceState({}, '', url.pathname + (url.search || ''));
+        }
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setErrorMessage(null);
 
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -42,29 +98,18 @@ export default function LoginPage() {
 
                 const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
 
-                console.log('User roles:', userRoles);
-                console.log('Has guest role:', hasGuestRole);
-                console.log('Roles length:', userRoles?.length);
-
-                toast({
-                    title: 'Success',
-                    description: 'Logged in successfully!',
-                });
+                toast.success('Berhasil masuk! Mengarahkan...');
 
                 if (hasGuestRole && userRoles?.length === 1) {
-                    console.log('Redirecting to /chatbot');
                     window.location.href = '/chatbot';
                 } else {
-                    console.log('Redirecting to /dashboard');
                     window.location.href = '/dashboard';
                 }
             }
         } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error.message || 'Failed to login',
-                variant: 'destructive',
-            });
+            const friendlyMsg = friendlyAuthError(error);
+            setErrorMessage(friendlyMsg);
+            toast.error(friendlyMsg);
         } finally {
             setLoading(false);
         }
@@ -84,6 +129,16 @@ export default function LoginPage() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleLogin} className="space-y-4">
+                        {/* Inline Error Alert — persisten sampai user retry */}
+                        {errorMessage && (
+                            <Alert variant="destructive" className="py-2">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription className="text-xs leading-relaxed">
+                                    {errorMessage}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
                         {/* Google OAuth Button */}
                         <Button
                             type="button"
@@ -92,6 +147,7 @@ export default function LoginPage() {
                             disabled={loading}
                             onClick={async () => {
                                 setLoading(true);
+                                setErrorMessage(null);
                                 try {
                                     const { error } = await supabase.auth.signInWithOAuth({
                                         provider: 'google',
@@ -101,11 +157,9 @@ export default function LoginPage() {
                                     });
                                     if (error) throw error;
                                 } catch (error: any) {
-                                    toast({
-                                        title: 'Error',
-                                        description: error.message || 'Failed to login with Google',
-                                        variant: 'destructive',
-                                    });
+                                    const friendlyMsg = friendlyAuthError(error);
+                                    setErrorMessage(friendlyMsg);
+                                    toast.error(friendlyMsg);
                                     setLoading(false);
                                 }
                             }}
@@ -153,7 +207,10 @@ export default function LoginPage() {
                                     type="email"
                                     placeholder="you@example.com"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (errorMessage) setErrorMessage(null);
+                                    }}
                                     required
                                     className="pl-10"
                                     disabled={loading}
@@ -172,7 +229,10 @@ export default function LoginPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="••••••••"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (errorMessage) setErrorMessage(null);
+                                    }}
                                     required
                                     className="pl-10 pr-10"
                                     disabled={loading}

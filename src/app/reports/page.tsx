@@ -81,6 +81,7 @@ import {
 import { format, startOfMonth, endOfMonth } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { exportReportToCSV, exportReportToPDF } from "@/lib/report-export"
 import {
   formatReportCurrency,
   formatPercentage,
@@ -167,38 +168,34 @@ export default function ReportsPage() {
   }
 
   const handleExport = async (type: 'pdf' | 'excel') => {
-    try {
+    if (!analyticsData) {
       toast({
-        title: "Export Started",
-        description: `Generating ${type.toUpperCase()} report...`,
+        variant: "destructive",
+        title: "Tidak ada data",
+        description: "Data analitik belum dimuat. Mohon refresh halaman.",
       })
+      return
+    }
 
-      const response = await fetch('/api/reports/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: type,
-          data: analyticsData,
-          dateRange,
-          filters: { roomType: roomTypeFilter }
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
+    try {
+      if (type === 'excel') {
+        exportReportToCSV(analyticsData, dateRange)
         toast({
-          title: "Export Complete!",
-          description: `${result.message} - File: ${result.filename}`,
+          title: "Ekspor Berhasil",
+          description: `File CSV telah diunduh. Buka dengan Excel/Google Sheets.`,
         })
       } else {
-        throw new Error(result.error)
+        exportReportToPDF(analyticsData, dateRange)
+        toast({
+          title: "Jendela cetak terbuka",
+          description: `Pilih "Save as PDF" pada dialog cetak browser untuk menyimpan sebagai PDF.`,
+        })
       }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Export Failed",
-        description: error instanceof Error ? error.message : 'Failed to export report',
+        title: "Ekspor Gagal",
+        description: error instanceof Error ? error.message : 'Gagal mengekspor laporan',
       })
     }
   }
@@ -542,7 +539,11 @@ export default function ReportsPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => {
+                        const pct = (percent ?? 0) * 100
+                        if (pct < 1) return ''
+                        return `${name} ${pct.toFixed(0)}%`
+                      }}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -585,15 +586,15 @@ export default function ReportsPage() {
                     <span className="text-sm">Total Requests</span>
                     <Badge variant="secondary">{analyticsData.roomServiceStats.total}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950/40 rounded-lg">
                     <span className="text-sm">Pending</span>
                     <Badge className="bg-orange-100 text-orange-800">{analyticsData.roomServiceStats.pending}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
                     <span className="text-sm">In Progress</span>
                     <Badge className="bg-blue-100 text-blue-800">{analyticsData.roomServiceStats.inProgress}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/40 rounded-lg">
                     <span className="text-sm">Completed</span>
                     <Badge className="bg-green-100 text-green-800">{analyticsData.roomServiceStats.completed}</Badge>
                   </div>
@@ -605,15 +606,15 @@ export default function ReportsPage() {
                     <span className="text-sm">Total Tasks</span>
                     <Badge variant="secondary">{analyticsData.housekeepingStats.total}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950/40 rounded-lg">
                     <span className="text-sm">Pending</span>
                     <Badge className="bg-orange-100 text-orange-800">{analyticsData.housekeepingStats.pending}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
                     <span className="text-sm">In Progress</span>
                     <Badge className="bg-blue-100 text-blue-800">{analyticsData.housekeepingStats.inProgress}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/40 rounded-lg">
                     <span className="text-sm">Completed</span>
                     <Badge className="bg-green-100 text-green-800">{analyticsData.housekeepingStats.completed}</Badge>
                   </div>
@@ -774,7 +775,7 @@ export default function ReportsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-600" />
                     <span className="font-medium">On-Time Check-ins</span>
@@ -782,7 +783,7 @@ export default function ReportsPage() {
                   <span className="text-lg font-bold text-green-600">87%</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-blue-600" />
                     <span className="font-medium">Early Check-ins</span>
@@ -790,7 +791,7 @@ export default function ReportsPage() {
                   <span className="text-lg font-bold text-blue-600">23%</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-orange-600" />
                     <span className="font-medium">Late Check-ins</span>
@@ -798,7 +799,7 @@ export default function ReportsPage() {
                   <span className="text-lg font-bold text-orange-600">15%</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <UserX className="h-5 w-5 text-red-600" />
                     <span className="font-medium">No-Shows</span>
@@ -817,7 +818,7 @@ export default function ReportsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-600" />
                     <span className="font-medium">On-Time Check-outs</span>
@@ -825,7 +826,7 @@ export default function ReportsPage() {
                   <span className="text-lg font-bold text-green-600">92%</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-blue-600" />
                     <span className="font-medium">Late Check-outs</span>
@@ -833,7 +834,7 @@ export default function ReportsPage() {
                   <span className="text-lg font-bold text-blue-600">8%</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Heart className="h-5 w-5 text-purple-600" />
                     <span className="font-medium">Guest Satisfaction</span>
@@ -841,7 +842,7 @@ export default function ReportsPage() {
                   <span className="text-lg font-bold text-purple-600">4.7/5</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-950/40 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Target className="h-5 w-5 text-yellow-600" />
                     <span className="font-medium">Return Guests</span>

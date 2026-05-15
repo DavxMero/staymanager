@@ -2570,6 +2570,49 @@ export default function OccupancyPage() {
   const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(null)
   const [housekeepingStaff, setHousekeepingStaff] = useState<any[]>([])
 
+  // Cleaning confirmation dialog state
+  const [cleaningDialogRoom, setCleaningDialogRoom] = useState<Room | null>(null)
+  const [cleaningAssignedTo, setCleaningAssignedTo] = useState<string>("")
+  const [cleaningSubmitting, setCleaningSubmitting] = useState(false)
+
+  const handleConfirmRoomCleaned = async () => {
+    if (!cleaningDialogRoom) return
+    setCleaningSubmitting(true)
+    try {
+      const { error: updateErr } = await supabase
+        .from('rooms')
+        .update({ status: 'available' })
+        .eq('id', cleaningDialogRoom.id)
+      if (updateErr) throw updateErr
+
+      // Try to log who cleaned (best-effort — silently skip if table/cols differ)
+      if (cleaningAssignedTo) {
+        try {
+          await supabase.from('housekeeping_tasks').insert({
+            room_id: cleaningDialogRoom.id,
+            assigned_to: cleaningAssignedTo,
+            status: 'completed',
+            task_type: 'checkout',
+            title: `Cleaning kamar ${cleaningDialogRoom.number}`,
+            completed_at: new Date().toISOString(),
+          })
+        } catch (logErr) {
+          // Logging failure is non-fatal — room status is already updated
+          console.warn('Housekeeping task log failed (non-fatal):', logErr)
+        }
+      }
+
+      await fetchRooms()
+      setCleaningDialogRoom(null)
+      setCleaningAssignedTo("")
+    } catch (err) {
+      console.error('Error marking room clean:', err)
+      setError('Gagal menandai kamar bersih: ' + (err as Error).message)
+    } finally {
+      setCleaningSubmitting(false)
+    }
+  }
+
   const applyFilters = useCallback(() => {
     let result = [...rooms]
 
@@ -2969,10 +3012,15 @@ export default function OccupancyPage() {
                       {eachDayOfInterval({ start: calendarStartDate, end: addDays(calendarStartDate, 13) }).map((date, i) => {
                         const d = new Date(date);
                         d.setHours(0,0,0,0);
+                        const KNOWN_STATUSES = new Set(['confirmed', 'checked-in', 'overdue', 'checked-out'])
                         const matchingReservations = calendarReservations.filter(r => {
                           if (r.room_id !== room.id) return false;
+                          // Skip legacy reservations with unknown/null status (causes long gray phantom rows)
+                          if (!r.status || !KNOWN_STATUSES.has(r.status)) return false;
+                          if (!r.check_in || !r.check_out) return false;
                           const ci = new Date(r.check_in); ci.setHours(0,0,0,0);
                           const co = new Date(r.check_out); co.setHours(0,0,0,0);
+                          if (isNaN(ci.getTime()) || isNaN(co.getTime())) return false;
                           return d >= ci && d <= co;
                         })
                         const statusPriority: Record<string, number> = { 'checked-in': 0, 'overdue': 1, 'confirmed': 2, 'checked-out': 3 }
@@ -3012,7 +3060,7 @@ export default function OccupancyPage() {
                                 reservation.status === 'confirmed' ? 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100 hover:shadow dark:bg-purple-900/25 dark:border-purple-800 dark:text-purple-200 dark:hover:bg-purple-900/40' :
                                 reservation.status === 'checked-out' ? 'bg-slate-200 border-slate-300 text-slate-600 hover:bg-slate-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 opacity-60' :
                                 'bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
-                              ) : room.status === 'cleaning' ? "bg-amber-50/60 border-amber-200 dark:bg-amber-900/15 dark:border-amber-700 cursor-not-allowed" : "bg-transparent border-dashed border-slate-200 dark:border-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:border-blue-700 dark:hover:text-blue-300 group-hover:border-solid text-transparent"
+                              ) : room.status === 'cleaning' ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700 p-0" : "bg-transparent border-dashed border-slate-200 dark:border-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:border-blue-700 dark:hover:text-blue-300 group-hover:border-solid text-transparent"
                             )}
                           >
                             {reservation ? (
@@ -3024,9 +3072,19 @@ export default function OccupancyPage() {
                                 </div>
                               </div>
                             ) : room.status === 'cleaning' ? (
-                              <div className="flex flex-col items-center justify-center h-full w-full bg-amber-50/50 dark:bg-amber-900/15">
-                                <span className="text-[8px] font-bold text-amber-700 dark:text-amber-300">🧹</span>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setCleaningDialogRoom(room)
+                                  setCleaningAssignedTo("")
+                                }}
+                                title="Klik untuk tandai sudah dibersihkan"
+                                className="flex flex-col items-center justify-center h-full w-full bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/50 cursor-pointer transition-colors group/clean"
+                              >
+                                <span className="text-base group-hover/clean:scale-125 transition-transform">🧹</span>
+                                <span className="text-[7px] font-bold text-yellow-800 dark:text-yellow-200 opacity-0 group-hover/clean:opacity-100 transition-opacity">Bersihkan</span>
+                              </button>
                             ) : (
                               <div className="flex items-center justify-center h-full w-full opacity-0 hover:opacity-100 transition-opacity">
                                 <Plus className="h-3 w-3" />
@@ -3228,15 +3286,10 @@ export default function OccupancyPage() {
                     <Button
                       size="sm"
                       className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation()
-                        try {
-                          const { error: updateErr } = await supabase.from('rooms').update({ status: 'available' }).eq('id', room.id)
-                          if (updateErr) throw updateErr
-                          fetchRooms()
-                        } catch (err) {
-                          console.error('Error marking room clean:', err)
-                        }
+                        setCleaningDialogRoom(room)
+                        setCleaningAssignedTo("")
                       }}
                     >
                       ✅ Tandai Sudah Bersih
@@ -3296,6 +3349,98 @@ export default function OccupancyPage() {
           await fetchCalendarReservations(calendarStartDate)
         }}
       />
+
+      {/* Mark as Cleaned Dialog — with assignee picker */}
+      <Dialog
+        open={!!cleaningDialogRoom}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCleaningDialogRoom(null)
+            setCleaningAssignedTo("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/40">
+              <span className="text-2xl">🧹</span>
+            </div>
+            <DialogTitle className="text-center text-xl">
+              Tandai Kamar Sudah Dibersihkan?
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm">
+              Setelah dikonfirmasi, status kamar akan berubah menjadi <strong>Tersedia</strong> dan siap untuk check-in tamu baru.
+            </DialogDescription>
+          </DialogHeader>
+
+          {cleaningDialogRoom && (
+            <div className="my-2 rounded-lg border bg-muted/50 p-4 space-y-3">
+              <div className="grid gap-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Nomor Kamar:</span>
+                  <span className="font-semibold">{cleaningDialogRoom.number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tipe:</span>
+                  <span className="font-semibold">{cleaningDialogRoom.type}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor="cleaning-assignee" className="text-sm font-medium">
+                  Dibersihkan oleh <span className="text-muted-foreground font-normal">(opsional)</span>
+                </Label>
+                <Select
+                  value={cleaningAssignedTo}
+                  onValueChange={setCleaningAssignedTo}
+                >
+                  <SelectTrigger id="cleaning-assignee">
+                    <SelectValue placeholder="Pilih staff housekeeping..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {housekeepingStaff.length === 0 ? (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                        Belum ada staff housekeeping terdaftar
+                      </div>
+                    ) : (
+                      housekeepingStaff.map((staff) => (
+                        <SelectItem key={staff.id} value={staff.id}>
+                          {staff.full_name}
+                          {staff.role && <span className="text-muted-foreground text-xs ml-2">({staff.role})</span>}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Pencatatan ini membantu audit trail housekeeping. Anda dapat mengonfirmasi tanpa memilih staff.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCleaningDialogRoom(null)
+                setCleaningAssignedTo("")
+              }}
+              disabled={cleaningSubmitting}
+              className="flex-1"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleConfirmRoomCleaned}
+              disabled={cleaningSubmitting}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {cleaningSubmitting ? "Memproses..." : "✅ Konfirmasi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   )
 }

@@ -17,7 +17,9 @@ import {
     ArrowDownRight,
     MoreHorizontal,
     FileText,
-    PieChart
+    PieChart,
+    FileSpreadsheet,
+    Printer
 } from "lucide-react"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
@@ -47,8 +49,16 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
+import { exportFinancialToCSV, exportFinancialToPDF } from "@/lib/report-export"
+import { toast } from "sonner"
 
 interface Expense {
     id: number
@@ -188,10 +198,44 @@ export default function FinancialPage() {
                     <p className="text-muted-foreground">Manage your property's cash flow, income, and expenses.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Report
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <Download className="mr-2 h-4 w-4" />
+                                Export Report
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    try {
+                                        exportFinancialToCSV({ totalIncome, totalExpenses, netProfit, payments, expenses })
+                                        toast.success("File CSV berhasil diunduh. Buka dengan Excel/Google Sheets.")
+                                    } catch (err) {
+                                        toast.error(err instanceof Error ? err.message : "Gagal ekspor CSV")
+                                    }
+                                }}
+                                className="cursor-pointer"
+                            >
+                                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                                Export sebagai CSV (Excel)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    try {
+                                        exportFinancialToPDF({ totalIncome, totalExpenses, netProfit, payments, expenses })
+                                        toast.success("Jendela cetak terbuka. Pilih 'Save as PDF' di dialog cetak.")
+                                    } catch (err) {
+                                        toast.error(err instanceof Error ? err.message : "Gagal ekspor PDF")
+                                    }
+                                }}
+                                className="cursor-pointer"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Export sebagai PDF (Print)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button onClick={() => setIsExpenseDialogOpen(true)} className="bg-red-600 hover:bg-red-700">
                         <MinusCircleIcon className="mr-2 h-4 w-4" />
                         Record Expense
