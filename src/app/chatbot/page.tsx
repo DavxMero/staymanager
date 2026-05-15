@@ -48,13 +48,28 @@ type ParsedChatbotError = {
 function parseChatbotError(raw: string): ParsedChatbotError {
   const msg = raw.toLowerCase();
 
-  if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('limit: 20')) {
-    // Coba ekstrak "Please retry in X.Xs"
-    const retryMatch = raw.match(/retry in ([\d.]+)s/i);
+  if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('rate_limit') || msg.includes('limit: 20') || msg.includes('tokens per minute') || msg.includes('tpm')) {
+    // Coba ekstrak "Please retry in X.Xs" atau "try again in X.Xs"
+    const retryMatch = raw.match(/(?:retry|try again) in ([\d.]+)s/i);
     const retrySec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 30;
+
+    // Detect provider dari error message untuk pesan yang akurat
+    let providerHint = 'layanan AI';
+    let limitHint = '';
+    if (msg.includes('groq') || msg.includes('llama') || msg.includes('tokens per minute') || msg.includes('tpm')) {
+      providerHint = 'Groq (Llama)';
+      // 8B Instant TPM = 6000, 70B = 12000 — keduanya rentan kalau system prompt panjang
+      limitHint = msg.includes('8b') || msg.includes('instant')
+        ? ' Llama 8B Instant punya TPM ketat (6K token/menit) — pertimbangkan switch ke Llama 70B untuk headroom 2x lebih besar.'
+        : '';
+    } else if (msg.includes('google') || msg.includes('gemini') || msg.includes('generativelanguage') || msg.includes('limit: 20')) {
+      providerHint = 'Gemini (Google)';
+      limitHint = ' Free tier 20 request/menit.';
+    }
+
     return {
       title: 'Batas penggunaan AI tercapai',
-      description: `Free tier Gemini terbatas 20 request/menit. Mohon tunggu sekitar ${retrySec} detik lalu kirim ulang.`,
+      description: `Batas request ${providerHint} tercapai.${limitHint} Mohon tunggu sekitar ${retrySec} detik lalu kirim ulang, atau ganti model dari dropdown.`,
       isKnown: true,
       retrySec,
     };
@@ -117,15 +132,16 @@ function QuotaCountdown({ initialSec }: { initialSec: number }) {
     return (
       <span>
         <span className="font-semibold text-green-600 dark:text-green-400">Bisa coba lagi sekarang.</span>{' '}
-        Free tier Gemini 20 request/menit.
+        Atau pilih model lain di dropdown.
       </span>
     );
   }
 
   return (
     <span>
-      Free tier Gemini 20 request/menit tercapai. Coba lagi dalam{' '}
-      <span className="font-bold tabular-nums text-amber-600 dark:text-amber-400">{secLeft}</span> detik.
+      Coba lagi dalam{' '}
+      <span className="font-bold tabular-nums text-amber-600 dark:text-amber-400">{secLeft}</span> detik,
+      atau ganti model di dropdown untuk lanjut sekarang.
     </span>
   );
 }
@@ -141,9 +157,9 @@ interface BookingData {
 
 // Pilihan model yang ditampilkan di selector — semua gratis. Groq diprioritaskan (default).
 const MODEL_OPTIONS = [
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)', hint: 'Gratis · 30 req/menit · default & direkomendasikan', accent: 'text-emerald-600 dark:text-emerald-400' },
-  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant (Groq)', hint: 'Gratis · 30 req/menit · 14.400 req/hari · paling cepat', accent: 'text-teal-600 dark:text-teal-400' },
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Gratis · 20 req/menit · backup', accent: 'text-blue-600 dark:text-blue-400' },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)', hint: 'Gratis · 12K token/menit · default & direkomendasikan', accent: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Gratis · 20 req/menit · 1M token/menit · backup terbaik', accent: 'text-blue-600 dark:text-blue-400' },
+  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant (Groq)', hint: 'Gratis · paling cepat · TPM 6K ketat, rentan limit', accent: 'text-teal-600 dark:text-teal-400' },
 ] as const;
 
 type ModelId = typeof MODEL_OPTIONS[number]['id'];
@@ -1107,8 +1123,8 @@ Phone: ${info.guestPhone}`
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>
-              Cooldown <span className="font-bold tabular-nums">{secUntilUnlock}s</span> — batas request Gemini free tier
-              tercapai, tunggu sebentar.
+              Cooldown <span className="font-bold tabular-nums">{secUntilUnlock}s</span> — batas request AI free tier tercapai.
+              Tunggu, atau ganti model di dropdown untuk lanjut sekarang.
             </span>
           </div>
         )}
