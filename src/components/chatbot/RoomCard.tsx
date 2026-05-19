@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,6 +29,7 @@ interface RoomCardProps {
     checkIn: string;
     checkOut: string;
     onBook: (room: Room) => void;
+    count?: number;
 }
 
 const formatPrice = (price: number) =>
@@ -46,11 +47,11 @@ const getRoomIcon = (type: string) => {
     return '🏨';
 };
 
-export function RoomCard({ room, checkIn, checkOut, onBook }: RoomCardProps) {
+export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardProps) {
+    const isGroup = typeof count === 'number';
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [carouselIndex, setCarouselIndex] = useState(0);
 
-    // Build deduplicated image gallery: image_url first, then images[]
     const gallery = useMemo(() => {
         const all = [room.image_url, ...(room.images || [])].filter(
             (u): u is string => Boolean(u),
@@ -73,20 +74,20 @@ export function RoomCard({ room, checkIn, checkOut, onBook }: RoomCardProps) {
                 className="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
             >
                 {/* Compact Header: thumbnail + name */}
-                <div className="p-3 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-200 dark:border-gray-600">
+                <div className="p-3 bg-gray-50 dark:bg-gray-900/40 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             {primaryImage ? (
                                 <img
                                     src={primaryImage}
-                                    alt={`${room.type} ${room.number}`}
-                                    className="w-14 h-14 rounded-lg object-cover ring-1 ring-gray-200 dark:ring-gray-600 shrink-0"
+                                    alt={room.type}
+                                    className="w-14 h-14 rounded-lg object-cover ring-1 ring-gray-200 dark:ring-gray-700 shrink-0"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                     }}
                                 />
                             ) : (
-                                <div className="w-14 h-14 rounded-lg bg-linear-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center text-2xl shrink-0">
+                                <div className="w-14 h-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-2xl shrink-0">
                                     {getRoomIcon(room.type)}
                                 </div>
                             )}
@@ -94,13 +95,15 @@ export function RoomCard({ room, checkIn, checkOut, onBook }: RoomCardProps) {
                                 <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                                     {room.type}
                                 </h3>
-                                <p className="text-xs text-gray-600 dark:text-gray-300">
-                                    Room {room.number}
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    {isGroup
+                                        ? `${count} kamar tersedia`
+                                        : `Room ${room.number}`}
                                 </p>
                             </div>
                         </div>
-                        <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full text-xs font-medium shrink-0">
-                            Available
+                        <span className="bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-md text-xs font-medium shrink-0 border border-emerald-200 dark:border-emerald-900">
+                            Tersedia
                         </span>
                     </div>
                 </div>
@@ -158,7 +161,7 @@ export function RoomCard({ room, checkIn, checkOut, onBook }: RoomCardProps) {
                     </DialogHeader>
 
                     {/* Carousel */}
-                    <div className="relative w-full aspect-video bg-linear-to-br from-blue-100 to-indigo-100 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
+                    <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
                         <AnimatePresence mode="wait">
                             {gallery.length > 0 ? (
                                 <motion.img
@@ -178,42 +181,52 @@ export function RoomCard({ room, checkIn, checkOut, onBook }: RoomCardProps) {
                             )}
                         </AnimatePresence>
 
-                        {gallery.length > 1 && (
-                            <>
-                                <button
-                                    onClick={() => setCarouselIndex((i) => (i - 1 + gallery.length) % gallery.length)}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md"
-                                    aria-label="Previous image"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => setCarouselIndex((i) => (i + 1) % gallery.length)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md"
-                                    aria-label="Next image"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                                    {gallery.map((_, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setCarouselIndex(idx)}
-                                            className={`h-1.5 rounded-full transition-all ${
-                                                idx === carouselIndex
-                                                    ? 'w-6 bg-white'
-                                                    : 'w-1.5 bg-white/60'
-                                            }`}
-                                            aria-label={`Go to image ${idx + 1}`}
-                                        />
-                                    ))}
-                                </div>
-                            </>
-                        )}
+                        {/* Carousel controls — always rendered; disabled visually when only 1 image */}
+                        {(() => {
+                            const multi = gallery.length > 1;
+                            return (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => multi && setCarouselIndex((i) => (i - 1 + gallery.length) % gallery.length)}
+                                        disabled={!multi}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Previous image"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => multi && setCarouselIndex((i) => (i + 1) % gallery.length)}
+                                        disabled={!multi}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Next image"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                    {multi && (
+                                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                            {gallery.map((_, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setCarouselIndex(idx)}
+                                                    className={`h-1.5 rounded-full transition-all ${
+                                                        idx === carouselIndex
+                                                            ? 'w-6 bg-white'
+                                                            : 'w-1.5 bg-white/60'
+                                                    }`}
+                                                    aria-label={`Go to image ${idx + 1}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* Details body */}
@@ -224,7 +237,7 @@ export function RoomCard({ room, checkIn, checkOut, onBook }: RoomCardProps) {
                                     {room.type}
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Room {room.number}
+                                    {isGroup ? `${count} kamar tersedia` : `Room ${room.number}`}
                                 </p>
                             </div>
                             <div className="text-right">

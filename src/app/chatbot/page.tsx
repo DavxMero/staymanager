@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useChat } from 'ai/react';
 import { useRef, useEffect, useState, useMemo } from 'react';
@@ -16,16 +16,7 @@ import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LogIn, UserPlus, LayoutDashboard, History, PanelLeft, Sparkles, Check, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+import { LogIn, UserPlus, LayoutDashboard, History, PanelLeft, Sparkles } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { toLocalDateString } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -41,54 +32,23 @@ type ParsedChatbotError = {
   title: string;
   description: string;
   isKnown: boolean;
-  retrySec?: number; // hanya untuk error quota/rate-limit
 };
 
-// Map error message dari useChat → toast title + description ramah-pengguna
 function parseChatbotError(raw: string): ParsedChatbotError {
   const msg = raw.toLowerCase();
 
-  if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('rate_limit') || msg.includes('limit: 20') || msg.includes('tokens per minute') || msg.includes('tpm')) {
-    // Coba ekstrak "Please retry in X.Xs" atau "try again in X.Xs"
-    const retryMatch = raw.match(/(?:retry|try again) in ([\d.]+)s/i);
-    const retrySec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 30;
-
-    // Detect provider dari error message untuk pesan yang akurat
-    let providerHint = 'layanan AI';
-    let limitHint = '';
-    if (msg.includes('groq') || msg.includes('llama') || msg.includes('tokens per minute') || msg.includes('tpm')) {
-      providerHint = 'Groq (Llama)';
-      // 8B Instant TPM = 6000, 70B = 12000 — keduanya rentan kalau system prompt panjang
-      limitHint = msg.includes('8b') || msg.includes('instant')
-        ? ' Llama 8B Instant punya TPM ketat (6K token/menit) — pertimbangkan switch ke Llama 70B untuk headroom 2x lebih besar.'
-        : '';
-    } else if (msg.includes('google') || msg.includes('gemini') || msg.includes('generativelanguage') || msg.includes('limit: 20')) {
-      providerHint = 'Gemini (Google)';
-      limitHint = ' Free tier 20 request/menit.';
-    }
-
+  if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('rate_limit') || msg.includes('resource_exhausted') || msg.includes('429')) {
     return {
       title: 'Batas penggunaan AI tercapai',
-      description: `Batas request ${providerHint} tercapai.${limitHint} Mohon tunggu sekitar ${retrySec} detik lalu kirim ulang, atau ganti model dari dropdown.`,
+      description: 'Server AI sedang sibuk atau kuota habis. Coba kirim ulang dalam beberapa detik.',
       isKnown: true,
-      retrySec,
     };
   }
 
   if (msg.includes('api key') || msg.includes('llm api key missing') || msg.includes('konfigurasi server')) {
-    // Coba deteksi provider mana yang missing key
-    let provider = 'AI';
-    let envVar = 'GOOGLE_GENERATIVE_AI_API_KEY';
-    if (msg.includes('groq')) {
-      provider = 'Groq (Llama)';
-      envVar = 'GROQ_API_KEY';
-    } else if (msg.includes('google') || msg.includes('gemini')) {
-      provider = 'Gemini (Google)';
-      envVar = 'GOOGLE_GENERATIVE_AI_API_KEY';
-    }
     return {
-      title: `API key ${provider} belum diset`,
-      description: `Model yang dipilih butuh API key. Tambahkan env var ${envVar} di .env.local, atau pilih model lain dari dropdown.`,
+      title: 'API key Gemini belum diset',
+      description: 'Server belum dikonfigurasi. Tambahkan env var GOOGLE_GENERATIVE_AI_API_KEY di .env.local atau Vercel Settings.',
       isKnown: true,
     };
   }
@@ -116,36 +76,6 @@ function parseChatbotError(raw: string): ParsedChatbotError {
   };
 }
 
-// Live countdown buat toast quota error
-function QuotaCountdown({ initialSec }: { initialSec: number }) {
-  const [secLeft, setSecLeft] = useState(initialSec);
-
-  useEffect(() => {
-    if (secLeft <= 0) return;
-    const id = setInterval(() => {
-      setSecLeft((s) => (s > 0 ? s - 1 : 0));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [secLeft]);
-
-  if (secLeft <= 0) {
-    return (
-      <span>
-        <span className="font-semibold text-green-600 dark:text-green-400">Bisa coba lagi sekarang.</span>{' '}
-        Atau pilih model lain di dropdown.
-      </span>
-    );
-  }
-
-  return (
-    <span>
-      Coba lagi dalam{' '}
-      <span className="font-bold tabular-nums text-amber-600 dark:text-amber-400">{secLeft}</span> detik,
-      atau ganti model di dropdown untuk lanjut sekarang.
-    </span>
-  );
-}
-
 interface BookingData {
   room: Room;
   checkIn: string;
@@ -155,11 +85,9 @@ interface BookingData {
   guestPhone: string;
 }
 
-// Pilihan model yang ditampilkan di selector — semua gratis. Groq diprioritaskan (default).
 const MODEL_OPTIONS = [
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)', hint: 'Gratis · 12K token/menit · default & direkomendasikan', accent: 'text-emerald-600 dark:text-emerald-400' },
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Gratis · 20 req/menit · 1M token/menit · backup terbaik', accent: 'text-blue-600 dark:text-blue-400' },
-  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant (Groq)', hint: 'Gratis · paling cepat · TPM 6K ketat, rentan limit', accent: 'text-teal-600 dark:text-teal-400' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Default · cepat & ekonomis · $0.30/$2.50 per 1M token', accent: 'text-blue-600 dark:text-blue-400' },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', hint: 'Lebih pintar untuk reasoning kompleks · $1.25/$10 per 1M token', accent: 'text-indigo-600 dark:text-indigo-400' },
 ] as const;
 
 type ModelId = typeof MODEL_OPTIONS[number]['id'];
@@ -172,40 +100,16 @@ export default function ChatbotPage() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  // Model selector — persist ke localStorage supaya pilihan user bertahan antar session.
-  // Default: Llama 3.3 70B via Groq (gratis, lebih cepat dari Gemini, rate-limit lebih tinggi)
-  const [selectedModel, setSelectedModel] = useState<ModelId>('llama-3.3-70b-versatile');
+  const [selectedModel, setSelectedModel] = useState<ModelId>('gemini-2.5-flash');
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const saved = window.localStorage.getItem('staymanager:chatbot:model') as ModelId | null;
     if (saved && MODEL_OPTIONS.some((m) => m.id === saved)) {
       setSelectedModel(saved);
+    } else if (saved) {
+      window.localStorage.removeItem('staymanager:chatbot:model');
     }
   }, []);
-  const updateModel = (id: ModelId) => {
-    setSelectedModel(id);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('staymanager:chatbot:model', id);
-    }
-  };
-  // Rate limit hold: disable Send selama countdown supaya user tidak nge-spam dan habisin quota
-  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
-  const [nowTick, setNowTick] = useState(Date.now());
-  const isRateLimited = rateLimitedUntil !== null && nowTick < rateLimitedUntil;
-  const secUntilUnlock = rateLimitedUntil ? Math.max(0, Math.ceil((rateLimitedUntil - nowTick) / 1000)) : 0;
-
-  useEffect(() => {
-    if (!rateLimitedUntil) return;
-    const id = setInterval(() => {
-      const now = Date.now();
-      setNowTick(now);
-      if (now >= rateLimitedUntil) {
-        setRateLimitedUntil(null);
-        clearInterval(id);
-      }
-    }, 1000);
-    return () => clearInterval(id);
-  }, [rateLimitedUntil]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -214,11 +118,12 @@ export default function ChatbotPage() {
   const supabase = useMemo(() => createClient(), []);
   const { toggleSidebar } = useSidebar();
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
-    api: '/api/chat',
-    maxSteps: 5,
-    initialMessages: initialMessages.length > 0 ? initialMessages : undefined,
-    body: {
+  const messagesRef = useRef<any[]>([]);
+  const currentChatIdRef = useRef<string | null>(null);
+  const userRef = useRef<any>(null);
+
+  const chatBody = useMemo(
+    () => ({
       model: selectedModel,
       userContext: user
         ? {
@@ -228,32 +133,29 @@ export default function ChatbotPage() {
             phone: (user.user_metadata?.phone as string | undefined) || '',
           }
         : { isLoggedIn: false },
-    },
+    }),
+    [selectedModel, user],
+  );
+
+  const { messages, input, handleInputChange, handleSubmit: rawHandleSubmit, isLoading, append: rawAppend, stop, reload } = useChat({
+    api: '/api/chat',
+    maxSteps: 1,
+    initialMessages: initialMessages.length > 0 ? initialMessages : undefined,
+    body: chatBody,
+    experimental_throttle: 50,
     onError: (error) => {
       const raw = error?.message || '';
       const parsed = parseChatbotError(raw);
-      // Pakai console.warn untuk known/handled errors → tidak trigger Next.js dev error overlay
       if (parsed.isKnown) {
         console.warn('[useChat onError]', parsed.title, '—', raw);
       } else {
         console.error('[useChat onError]', error);
       }
-      // Quota error → tampilkan live countdown sebagai description, dan biarkan toast
-      // bertahan sampai countdown selesai + 2 detik buffer biar user lihat "bisa coba lagi"
-      const isQuota = typeof parsed.retrySec === 'number';
-      if (isQuota) {
-        // Set rate-limit hold supaya Send button auto-disabled selama countdown
-        setRateLimitedUntil(Date.now() + parsed.retrySec! * 1000);
-      }
       const toastId = `chatbot-error-${parsed.title}`; // pakai ID stable supaya error berulang merge ke toast yang sama
       toast.error(parsed.title, {
         id: toastId,
-        description: isQuota
-          ? <QuotaCountdown initialSec={parsed.retrySec!} />
-          : parsed.description,
-        duration: isQuota
-          ? Math.max(8000, (parsed.retrySec! + 3) * 1000)
-          : parsed.isKnown ? 8000 : 6000,
+        description: parsed.description,
+        duration: parsed.isKnown ? 8000 : 6000,
       });
     },
     onResponse: (response) => {
@@ -271,8 +173,45 @@ export default function ChatbotPage() {
           duration: 6000,
         });
       }
+      const u = userRef.current;
+      if (!u) return;
+      const msgs = messagesRef.current;
+      if (!msgs || msgs.length === 0) return;
+      (async () => {
+        try {
+          const chatId =
+            currentChatIdRef.current ||
+            (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+          await supabase.from('Chat').upsert({ id: chatId, user_id: u.id, messages: msgs });
+          if (!currentChatIdRef.current) {
+            currentChatIdRef.current = chatId;
+            setCurrentChatId(chatId);
+          }
+        } catch (error) {
+          console.error('Error saving chat:', error);
+        }
+      })();
     },
   });
+
+  const handleSubmit = (e?: any) => {
+    requestAnimationFrame(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
+    return rawHandleSubmit(e);
+  };
+  const append: typeof rawAppend = (...args: Parameters<typeof rawAppend>) => {
+    requestAnimationFrame(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
+    return rawAppend(...args);
+  };
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+  useEffect(() => {
+    currentChatIdRef.current = currentChatId;
+  }, [currentChatId]);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -303,7 +242,6 @@ export default function ChatbotPage() {
     };
 
     loadChatFromUrl();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -311,13 +249,11 @@ export default function ChatbotPage() {
 
     const checkUser = async () => {
       try {
-        // Coba dapat session dulu (sync-ish dari cookie/storage, lebih cepat dari getUser yang verify ke server)
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           setUser(session.user);
         }
 
-        // Verifikasi via getUser untuk konsistensi dengan komponen lain (sidebar dll)
         const { data: { user: verifiedUser } } = await supabase.auth.getUser();
         setUser(verifiedUser);
 
@@ -345,10 +281,6 @@ export default function ChatbotPage() {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Hanya null-kan user pada SIGNED_OUT eksplisit. Event lain
-      // (INITIAL_SESSION, TOKEN_REFRESHED, USER_UPDATED) bisa fire dengan
-      // session=null sementara cache belum sync — jangan clobber state
-      // yang sudah diisi oleh checkUser()→getUser().
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setChatHistory([]);
@@ -372,41 +304,23 @@ export default function ChatbotPage() {
 
         setUserRole(isGuestOnly ? 'guest' : 'staff');
       }
-      // else: ignore — biarkan state existing dari getUser() bertahan
     });
 
     return () => subscription.unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages.length, isLoading]);
 
   useEffect(() => {
-    if (messages.length > 0 && user) {
-      const saveChat = async () => {
-        try {
-          const chatId = currentChatId || (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
-
-          await supabase
-            .from('Chat')
-            .upsert({
-              id: chatId,
-              user_id: user.id,
-              messages: messages,
-            });
-
-          if (!currentChatId) {
-            setCurrentChatId(chatId);
-          }
-        } catch (error) {
-          console.error('Error saving chat:', error);
-        }
-      };
-      saveChat();
-    }
-  }, [messages, user, currentChatId, supabase]);
+    const target = messagesEndRef.current?.parentElement;
+    if (!target) return;
+    const scroll = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const observer = new ResizeObserver(scroll);
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -493,7 +407,7 @@ export default function ChatbotPage() {
     return { name, email, phone };
   };
 
-  const handleBookRoom = async (room: Room) => {
+  const handleBookRoom = (room: Room) => {
     if (!user) {
       if (confirm('Anda perlu login untuk membuat reservasi. Login sekarang?')) {
         window.location.href = `/login?returnUrl=${encodeURIComponent('/chatbot')}`;
@@ -501,47 +415,34 @@ export default function ChatbotPage() {
       return;
     }
 
-    let guestInfo = { name: '', email: '', phone: '' };
-
-    try {
-      const { data: guestData, error } = await supabase
-        .from('guests')
-        .select('full_name, email, phone')
-        .eq('email', user.email)
-        .single();
-
-      if (guestData && !error) {
-        guestInfo = {
-          name: guestData.full_name || '',
-          email: guestData.email || '',
-          phone: guestData.phone || ''
-        };
-      } else {
-        const extracted = extractGuestInfo();
-        guestInfo = {
-          name: extracted.name || user.user_metadata?.full_name || '',
-          email: user.email || extracted.email,
-          phone: extracted.phone || user.user_metadata?.phone || ''
-        };
-      }
-    } catch (err) {
-      console.error('Error fetching guest data:', err);
-      const extracted = extractGuestInfo();
-      guestInfo = {
-        name: extracted.name || user.user_metadata?.full_name || '',
-        email: user.email || extracted.email,
-        phone: extracted.phone || user.user_metadata?.phone || ''
-      };
-    }
-
+    const extracted = extractGuestInfo();
     setShowBooking({
       room,
       checkIn: selectedDates.checkIn || toLocalDateString(new Date()),
       checkOut: selectedDates.checkOut || toLocalDateString(new Date(Date.now() + 86400000)),
-      guestName: guestInfo.name,
-      guestEmail: guestInfo.email,
-      guestPhone: guestInfo.phone,
+      guestName: extracted.name || (user.user_metadata?.full_name as string) || '',
+      guestEmail: user.email || extracted.email,
+      guestPhone: extracted.phone || (user.user_metadata?.phone as string) || '',
     });
+
+    (async () => {
+      try {
+        const { data: guestData } = await supabase
+          .from('guests')
+          .select('full_name, email, phone')
+          .eq('email', user.email!)
+          .maybeSingle();
+        if (guestData) {
+          setShowBooking((prev) => prev && {
+            ...prev,
+            guestName: guestData.full_name || prev.guestName,
+            guestEmail: guestData.email || prev.guestEmail,
+            guestPhone: guestData.phone || prev.guestPhone,
+          });
+        }
+      } catch {
+      }
+    })();
   };
 
   const handleConfirmBooking = async () => {
@@ -573,6 +474,19 @@ Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).
       }
     } catch (e) {
       return null;
+    }
+    return null;
+  };
+
+  const extractRoomsFromToolInvocations = (msg: any): Room[] | null => {
+    if (!msg?.toolInvocations || !Array.isArray(msg.toolInvocations)) return null;
+    for (const inv of msg.toolInvocations) {
+      if (inv?.toolName !== 'cekKetersediaan') continue;
+      if (!('result' in inv) || !inv.result) continue;
+      const result = inv.result as Record<string, unknown>;
+      if (result.status === 'available' && Array.isArray(result.rooms) && result.rooms.length > 0) {
+        return result.rooms as Room[];
+      }
     }
     return null;
   };
@@ -726,7 +640,7 @@ Phone: ${info.guestPhone}`
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-[#0a0a0a] dark:via-[#0a0a0a] dark:to-[#0a0a0a] text-gray-800 dark:text-gray-100">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-100">
 
       {/* Header */}
       <header className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 px-6 py-4 shadow-sm sticky top-0 z-10">
@@ -734,13 +648,13 @@ Phone: ${info.guestPhone}`
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSidebar}
-              className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg hover:scale-105 transition-transform cursor-pointer group"
+              className="bg-blue-600 p-2.5 rounded-xl shadow-sm hover:bg-blue-700 transition-colors cursor-pointer group"
               title="Toggle Sidebar"
             >
               <PanelLeft className="w-6 h-6 text-white group-hover:opacity-90" />
             </button>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                 StayManager AI Concierge
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-300">
@@ -763,55 +677,32 @@ Phone: ${info.guestPhone}`
               </Button>
             )}
 
-            {/* Model Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
-                  title="Pilih model AI"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span className="hidden md:inline">
-                    {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.label ?? 'Model'}
-                  </span>
-                  <ChevronDown className="h-3 w-3 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72">
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                  Pilih model AI untuk percakapan
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={selectedModel}
-                  onValueChange={(v) => updateModel(v as ModelId)}
-                >
-                  {MODEL_OPTIONS.map((m) => (
-                    <DropdownMenuRadioItem key={m.id} value={m.id} className="cursor-pointer py-2">
-                      <div className="flex-1 ml-2">
-                        <div className={`text-sm font-medium ${m.accent}`}>{m.label}</div>
-                        <div className="text-xs text-muted-foreground">{m.hint}</div>
-                      </div>
-                      {selectedModel === m.id && <Check className="h-4 w-4 opacity-80" />}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Powered-by label (replaces model selector — default Gemini 2.5 Flash) */}
+            <div
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground select-none"
+              title="Model AI yang digunakan"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">
+                Powered by{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.label ?? 'Gemini'}
+                </span>
+              </span>
+              <span className="md:hidden font-medium text-gray-700 dark:text-gray-300">
+                {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.label ?? 'Gemini'}
+              </span>
+            </div>
 
             {/* Auth Buttons — render hanya setelah auth resolved untuk hindari flash Login/Sign Up saat sudah login.
                 Saat masih loading: render nothing (bukan skeleton) supaya tidak ada kotak kosong yang mengganggu. */}
             {!authChecked ? null : user ? (
-              /* Dashboard Button — hanya tampil saat role sudah dikonfirmasi 'staff'.
-                 Pakai kondisi positif (=== 'staff') supaya state loading (null) tidak menampilkan tombol kosong. */
               userRole === 'staff' ? (
                 <Link href="/dashboard">
                   <Button
                     variant="default"
                     size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
@@ -834,7 +725,7 @@ Phone: ${info.guestPhone}`
                   <Button
                     variant="default"
                     size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                   >
                     <UserPlus className="h-4 w-4" />
                     Sign Up
@@ -875,9 +766,9 @@ Phone: ${info.guestPhone}`
 
       {/* Guest Mode Banner — hanya tampil setelah auth resolved supaya tidak flash saat user sudah login */}
       {authChecked && !user && (
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white px-6 py-3 shadow-md">
+        <div className="bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 shadow-sm">
           <div className="max-w-6xl mx-auto flex items-center justify-center gap-3">
-            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <p className="text-sm font-medium">
@@ -899,7 +790,7 @@ Phone: ${info.guestPhone}`
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-12"
             >
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-xl">
+              <div className="bg-blue-600 dark:bg-blue-500 w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-sm">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                 </svg>
@@ -943,54 +834,41 @@ Phone: ${info.guestPhone}`
             </motion.div>
           )}
 
-          {/* Messages */}
           <AnimatePresence>
             {messages.map((m, index) => {
-              const rooms = m.role === 'assistant' ? parseRoomsFromMessage(m.content) : null;
+              if (isLoading && m.role === 'assistant') {
+                let lastUserIdx = -1;
+                for (let i = messages.length - 1; i >= 0; i--) if (messages[i].role === 'user') { lastUserIdx = i; break; }
+                if (index > lastUserIdx) return null;
+              }
+              const prev = index > 0 ? messages[index - 1] : null;
+              const rooms = m.role === 'assistant'
+                ? (
+                    parseRoomsFromMessage(m.content) ||
+                    extractRoomsFromToolInvocations(m) ||
+                    (prev?.role === 'assistant' ? extractRoomsFromToolInvocations(prev) : null)
+                  )
+                : null;
               const rawGuestForm = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_GUEST_FORM_JSON') : null;
               const dateSelector = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_DATE_SELECTOR_JSON') : null;
               const paymentOptions = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_PAYMENT_OPTIONS_JSON') : null;
               const loginPrompt = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_LOGIN_PROMPT_JSON') : null;
 
-              // Fallback heuristics: kalau LLM (terutama Llama) lupa emit marker JSON tapi
-              // text-nya ngomongin form biodata / pilih tanggal, kita render card-nya tetap.
-              // Hanya aktif di message terakhir + setelah loading selesai (supaya tidak flash).
-              const isLastAssistantMsg = m.role === 'assistant' && index === messages.length - 1 && !isLoading;
-              const lc = (m.content || '').toLowerCase();
-              const fallbackGuestForm =
-                !rawGuestForm && isLastAssistantMsg && user && (
-                  /\b(nomor (telepon|hp|tlp)|phone( number)?|nomor kontak|kontak anda|nomor anda|isi (data|biodata)|lengkapi (data|biodata|profil))\b/.test(lc) ||
-                  /\b(telepon|whatsapp|wa)\b.*\b(aktif|berapa|anda|kamu)\b/.test(lc)
-                )
-                  ? { guestName: '', guestEmail: '', guestPhone: '' }
-                  : null;
-              const fallbackDateSelector =
-                !dateSelector && isLastAssistantMsg && (
-                  /\b(tanggal|check.?in|check.?out|kapan|when|pilih hari|date)\b/.test(lc) &&
-                  /\b(berapa|kapan|silakan|please|tolong|mohon)\b/.test(lc) &&
-                  !rooms // jangan tampilkan date picker kalau room cards sudah ada
-                )
-                  ? { checkIn: '', checkOut: '', adults: 1, children: 0 }
-                  : null;
-
-              const baseGuestForm = rawGuestForm || fallbackGuestForm;
-              // Auto-fill guest form dari user profile kalau sudah login
-              const guestForm = baseGuestForm
+              const guestForm = rawGuestForm
                 ? {
-                    ...baseGuestForm,
-                    guestName: baseGuestForm.guestName || (user?.user_metadata?.full_name as string | undefined) || '',
-                    guestEmail: baseGuestForm.guestEmail || user?.email || '',
-                    guestPhone: baseGuestForm.guestPhone || (user?.user_metadata?.phone as string | undefined) || '',
+                    ...rawGuestForm,
+                    guestName: rawGuestForm.guestName || (user?.user_metadata?.full_name as string | undefined) || '',
+                    guestEmail: rawGuestForm.guestEmail || user?.email || '',
+                    guestPhone: rawGuestForm.guestPhone || (user?.user_metadata?.phone as string | undefined) || '',
                   }
                 : null;
-              const effectiveDateSelector = dateSelector || fallbackDateSelector;
+              const effectiveDateSelector = dateSelector;
 
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
               const hasCompletedToolInvocations = m.toolInvocations && m.toolInvocations.length > 0;
               const hasInteractiveComponent = !!(rooms || guestForm || effectiveDateSelector || paymentOptions || loginPrompt);
               const cleanedContent = cleanMessageContent(m.content);
 
-              // Only skip a truly empty assistant message — keep it if there are any markers/tools/components to render
               const isTrulyEmpty =
                 m.role === 'assistant' &&
                 !cleanedContent &&
@@ -1002,11 +880,31 @@ Phone: ${info.guestPhone}`
                 return null;
               }
 
-              // Fallback text when LLM produced no readable content but did stream a tool result / marker
-              const fallbackContent =
-                m.role === 'assistant' && !cleanedContent && !hasInteractiveComponent && hasCompletedToolInvocations
-                  ? '_Lihat hasil di bawah._'
-                  : cleanedContent;
+              const next = messages[index + 1];
+              const isIntermediateToolOnly =
+                m.role === 'assistant' &&
+                !cleanedContent &&
+                hasCompletedToolInvocations &&
+                !!next &&
+                next.role === 'assistant';
+              if (isIntermediateToolOnly) {
+                return null;
+              }
+
+              let fallbackContent = cleanedContent;
+              if (m.role === 'assistant' && !cleanedContent) {
+                if (rooms && rooms.length > 0) {
+                  fallbackContent = 'Berikut kamar yang tersedia:';
+                } else if (guestForm) {
+                  fallbackContent = 'Silakan lengkapi data berikut:';
+                } else if (effectiveDateSelector) {
+                  fallbackContent = 'Mohon pilih tanggal di kalender berikut:';
+                } else if (paymentOptions) {
+                  fallbackContent = 'Pilih metode pembayaran:';
+                } else if (loginPrompt) {
+                  fallbackContent = 'Silakan login untuk melanjutkan:';
+                }
+              }
 
               return (
                 <motion.div
@@ -1021,14 +919,14 @@ Phone: ${info.guestPhone}`
                     {/* Message Bubble */}
                     <div
                       className={`p-4 rounded-2xl shadow-sm ${m.role === 'user'
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none'
+                        ? 'bg-blue-600 text-white rounded-tr-none'
                         : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none'
                         }`}
                     >
                       {/* Avatar & Role */}
                       {m.role === 'assistant' && (
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
                             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                             </svg>
@@ -1044,8 +942,7 @@ Phone: ${info.guestPhone}`
                         ) : fallbackContent ? (
                           <MarkdownMessage
                             content={fallbackContent}
-                            isStreaming={isLoading}
-                            isLatestMessage={index === messages.length - 1}
+                            isStreaming={isLoading && index === messages.length - 1}
                           />
                         ) : hasInteractiveComponent ? (
                           <div className="text-sm text-gray-500 dark:text-gray-400 italic">
@@ -1076,20 +973,34 @@ Phone: ${info.guestPhone}`
                       })}
                     </div>
 
-                    {/* Room Cards */}
-                    {rooms && rooms.length > 0 && (
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {rooms.map((room) => (
-                          <RoomCard
-                            key={room.id}
-                            room={room}
-                            checkIn={selectedDates.checkIn || 'TBD'}
-                            checkOut={selectedDates.checkOut || 'TBD'}
-                            onBook={handleBookRoom}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {/* Room Cards — aggregated by type (1 card per type) */}
+                    {rooms && rooms.length > 0 && (() => {
+                      const groups = new Map<string, { rep: typeof rooms[number]; count: number }>();
+                      for (const r of rooms) {
+                        const existing = groups.get(r.type);
+                        if (!existing) {
+                          groups.set(r.type, { rep: r, count: 1 });
+                        } else {
+                          existing.count += 1;
+                          if (r.base_price < existing.rep.base_price) existing.rep = r;
+                        }
+                      }
+                      const groupList = Array.from(groups.values()).sort((a, b) => a.rep.base_price - b.rep.base_price);
+                      return (
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {groupList.map(({ rep, count }) => (
+                            <RoomCard
+                              key={rep.type}
+                              room={rep}
+                              count={count}
+                              checkIn={selectedDates.checkIn || 'TBD'}
+                              checkOut={selectedDates.checkOut || 'TBD'}
+                              onBook={handleBookRoom}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Interactive Components */}
                     {guestForm && (
@@ -1127,11 +1038,46 @@ Phone: ${info.guestPhone}`
                         <LoginPromptCard reason={loginPrompt.reason || 'membuat reservasi'} />
                       </div>
                     )}
+
+                    {/* Regenerate button — hanya di assistant message terakhir, setelah streaming selesai */}
+                    {m.role === 'assistant' && index === messages.length - 1 && !isLoading && (
+                      <button
+                        type="button"
+                        onClick={() => reload()}
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-md px-2.5 py-1 transition-colors"
+                        title="Regenerate response"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Regenerate
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               );
             })}
           </AnimatePresence>
+
+          {/* Typing indicator — muncul hanya saat last message dari USER (assistant belum start stream).
+              Setelah assistant bubble muncul, indicator hilang dan content streaming tampil langsung di bubble. */}
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex w-full justify-start mt-2"
+            >
+              <div className="max-w-[85%] md:max-w-[70%]">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-tl-none inline-block">
+                  <div className="flex items-center gap-1.5" aria-label="AI sedang mengetik">
+                    <motion.span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
+                    <motion.span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
+                    <motion.span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           <div ref={messagesEndRef} />
         </div>
@@ -1139,18 +1085,6 @@ Phone: ${info.guestPhone}`
 
       {/* Input Area */}
       <footer className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 p-4 md:p-6 sticky bottom-0 z-10">
-        {/* Rate-limit cooldown banner */}
-        {isRateLimited && (
-          <div className="max-w-4xl mx-auto mb-3 flex items-center justify-center gap-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-            <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>
-              Cooldown <span className="font-bold tabular-nums">{secUntilUnlock}s</span> — batas request AI free tier tercapai.
-              Tunggu, atau ganti model di dropdown untuk lanjut sekarang.
-            </span>
-          </div>
-        )}
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex gap-3 items-end">
             <textarea
@@ -1162,32 +1096,41 @@ Phone: ${info.guestPhone}`
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  if (!isRateLimited) handleSubmit(e as any);
+                  handleSubmit(e as any);
                 }
               }}
-              placeholder={isRateLimited ? `Tunggu ${secUntilUnlock}s sebelum mengirim lagi...` : "Type your message... (Shift+Enter for new line)"}
-              disabled={isLoading || isRateLimited}
+              placeholder="Type your message... (Shift+Enter for new line)"
+              disabled={isLoading}
               rows={1}
             />
-            <motion.button
-              whileHover={{ scale: isRateLimited ? 1 : 1.02 }}
-              whileTap={{ scale: isRateLimited ? 1 : 0.98 }}
-              type="submit"
-              disabled={isLoading || !input.trim() || isRateLimited}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-[#2a2a2a] dark:disabled:to-[#222222] disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-semibold transition-all shadow-lg disabled:shadow-none flex items-center justify-center gap-2 h-[56px] flex-shrink-0"
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            {isLoading ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => stop()}
+                className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-semibold transition-colors shadow-sm flex items-center justify-center gap-2 h-14 shrink-0"
+                title="Hentikan respon AI"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
                 </svg>
-              ) : (
+                <span className="hidden sm:inline">Stop</span>
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={!input.trim()}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-[#2a2a2a] disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-semibold transition-colors shadow-sm disabled:shadow-none flex items-center justify-center gap-2 h-14 shrink-0"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
-              )}
-              <span className="hidden sm:inline">Send</span>
-            </motion.button>
+                <span className="hidden sm:inline">Send</span>
+              </motion.button>
+            )}
           </div>
         </form>
       </footer>
@@ -1229,7 +1172,7 @@ function DateSelectorWrapper({ initialData, onConfirm }: { initialData: any, onC
       />
       <Button
         onClick={() => onConfirm(data)}
-        className="self-end bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+        className="self-end bg-blue-600 text-white"
       >
         Confirm Dates
       </Button>

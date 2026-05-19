@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -60,7 +60,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                     className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
                 >
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 p-6 text-white">
+                    <div className="bg-blue-600 dark:bg-blue-700 p-6 text-white">
                         <div className="flex items-center gap-3">
                             <div className="bg-white/20 p-3 rounded-full">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

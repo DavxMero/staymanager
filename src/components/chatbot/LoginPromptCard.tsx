@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion } from 'framer-motion';
 import { LogIn, UserPlus, ShieldCheck, Save, Clock } from 'lucide-react';
@@ -14,10 +14,10 @@ export function LoginPromptCard({ reason = 'membuat reservasi' }: LoginPromptCar
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-5 border-2 border-blue-200 dark:border-blue-800 shadow-lg"
+            className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm"
         >
             <div className="flex items-start gap-4">
-                <div className="shrink-0 w-12 h-12 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
                     <ShieldCheck className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">

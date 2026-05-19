@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Plus, Trash2, Clock, X } from 'lucide-react';
@@ -85,7 +85,7 @@ export function ChatHistorySidebar({
                         <div className="p-3">
                             <Button
                                 onClick={onNewChat}
-                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2"
                             >
                                 <Plus className="h-4 w-4" />
                                 New Chat
