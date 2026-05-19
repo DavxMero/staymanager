@@ -1,4 +1,73 @@
-# 📋 CHANGELOG - StayManager Chatbot Enhancements
+# Changelog
+
+## 2026-05-17 — Chat persistence alignment cleanup
+
+### Removed (dead code)
+- **`src/lib/ai-chat-utils.ts`** — utility file dengan fungsi `saveChat`, `saveMessages`, `getChatHistory` yang mereference tabel `ai_chats` (tidak pernah dibuat) dan `ai_messages` (kosong, 0 rows). Tidak diimport oleh komponen produksi.
+- **`src/app/api/chat/history/route.ts`** — orphan endpoint yang import `getChatHistory` dari utility di atas. Tidak ada client code yang fetch ke `/api/chat/history`.
+- **Folder `src/app/api/chat/history/`** — kosong setelah delete route.
+
+### Database
+- **`DROP TABLE public.ai_messages`** APPLIED via migration `drop_unused_ai_messages` (2026-05-17). Total tabel public schema: 27 → **26**.
+
+### Why
+Chat history di production sejak hari pertama (commit `a6b5c0f`, 2025-12-04) pakai tabel **`Chat`** (capital C, singular, JSONB `messages` array) via `src/app/chatbot/page.tsx`. Pattern: load utuh per sesi, simpan array messages secara atomik via `useChat` hook AI SDK — khas template Vercel AI Chatbot scaffold.
+
+Repo juga mengandung skeleton dua-tabel design (`ai_chats` parent + `ai_messages` child via FK `chat_id`) dari utility code yang tidak pernah diselesaikan: tabel `ai_chats` tidak pernah dibuat di Supabase, table `ai_messages` dibuat tapi tidak pernah di-write, endpoint `/api/chat/history` tidak pernah dipanggil dari UI. Hasil: kalau endpoint pernah ter-trigger, akan error 500 karena query ke `ai_chats` (ghost table).
+
+Pembersihan ini menyelaraskan tiga layer (DB + backend + frontend) ke desain single-table `Chat` yang nyata. Skripsi `docs/Skripsi_StayManager_Fixed.md` sudah aligned via revisi LOKASI-3/5/6 di Audit Pass #2 (2026-05-17).
+
+---
+
+## 2026-05-16 — Chatbot UX overhaul & cleanup
+
+### Added
+- **Stop button** during streaming (`useChat.stop()`) — cancel mid-response.
+- **Regenerate button** at last assistant message (`useChat.reload()`).
+- **`experimental_throttle: 50`** on `useChat` — reduce render thrash during fast streaming.
+- **Multi-image carousel per room** — `rooms.images jsonb` column, multi-upload in admin form, gallery dialog with left/right arrows + dot indicator (arrows shown even with 1 image, disabled state).
+- **Room amenities & bed configuration editor** in room edit form — per-type (saved to `custom_room_types`). Common amenities chip-selector + custom input. Bed config dropdown (King/Queen/Twin/Double/Single/Bunk/Sofa).
+- **Room detail viewer** in dashboard `/rooms` — modal with carousel, specs (capacity, size, bed, view), amenity chips, description.
+- **Date picker calendar** in chatbot — shadcn `Calendar` + `Popover` replacing native `<input type=date>`. Auto-bump checkout +1 day. Past dates disabled.
+- **Type-grouped room cards** in chatbot — one card per room type with "{count} kamar tersedia", sorted by price.
+- **Date-first booking flow** — bot asks for dates via picker before calling `cekKetersediaan`, even when guest mentions "besok"/"tomorrow".
+- **Server-side auth verification** in `/api/chat` — reads Supabase session cookie, overrides client-supplied `userContext`, blocks `createBooking`/`confirmPayment` for anonymous users.
+- **Booking-ownership check** on `confirmPayment` — compares `reservation.guest_email` vs verified user email.
+- **Non-enumerable booking references** — `BK<6-digit-time><6-char-random>` instead of predictable `BK<8-digit-time>`.
+
+### Changed
+- **Single `isLoading` cycle** — `useChat({ maxSteps: 1 })` on client (server `streamText` keeps `maxSteps: 3` for internal tool round-trips in one HTTP stream). No more 3× flicker per tool-using response.
+- **Streaming UI** — assistant messages produced during `isLoading` are hidden; user sees a single persistent typing-dots indicator until the final reply is ready.
+- **Scroll behavior** — auto-scroll on `messages.length` and `isLoading` change, plus `ResizeObserver` on the message container to catch async height changes (room cards, image lazy-load).
+- **Tool-availability filter** — `cekKetersediaan` now excludes only `maintenance`/`out_of_order` rooms (was incorrectly filtering `status='available'` only, which masked rooms currently `occupied` but free for future dates). Busy-reservation overlap check filters out `checked-out`/`cancelled`/`no_show` statuses and null `room_id` entries (which were breaking the `NOT IN` clause).
+- **System prompt** rewritten — structured Markdown sections (Tools, Anti-hallucination rules, Booking flow, JSON markers, Examples, Rules). Detail kept high to prevent hallucination; ALL-CAPS spam removed.
+- **Model selector** removed — replaced with a static "Powered by Gemini 2.5 Flash" label.
+- **De-gradient pass** across chatbot components and admin sidebar — solid colors only.
+- **Booking failure error** sanitized — server returns a generic "internal system problem" message instead of leaking column-length errors that previously led the LLM to wrongly ask the guest to shorten their phone number.
+
+### Fixed
+- **Booking creation `value too long`** — `booking_id` shortened from 25 to 14 characters to fit `varchar(20)`.
+- **Phone column overflow guard** — `reservations.guest_phone` and `guests.phone` widened from `varchar(20)` to `varchar(30)`.
+- **Deprecated Gemini models** — removed `gemini-2.0-flash-lite`, `gemini-2.0-flash`, `gemini-2.5-flash-lite` from selector; server falls back to `gemini-2.5-flash` for unknown model IDs.
+- **Book button unresponsive** — was awaiting a `.single()` Supabase query that 406'd when the `guests` row didn't exist; replaced with non-blocking `.maybeSingle()`.
+- **Tool loop** — `toolChoice: 'auto'` (was `'required'`) prevents the model from being forced to re-call the same tool every step.
+- **`MarkdownMessage` empty-render bug** — removed custom typewriter wrapper that froze `revealed` state when content arrived after mount. Content streams directly from `useChat`.
+
+### Removed
+- **Multi-key API round-robin** (`parseKeys`, `pickGeminiKey`, `geminiCounter`) — Tier 1 billing is per-project, multi-key didn't multiply limits.
+- **`QuotaCountdown` component + rate-limit hold infrastructure** — `rateLimitedUntil`, `nowTick`, `isRateLimited`, `secUntilUnlock`, cooldown banner, related Send-button gating.
+- **Llama-era regex fallback heuristics** — frontend used to detect "nomor telepon"/"tanggal" in assistant text to render cards even when the LLM forgot the marker. Gemini 2.5 Flash is reliable enough; safety net dropped.
+- **`_Lihat hasil di bawah._` fallback text** — empty bubble is fine when the marker delivers the UI card.
+- **Typewriter post-stream animation** — `useChat` token streaming already provides the typewriter feel; wrapper caused a blank-bubble bug.
+- **Inline typing indicator** inside the assistant bubble — replaced by a single standalone indicator persistent through the whole `isLoading` period.
+- **Model selector dropdown** + related `updateModel`, `ChevronDown`, `Check`, `DropdownMenu*` imports.
+- **Comment cleanup** — all `//` and `/* */` standalone comments stripped from `route.ts`, `chatbot/page.tsx`, and `components/chatbot/*.tsx`.
+- **Groq provider & `GROQ_API_KEY` references** — comment in `route.ts` updated to Gemini-only.
+
+### Security
+- **Server-side auth & ownership checks** (above) — `confirmPayment` previously trusted client-supplied `bookingReference`, making it enumerable for any guest with a valid session. Now requires both an authenticated user and that the reservation's `guest_email` matches.
+
+---
 
 ## 🗓️ Date: December 4, 2025
 

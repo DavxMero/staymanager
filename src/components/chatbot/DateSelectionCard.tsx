@@ -1,8 +1,22 @@
-'use client';
+﻿'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, Users, Plus, Minus } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+
+function parseISO(s: string): Date | undefined {
+  if (!s) return undefined;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
+function toISO(d: Date | undefined): string {
+  if (!d) return '';
+  return format(d, 'yyyy-MM-dd');
+}
 
 interface DateSelectionCardProps {
     checkIn?: string;
@@ -49,11 +63,11 @@ export function DateSelectionCard({
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border-2 border-blue-200 dark:border-gray-600"
+            className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700"
         >
             <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <CalendarIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">Select Dates</h3>
@@ -62,40 +76,85 @@ export function DateSelectionCard({
             </div>
 
             <div className="space-y-4">
-                {/* Date Inputs */}
+                {/* Date Pickers */}
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                             Check-in
                         </label>
-                        <input
-                            type="date"
-                            value={localCheckIn}
-                            onChange={(e) => {
-                                setLocalCheckIn(e.target.value);
-                                onUpdate?.({ checkIn: e.target.value, checkOut: localCheckOut, adults: localAdults, children: localChildren });
-                            }}
-                            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-left text-gray-900 dark:text-white hover:border-blue-500 transition-colors flex items-center gap-2"
+                                >
+                                    <CalendarIcon className="w-4 h-4 text-gray-500" />
+                                    <span className={localCheckIn ? '' : 'text-gray-400'}>
+                                        {localCheckIn ? format(new Date(localCheckIn), 'EEE, dd MMM yyyy') : 'Pilih tanggal'}
+                                    </span>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={parseISO(localCheckIn)}
+                                    onSelect={(d) => {
+                                        const iso = toISO(d);
+                                        setLocalCheckIn(iso);
+                                        let newCheckOut = localCheckOut;
+                                        if (d && (!localCheckOut || new Date(localCheckOut) <= d)) {
+                                            const next = new Date(d);
+                                            next.setDate(next.getDate() + 1);
+                                            newCheckOut = toISO(next);
+                                            setLocalCheckOut(newCheckOut);
+                                        }
+                                        onUpdate?.({ checkIn: iso, checkOut: newCheckOut, adults: localAdults, children: localChildren });
+                                    }}
+                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                             Check-out
                         </label>
-                        <input
-                            type="date"
-                            value={localCheckOut}
-                            onChange={(e) => {
-                                setLocalCheckOut(e.target.value);
-                                onUpdate?.({ checkIn: localCheckIn, checkOut: e.target.value, adults: localAdults, children: localChildren });
-                            }}
-                            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-left text-gray-900 dark:text-white hover:border-blue-500 transition-colors flex items-center gap-2"
+                                >
+                                    <CalendarIcon className="w-4 h-4 text-gray-500" />
+                                    <span className={localCheckOut ? '' : 'text-gray-400'}>
+                                        {localCheckOut ? format(new Date(localCheckOut), 'EEE, dd MMM yyyy') : 'Pilih tanggal'}
+                                    </span>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={parseISO(localCheckOut)}
+                                    onSelect={(d) => {
+                                        const iso = toISO(d);
+                                        setLocalCheckOut(iso);
+                                        onUpdate?.({ checkIn: localCheckIn, checkOut: iso, adults: localAdults, children: localChildren });
+                                    }}
+                                    disabled={(date) => {
+                                        const min = localCheckIn ? new Date(localCheckIn) : new Date(new Date().setHours(0, 0, 0, 0));
+                                        min.setDate(min.getDate() + 1);
+                                        return date < min;
+                                    }}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
 
                 {/* Guest Counter */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+                <div className="bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <span className="text-sm font-semibold text-gray-800 dark:text-white">Guests</span>
@@ -121,7 +180,7 @@ export function DateSelectionCard({
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => updateCount('adults', 1)}
-                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center hover:from-blue-700 hover:to-indigo-700 transition-all"
+                                    className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-colors"
                                 >
                                     <Plus className="w-4 h-4 text-white" />
                                 </motion.button>
@@ -147,7 +206,7 @@ export function DateSelectionCard({
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => updateCount('children', 1)}
-                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center hover:from-blue-700 hover:to-indigo-700 transition-all"
+                                    className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-colors"
                                 >
                                     <Plus className="w-4 h-4 text-white" />
                                 </motion.button>
@@ -161,7 +220,7 @@ export function DateSelectionCard({
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-3 border border-green-200 dark:border-green-700"
+                        className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-3 border border-emerald-200 dark:border-emerald-900"
                     >
                         <div className="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">
                             ✓ Ready to search

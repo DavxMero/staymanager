@@ -1,6 +1,6 @@
 # StayManager — App Summary
 
-> **Last sync**: 2026-05-15 (commit `6122274`)
+> **Last sync**: 2026-05-17 (HEAD `5458862` + uncommitted 2026-05-16 chatbot UX overhaul — lihat [CHANGELOG.md](../CHANGELOG.md))
 > **Tujuan dokumen**: snapshot lengkap fitur, arsitektur, dan tech stack agar penulisan skripsi tetap aligned dengan kode terbaru. Pakai dokumen ini sebagai *ground truth* saat merevisi bab Implementasi, Pengujian, dan Lampiran.
 
 ---
@@ -43,12 +43,13 @@
 - **API Routes**: Next.js Route Handlers (`src/app/api/**/route.ts`) — Node.js runtime
 - **Storage**: Supabase Storage (untuk foto kamar, brand logo)
 
-### AI / LLM (Multi-provider)
+### AI / LLM (Single-provider, Gemini-only sejak 2026-05-16)
 - **AI SDK**: Vercel AI SDK `ai@4.0.38` (`useChat` hook + `streamText`)
-- **Provider 1**: `@ai-sdk/google` `1.0.10` — Gemini 2.5 Flash (gratis, 20 req/menit, 1500 req/hari)
-- **Provider 2**: `@ai-sdk/groq` `1.2.9` — Llama 3.3 70B Versatile & Llama 3.1 8B Instant (gratis, 30 req/menit, 1000–14400 req/hari)
-- **Default model**: Llama 3.3 70B (Groq) — dipilih karena rate-limit lebih longgar & latency lebih rendah
-- **Model selector**: dropdown di header `/chatbot`, pilihan persistent di `localStorage` (`staymanager:chatbot:model`)
+- **Provider**: `@ai-sdk/google` `1.0.10` — Gemini 2.5 Flash (default) + Gemini 2.5 Pro (registry di `route.ts`)
+- **Default model**: `gemini-2.5-flash` (hard-coded; selector di UI dihapus, label statis "Powered by Gemini 2.5 Flash")
+- **Groq + Llama (3.3 70B & 3.1 8B) dihapus** — `@ai-sdk/groq` di-uninstall, `GROQ_API_KEY` di-cleanup. Rationale: setelah pipa kerja stabil, Gemini cukup reliable; Llama-era hallucination workaround (keyword fallback, few-shot markers, force tool-use) di-revert.
+- **Multi-key round-robin (`parseKeys`, `pickGeminiKey`, `geminiCounter`) dihapus** — Tier 1 billing per-project, multi-key tidak melipatgandakan limit.
+- **Tool round-trip**: server `streamText` pakai `maxSteps: 3`; client `useChat({ maxSteps: 1 })` agar satu siklus `isLoading` per response (tidak flicker 3×).
 
 ---
 
@@ -57,9 +58,8 @@
 ```
 src/
 ├── app/                          # Next.js App Router
-│   ├── api/                      # 19 API routes (REST + chat streaming)
-│   │   ├── chat/route.ts         # POST /api/chat — multi-model LLM streaming
-│   │   ├── chat/history/route.ts # Chat history persistence
+│   ├── api/                      # 18 API routes (REST + chat streaming)
+│   │   ├── chat/route.ts         # POST /api/chat — Gemini streaming + 4 function tools
 │   │   ├── reports/analytics/    # GET — agregat revenue, occupancy, KPI
 │   │   ├── reports/export/       # PDF/CSV export
 │   │   ├── rooms/                # Room CRUD + upload image
@@ -219,6 +219,27 @@ Error path:
 ## 7. Recent Updates (Mei 2026 — UAT Preparation)
 
 Berikut adalah perubahan signifikan yang dilakukan menjelang UAT publik. Bisa dijadikan referensi untuk bab "Implementasi & Pengujian" atau "Iterasi Pengembangan" di skripsi.
+
+### 2026-05-17 — Chat persistence alignment cleanup
+- **Hapus dead code** `src/lib/ai-chat-utils.ts` (utility yang reference ghost table `ai_chats` + empty `ai_messages`).
+- **Hapus orphan endpoint** `src/app/api/chat/history/route.ts` (tidak ada client yang fetch).
+- **DB migration** `drop_unused_ai_messages`: drop tabel `ai_messages` (0 rows, no incoming FK). Total tabel public schema: 27 → **26**.
+- **Hasil**: tiga layer (DB + backend + frontend) align ke desain single-table `Chat` JSONB yang dipakai produksi sejak commit `a6b5c0f` (2025-12-04).
+- Skripsi LOKASI-1/3/5/6 di [docs/Skripsi_StayManager_Fixed.md](Skripsi_StayManager_Fixed.md) sudah consistent dengan kondisi pasca-cleanup.
+
+### 2026-05-16 — Chatbot UX overhaul & cleanup (working tree, belum di-commit)
+Lihat detail penuh di [CHANGELOG.md](../CHANGELOG.md). Ringkasan poin penting:
+- **Single-provider migration**: hapus Groq + Llama models, `@ai-sdk/groq` di-uninstall. Selector model dihapus → label statis "Powered by Gemini 2.5 Flash".
+- **Streaming UX**: `useChat({ maxSteps: 1 })` + `experimental_throttle: 50`, tombol Stop & Regenerate, single persistent typing indicator (tidak flicker 3× per tool-use response).
+- **Date picker**: shadcn `Calendar` + `Popover` menggantikan native `<input type=date>`; auto-bump checkout +1 hari; past dates disabled.
+- **Multi-image gallery**: kolom `rooms.images jsonb` + carousel di admin + di chatbot `<RoomCard>` (arrows kiri/kanan + dot indicator).
+- **Room amenities & bed configuration editor** di `/rooms` (per-type, tersimpan di `custom_room_types`); modal room-detail viewer dengan amenity chips.
+- **Type-grouped room cards** di chatbot — satu kartu per tipe dengan "{count} kamar tersedia", sorted by price.
+- **Date-first booking flow** — bot wajib minta tanggal via date picker sebelum `cekKetersediaan`, bahkan untuk "besok"/"tomorrow".
+- **Security (server-side auth)**: `/api/chat` baca Supabase session cookie via `createServerSupabase()`, override `userContext` client-supplied, blokir `createBooking` & `confirmPayment` untuk anonymous user. Ownership check: `reservation.guest_email` harus match `verifiedUser.email`. Booking reference non-enumerable: `BK<6-digit-time><6-char-random>` (was predictable `BK<8-digit-time>`).
+- **Tool-availability filter fix**: `cekKetersediaan` excludes hanya `maintenance`/`out_of_order` (sebelumnya `status='available'` only → masking kamar `occupied` yang free untuk tanggal future). Overlap check filter out `checked-out`/`cancelled`/`no_show` + null `room_id`.
+- **DB schema fixes**: `reservations.booking_id` shortened 25 → 14 char (fit `varchar(20)`); `reservations.guest_phone` & `guests.phone` widened 20 → 30.
+- **Removed (Llama-era cruft)**: multi-key API round-robin, `QuotaCountdown` + rate-limit hold infra, regex keyword fallback (deteksi "nomor telepon"/"tanggal" untuk render card), typewriter wrapper di `MarkdownMessage`, inline typing indicator, model selector dropdown, semua komentar inline di `route.ts` + `chatbot/page.tsx` + `components/chatbot/*`.
 
 ### Commit `f13794f` — Skripsi Assets v4.1
 Asset pipeline lengkap (33 diagram Mermaid + 23 Playwright screenshot + verified citations) untuk lampiran skripsi.

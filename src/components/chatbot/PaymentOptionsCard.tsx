@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion } from 'framer-motion';
 import { CreditCard, Building2, Wallet, Clock, CheckCircle } from 'lucide-react';
@@ -37,12 +37,12 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-5 shadow-xl border-2 border-purple-200 dark:border-gray-600"
+            className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700"
         >
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                             <CreditCard className="w-5 h-5 text-white" />
                         </div>
                         Payment Options
@@ -51,7 +51,7 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                 </div>
                 <div className="text-right">
                     <div className="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
-                    <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrency(totalAmount)}
                     </div>
                 </div>
@@ -140,7 +140,7 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 text-white"
+                        className="bg-emerald-600 rounded-xl p-4 text-white"
                     >
                         <div className="flex items-center gap-2 mb-2">
                             <CheckCircle className="w-5 h-5" />

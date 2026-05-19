@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion } from 'framer-motion';
 import { Calendar, Users, BedDouble, DollarSign, Check } from 'lucide-react';
@@ -38,11 +38,11 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-5 border-2 border-blue-200 dark:border-gray-600 shadow-lg"
+            className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm"
         >
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                         <BedDouble className="w-5 h-5 text-white" />
                     </div>
                     Booking Information
@@ -172,7 +172,7 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         onClick={handleSave}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-lg font-semibold shadow-lg transition-all"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold shadow-sm transition-colors"
                     >
                         Save Changes
                     </motion.button>

@@ -257,7 +257,7 @@ export function AppSidebar() {
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-semibold">
+                    <AvatarFallback className="bg-blue-600 text-white font-semibold">
                       {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>

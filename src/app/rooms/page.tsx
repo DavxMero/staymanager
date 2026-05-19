@@ -68,7 +68,9 @@ import {
   Star,
   RefreshCw,
   ImageIcon,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { Room } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
@@ -126,12 +128,27 @@ export default function RoomsPage() {
   const [roomPrice, setRoomPrice] = useState("")
   const [roomStatus, setRoomStatus] = useState<string>("available")
   const [roomImageUrl, setRoomImageUrl] = useState<string>("")
+  const [roomImages, setRoomImages] = useState<string[]>([])
+  const [roomAmenities, setRoomAmenities] = useState<string[]>([])
+  const [customAmenityInput, setCustomAmenityInput] = useState("")
+  const [roomBedConfig, setRoomBedConfig] = useState<string>("")
   const [imageUploading, setImageUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null)
 
   const [customRoomTypes, setCustomRoomTypes] = useState<string[]>([])
   const [typeImagesByName, setTypeImagesByName] = useState<Record<string, string[]>>({})
+  const [typeMetaByName, setTypeMetaByName] = useState<Record<string, {
+    amenities: string[];
+    max_occupancy: number | null;
+    room_size: number | null;
+    bed_configuration: string | null;
+    description: string | null;
+    view_type: string | null;
+  }>>({})
+  // Detail viewer state — Dialog dengan carousel + amenities untuk staff lihat info kamar lengkap
+  const [viewRoom, setViewRoom] = useState<Room | null>(null)
+  const [viewCarouselIndex, setViewCarouselIndex] = useState(0)
   const [isAddingCustomType, setIsAddingCustomType] = useState(false)
   const [newCustomType, setNewCustomType] = useState("")
 
@@ -240,17 +257,36 @@ export default function RoomsPage() {
     try {
       const { data, error } = await supabase
         .from('custom_room_types')
-        .select('name, images')
+        .select('name, images, amenities, max_occupancy, room_size, bed_configuration, description, view_type')
       if (error) throw error
-      const map: Record<string, string[]> = {}
-      for (const row of (data || []) as { name: string; images: unknown }[]) {
+      const imageMap: Record<string, string[]> = {}
+      const metaMap: typeof typeMetaByName = {}
+      for (const row of (data || []) as Array<{
+        name: string;
+        images: unknown;
+        amenities: unknown;
+        max_occupancy: number | null;
+        room_size: number | null;
+        bed_configuration: string | null;
+        description: string | null;
+        view_type: string | null;
+      }>) {
         if (Array.isArray(row.images)) {
-          map[row.name] = (row.images as string[]).filter((u) => typeof u === 'string')
+          imageMap[row.name] = (row.images as string[]).filter((u) => typeof u === 'string')
+        }
+        metaMap[row.name] = {
+          amenities: Array.isArray(row.amenities) ? (row.amenities as string[]) : [],
+          max_occupancy: row.max_occupancy ?? null,
+          room_size: row.room_size ?? null,
+          bed_configuration: row.bed_configuration ?? null,
+          description: row.description ?? null,
+          view_type: row.view_type ?? null,
         }
       }
-      setTypeImagesByName(map)
+      setTypeImagesByName(imageMap)
+      setTypeMetaByName(metaMap)
     } catch (err) {
-      console.error('Error fetching custom_room_types images:', err)
+      console.error('Error fetching custom_room_types:', err)
     }
   }
 
@@ -560,6 +596,10 @@ export default function RoomsPage() {
     setRoomPrice("")
     setRoomStatus("available")
     setRoomImageUrl("")
+    setRoomImages([])
+    setRoomAmenities([])
+    setCustomAmenityInput("")
+    setRoomBedConfig("")
     setIsAddingCustomType(false)
     setNewCustomType('')
     setError(null)
@@ -573,6 +613,14 @@ export default function RoomsPage() {
     setRoomPrice((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0).toString())
     setRoomStatus(room.status || "available")
     setRoomImageUrl(room.image_url || "")
+    // Backward compat: kalau images[] kosong tapi image_url ada → migrasi seed dari kolom lama
+    const existing = Array.isArray(room.images) ? room.images.filter(Boolean) : []
+    setRoomImages(existing.length > 0 ? existing : (room.image_url ? [room.image_url] : []))
+    // Amenities di-resolve dari custom_room_types berdasarkan tipe (shared across rooms of same type)
+    const meta = typeMetaByName[room.type]
+    setRoomAmenities(meta?.amenities && meta.amenities.length > 0 ? [...meta.amenities] : [])
+    setCustomAmenityInput("")
+    setRoomBedConfig(meta?.bed_configuration || "")
     setIsAddingCustomType(false)
     setNewCustomType('')
     setError(null)
@@ -609,7 +657,9 @@ export default function RoomsPage() {
         throw new Error(data.error || 'Upload gagal')
       }
 
-      setRoomImageUrl(data.url)
+      setRoomImages((prev) => [...prev, data.url])
+      // Backward compat: kalau ini foto pertama, isi juga image_url biar tampilan lama tetap jalan
+      setRoomImageUrl((prev) => prev || data.url)
     } catch (err) {
       setError('Gagal upload gambar: ' + (err as Error).message)
     } finally {
@@ -630,7 +680,8 @@ export default function RoomsPage() {
             base_price: parseFloat(roomPrice),
             floor: roomNumber ? parseInt(roomNumber.charAt(0)) : null,
             status: roomStatus,
-            image_url: roomImageUrl || null
+            image_url: roomImages[0] || roomImageUrl || null,
+            images: roomImages,
           })
           .eq('id', currentRoom.id)
           .select()
@@ -650,7 +701,8 @@ export default function RoomsPage() {
             base_price: parseFloat(roomPrice),
             floor: roomNumber ? parseInt(roomNumber.charAt(0)) : null,
             status: roomStatus,
-            image_url: roomImageUrl || null
+            image_url: roomImages[0] || roomImageUrl || null,
+            images: roomImages,
           })
           .select()
 
@@ -662,7 +714,25 @@ export default function RoomsPage() {
         console.log('Room inserted:', data)
       }
 
+      // Update amenities + bed_configuration di custom_room_types (shared per type)
+      if (roomType) {
+        const meta = typeMetaByName[roomType]
+        const amenitiesChanged = JSON.stringify(meta?.amenities || []) !== JSON.stringify(roomAmenities)
+        const bedChanged = (meta?.bed_configuration || "") !== roomBedConfig
+        if (amenitiesChanged || bedChanged) {
+          const { error: ctErr } = await supabase
+            .from('custom_room_types')
+            .update({
+              amenities: roomAmenities,
+              bed_configuration: roomBedConfig || null,
+            })
+            .eq('name', roomType)
+          if (ctErr) console.error('Update custom_room_types error:', ctErr)
+        }
+      }
+
       await fetchRooms()
+      await fetchTypeImages() // refresh typeMetaByName setelah save
       setIsDialogOpen(false)
     } catch (err) {
       console.error('Error saving room:', err)
@@ -1447,46 +1517,28 @@ export default function RoomsPage() {
                 }
               }
               return filteredRooms.map((room) => {
-              // Fallback chain:
-              // 1. image per kamar (room.image_url)
-              // 2. images dari custom_room_types (per tipe, kalau di-setup)
-              // 3. image kamar lain dengan tipe sama (auto-borrow)
-              // 4. placeholder icon
+              // Build gallery: room-level images > legacy image_url > type-level images > borrow from sibling
+              const roomImgs = Array.isArray(room.images) ? room.images.filter((u): u is string => typeof u === 'string' && Boolean(u)) : []
               const typeImages = typeImagesByName[room.type] || []
-              const displayImage =
-                room.image_url ||
-                typeImages[0] ||
-                firstImageByType[room.type] ||
-                null
+              const galleryRaw = [...roomImgs, room.image_url || '', ...typeImages, firstImageByType[room.type] || ''].filter(Boolean) as string[]
+              const gallery = Array.from(new Set(galleryRaw))
+              const meta = typeMetaByName[room.type]
+              const amenities = meta?.amenities && meta.amenities.length > 0 ? meta.amenities : []
               const statusKey = (room.status || "available") as "available"|"occupied"|"reserved"|"cleaning"|"maintenance"|"out-of-order"
               const statusLabel = room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'
 
               return (
-              <Card key={room.id} className="overflow-hidden h-full flex flex-col min-h-[480px]">
-                {/* Hero image — fixed h-56 (224px) untuk konsistensi pixel-perfect lintas card */}
-                {displayImage ? (
-                  <div className="relative w-full h-56 bg-muted shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={displayImage}
-                      alt={`Room ${room.number}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none'
-                      }}
-                    />
+              <Card key={room.id} className="overflow-hidden h-full flex flex-col">
+                {/* Mini carousel hero */}
+                <DashboardRoomCarousel
+                  gallery={gallery}
+                  alt={`Room ${room.number}`}
+                  statusBadge={
                     <Badge className={`absolute top-2 right-2 ${statusVariants[statusKey]}`}>
                       {statusLabel}
                     </Badge>
-                  </div>
-                ) : (
-                  <div className="relative w-full h-56 bg-linear-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 flex items-center justify-center shrink-0">
-                    <ImageIcon className="h-12 w-12 text-blue-300 dark:text-blue-700" />
-                    <Badge className={`absolute top-2 right-2 ${statusVariants[statusKey]}`}>
-                      {statusLabel}
-                    </Badge>
-                  </div>
-                )}
+                  }
+                />
 
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -1503,12 +1555,49 @@ export default function RoomsPage() {
                   <p className="text-xs text-muted-foreground">
                     {formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0))} per night
                   </p>
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    <span className="font-medium">Status:</span> {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Available'} (Auto-managed)
+
+                  {/* Bed config + description */}
+                  {meta?.bed_configuration && (
+                    <p className="text-xs text-muted-foreground mt-1.5">🛏 {meta.bed_configuration}</p>
+                  )}
+                  {meta?.description && (
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{meta.description}</p>
+                  )}
+
+                  {/* Amenities preview (max 5 chips + "+N more") */}
+                  {amenities.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {amenities.slice(0, 5).map((a) => (
+                        <span
+                          key={a}
+                          className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900"
+                        >
+                          {a}
+                        </span>
+                      ))}
+                      {amenities.length > 5 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          +{amenities.length - 5}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    <span className="font-medium">Status:</span> {statusLabel} (Auto-managed)
                   </div>
 
                   {/* Room Actions — pushed to bottom for consistent alignment across cards */}
-                  <div className="flex mt-auto pt-4 space-x-1">
+                  <div className="flex mt-auto pt-4 gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => { setViewRoom(room); setViewCarouselIndex(0) }}
+                    >
+                      <ImageIcon className="h-4 w-4 mr-1" />
+                      Detail
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -2044,42 +2133,55 @@ export default function RoomsPage() {
 
             <div className="grid gap-3">
               <Label htmlFor="roomImage" className="text-sm font-medium">
-                Foto Kamar
+                Foto Kamar <span className="text-xs text-muted-foreground font-normal">(bisa upload banyak — slide di galeri)</span>
               </Label>
-              {roomImageUrl ? (
-                <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={roomImageUrl}
-                    alt="Room preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setRoomImageUrl("")}
-                    className="absolute top-2 right-2 h-7 px-2 text-xs"
-                  >
-                    Hapus
-                  </Button>
+
+              {roomImages.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {roomImages.map((url, idx) => (
+                    <div
+                      key={`${url}-${idx}`}
+                      className="relative aspect-square rounded-lg overflow-hidden border bg-muted group"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-medium">
+                          Utama
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRoomImages((prev) => prev.filter((_, i) => i !== idx))
+                          if (idx === 0) setRoomImageUrl(roomImages[1] || "")
+                        }}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 hover:bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Hapus foto ${idx + 1}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label
-                  htmlFor="roomImage"
-                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                >
-                  {imageUploading ? (
-                    <span className="text-sm text-muted-foreground">Mengupload...</span>
-                  ) : (
-                    <>
-                      <Plus className="h-6 w-6 text-muted-foreground mb-1" />
-                      <span className="text-sm text-muted-foreground">Klik untuk pilih foto</span>
-                      <span className="text-xs text-muted-foreground/70 mt-1">JPEG / PNG / WebP, max 5MB</span>
-                    </>
-                  )}
-                </label>
               )}
+
+              <label
+                htmlFor="roomImage"
+                className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+              >
+                {imageUploading ? (
+                  <span className="text-sm text-muted-foreground">Mengupload...</span>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5 text-muted-foreground mb-1" />
+                    <span className="text-sm text-muted-foreground">
+                      {roomImages.length > 0 ? 'Tambah foto lagi' : 'Klik untuk pilih foto'}
+                    </span>
+                    <span className="text-xs text-muted-foreground/70 mt-0.5">JPEG / PNG / WebP, max 5MB</span>
+                  </>
+                )}
+              </label>
               <input
                 id="roomImage"
                 type="file"
@@ -2091,6 +2193,118 @@ export default function RoomsPage() {
               {error && error.includes('gambar') && (
                 <p className="text-sm text-red-600">{error}</p>
               )}
+            </div>
+
+            {/* Bed Configuration (per tipe) */}
+            <div className="grid gap-2">
+              <Label htmlFor="roomBed" className="text-sm font-medium">
+                Konfigurasi Tempat Tidur{' '}
+                <span className="text-xs text-muted-foreground font-normal">(per tipe — berlaku untuk semua kamar tipe ini)</span>
+              </Label>
+              <Select value={roomBedConfig} onValueChange={setRoomBedConfig}>
+                <SelectTrigger id="roomBed" className="h-10">
+                  <SelectValue placeholder="Pilih tipe tempat tidur" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="King Bed">King Bed</SelectItem>
+                  <SelectItem value="Queen Bed">Queen Bed</SelectItem>
+                  <SelectItem value="Twin Bed">Twin Bed (2 single)</SelectItem>
+                  <SelectItem value="Double Bed">Double Bed</SelectItem>
+                  <SelectItem value="Single Bed">Single Bed</SelectItem>
+                  <SelectItem value="Bunk Bed">Bunk Bed (susun)</SelectItem>
+                  <SelectItem value="Sofa Bed">Sofa Bed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Amenities (per tipe) */}
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium">
+                Fasilitas{' '}
+                <span className="text-xs text-muted-foreground font-normal">(per tipe — berlaku untuk semua kamar tipe ini)</span>
+              </Label>
+              {(() => {
+                const COMMON_AMENITIES = [
+                  'WiFi', 'AC', 'TV', 'Mini Bar', 'Air Panas', 'Hairdryer',
+                  'Coffee Maker', 'Safety Box', 'Bathtub', 'Shower', 'Setrika',
+                  'Telepon', 'Kulkas', 'Balkon', 'City View', 'Sea View',
+                  'Mountain View', 'Sarapan', 'Akses Kolam Renang', 'Akses Gym',
+                ];
+                const toggle = (a: string) => {
+                  setRoomAmenities((prev) =>
+                    prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
+                  );
+                };
+                const customs = roomAmenities.filter((a) => !COMMON_AMENITIES.includes(a));
+                const addCustom = () => {
+                  const v = customAmenityInput.trim();
+                  if (!v) return;
+                  if (!roomAmenities.includes(v)) setRoomAmenities((prev) => [...prev, v]);
+                  setCustomAmenityInput("");
+                };
+                return (
+                  <>
+                    <div className="flex flex-wrap gap-1.5">
+                      {COMMON_AMENITIES.map((a) => {
+                        const selected = roomAmenities.includes(a);
+                        return (
+                          <button
+                            key={a}
+                            type="button"
+                            onClick={() => toggle(a)}
+                            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                              selected
+                                ? 'bg-blue-600 border-blue-600 text-white'
+                                : 'bg-background border-input hover:bg-muted'
+                            }`}
+                          >
+                            {a}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {customs.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {customs.map((a) => (
+                          <span
+                            key={a}
+                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900"
+                          >
+                            {a}
+                            <button
+                              type="button"
+                              onClick={() => toggle(a)}
+                              className="ml-1 hover:text-red-600"
+                              aria-label={`Hapus ${a}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      <Input
+                        value={customAmenityInput}
+                        onChange={(e) => setCustomAmenityInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addCustom();
+                          }
+                        }}
+                        placeholder="Fasilitas custom (mis. Jacuzzi)"
+                        className="h-9 text-sm"
+                      />
+                      <Button type="button" variant="outline" size="sm" onClick={addCustom}>
+                        Tambah
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -2171,6 +2385,261 @@ export default function RoomsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Room Detail Viewer — carousel + amenities + specs (read-only) */}
+      <Dialog open={!!viewRoom} onOpenChange={(open) => { if (!open) { setViewRoom(null); setViewCarouselIndex(0) } }}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{viewRoom ? `Room ${viewRoom.number} — ${viewRoom.type}` : ''}</DialogTitle>
+            <DialogDescription>Detail kamar lengkap dengan galeri foto dan fasilitas</DialogDescription>
+          </DialogHeader>
+          {viewRoom && (() => {
+            const meta = typeMetaByName[viewRoom.type] || { amenities: [], max_occupancy: null, room_size: null, bed_configuration: null, description: null, view_type: null }
+            const roomImgs = Array.isArray(viewRoom.images) ? viewRoom.images.filter(Boolean) : []
+            const typeImgs = typeImagesByName[viewRoom.type] || []
+            const gallery: string[] = Array.from(new Set([
+              ...roomImgs,
+              viewRoom.image_url || '',
+              ...typeImgs,
+            ].filter(Boolean) as string[]))
+            const amenities = meta.amenities && meta.amenities.length > 0 ? meta.amenities : []
+            const idx = Math.min(viewCarouselIndex, Math.max(0, gallery.length - 1))
+            return (
+              <>
+                {/* Carousel */}
+                <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  {gallery.length > 0 ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      key={idx}
+                      src={gallery[idx]}
+                      alt={`${viewRoom.type} ${viewRoom.number} - ${idx + 1}`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <ImageIcon className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => gallery.length > 1 && setViewCarouselIndex((i) => (i - 1 + gallery.length) % gallery.length)}
+                    disabled={gallery.length <= 1}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => gallery.length > 1 && setViewCarouselIndex((i) => (i + 1) % gallery.length)}
+                    disabled={gallery.length <= 1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+
+                  {gallery.length > 1 && (
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {gallery.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setViewCarouselIndex(i)}
+                          className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/60'}`}
+                          aria-label={`Go to image ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  <Badge className={`absolute top-3 right-3 ${statusVariants[(viewRoom.status || 'available') as keyof typeof statusVariants]}`}>
+                    {(viewRoom.status || 'available').charAt(0).toUpperCase() + (viewRoom.status || 'available').slice(1)}
+                  </Badge>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {viewRoom.type}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Room {viewRoom.number}
+                        {viewRoom.floor != null && ` · Lantai ${viewRoom.floor}`}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrencyCompat(Number(viewRoom.price) || Number(viewRoom.base_price) || 0)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">per malam</div>
+                    </div>
+                  </div>
+
+                  {meta.description && (
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {meta.description}
+                    </p>
+                  )}
+
+                  {/* Specs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-gray-200 dark:border-gray-700">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Tipe</div>
+                      <div className="text-sm font-medium">{viewRoom.type}</div>
+                    </div>
+                    {meta.max_occupancy && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Kapasitas</div>
+                        <div className="text-sm font-medium">{meta.max_occupancy} tamu</div>
+                      </div>
+                    )}
+                    {meta.room_size && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Ukuran</div>
+                        <div className="text-sm font-medium">{meta.room_size} m²</div>
+                      </div>
+                    )}
+                    {meta.bed_configuration && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Tempat tidur</div>
+                        <div className="text-sm font-medium">{meta.bed_configuration}</div>
+                      </div>
+                    )}
+                    {meta.view_type && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Pemandangan</div>
+                        <div className="text-sm font-medium">{meta.view_type}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Amenities */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                      Fasilitas {amenities.length === 0 && <span className="text-xs font-normal text-muted-foreground">(belum dikonfigurasi di Room Type)</span>}
+                    </h4>
+                    {amenities.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {amenities.map((a) => (
+                          <span
+                            key={a}
+                            className="text-xs bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 px-2.5 py-1 rounded-full"
+                          >
+                            {a}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Atur amenities di Room Types admin untuk menampilkan air panas, hairdryer, WiFi, dll.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => { setViewRoom(null); setViewCarouselIndex(0) }}
+                      className="flex-1"
+                    >
+                      Tutup
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const r = viewRoom
+                        setViewRoom(null)
+                        setViewCarouselIndex(0)
+                        if (r) handleEditRoom(r)
+                      }}
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Kamar
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )
+          })()}
+        </DialogContent>
+      </Dialog>
     </motion.div>
+  )
+}
+
+// Mini-carousel untuk hero image di dashboard card. Stateful local index.
+function DashboardRoomCarousel({
+  gallery,
+  alt,
+  statusBadge,
+}: {
+  gallery: string[]
+  alt: string
+  statusBadge: React.ReactNode
+}) {
+  const [idx, setIdx] = useState(0)
+  const safeIdx = gallery.length === 0 ? 0 : idx % gallery.length
+
+  if (gallery.length === 0) {
+    return (
+      <div className="relative w-full h-56 bg-muted flex items-center justify-center shrink-0">
+        <ImageIcon className="h-12 w-12 text-muted-foreground/40" />
+        {statusBadge}
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative w-full h-56 bg-muted shrink-0 group">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={safeIdx}
+        src={gallery[safeIdx]}
+        alt={alt}
+        className="w-full h-full object-cover transition-opacity duration-200"
+        onError={(e) => {
+          ;(e.target as HTMLImageElement).style.display = 'none'
+        }}
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          gallery.length > 1 && setIdx((i) => (i - 1 + gallery.length) % gallery.length)
+        }}
+        disabled={gallery.length <= 1}
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Previous image"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          gallery.length > 1 && setIdx((i) => (i + 1) % gallery.length)
+        }}
+        disabled={gallery.length <= 1}
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-900 flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Next image"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+      {gallery.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+          {gallery.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1 rounded-full transition-all ${i === safeIdx ? 'w-5 bg-white' : 'w-1 bg-white/60'}`}
+            />
+          ))}
+        </div>
+      )}
+      {statusBadge}
+    </div>
   )
 }
