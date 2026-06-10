@@ -1,0 +1,73 @@
+---
+title: Flowchart Peran Guest (Tamu) - Reservasi via Chatbot StayManager
+---
+flowchart TD
+    Start([Mulai: Tamu buka halaman publik]) --> Buka[Akses /chatbot<br/>tanpa wajib login]
+    Buka --> Banner[Tampil banner mode tamu<br/>+ tombol Login / Sign up]
+    Banner --> Tanya[Tamu ketik pertanyaan<br/>POST /api/chat]
+
+    Tanya --> CfgChk{API key Gemini<br/>terpasang?}
+    CfgChk -->|Tidak| Cfg503[Server balas 503<br/>Konfigurasi server tidak lengkap]
+    Cfg503 --> ErrToast
+    CfgChk -->|Ya| LLM[LLM Gemini 2.5-flash proses<br/>toolChoice: auto]
+
+    LLM --> StreamErr{Streaming<br/>berhasil?}
+    StreamErr -->|Gagal kuota/jaringan| ErrToast[Tampilkan toast error<br/>parseChatbotError]
+    ErrToast --> Tanya
+    StreamErr -->|Berhasil| Intent{Intent<br/>ketersediaan?}
+
+    Intent -->|Tidak| Jawab[Jawab info hotel/FAQ<br/>amenitas, kebijakan, harga]
+    Jawab --> Tanya
+    Intent -->|Ya| DateCard[Emit SHOW_DATE_SELECTOR_JSON<br/>tampil DateSelectionCard]
+
+    DateCard --> PilihTgl[Tamu pilih check-in & check-out]
+    PilihTgl --> ValTgl{Tanggal valid?<br/>check-in >= hari ini<br/>check-out > check-in}
+    ValTgl -->|Tidak| DateCard
+    ValTgl -->|Ya| ToolCek[Tool cekKetersediaan:<br/>query overlap reservations,<br/>kecualikan kamar maintenance/<br/>out_of_order & yang dipesan]
+
+    ToolCek --> Ada{Ada kamar<br/>tersedia?}
+    Ada -->|Tidak: status unavailable| TawarLain[Pesan 'Tidak ada kamar tersedia'<br/>sarankan tanggal/tipe lain]
+    TawarLain --> Tanya
+    Ada -->|Ya: status available| Kartu[Emit ROOM_CARDS_JSON<br/>tampil kartu kamar per tipe]
+
+    Kartu --> Pilih[Tamu klik 'Book' pada kamar]
+    Pilih --> Login{Tamu sudah<br/>login?}
+    Login -->|Belum| LoginCard[Emit SHOW_LOGIN_PROMPT_JSON]
+    LoginCard --> DoLogin[Tamu login akun guest]
+    DoLogin --> Login
+    Login -->|Sudah| FormCard[Emit SHOW_GUEST_FORM_JSON<br/>form auto-fill data tamu]
+
+    FormCard --> Konfirmasi[Tamu konfirmasi detail reservasi]
+    Konfirmasi --> ToolCreate[Tool createBooking]
+    ToolCreate --> AuthChk{verifiedUser<br/>ada?}
+    AuthChk -->|Tidak| AuthErr[Balas AUTH_REQUIRED<br/>minta login]
+    AuthErr --> Login
+    AuthChk -->|Ya| Guest[Buat / temukan guest by email]
+    Guest --> Insert[INSERT reservations<br/>status='confirmed'<br/>payment_status='pending']
+
+    Insert --> InsOk{Insert<br/>berhasil?}
+    InsOk -->|Tidak| InsErr[Balas success=false + pesan error]
+    InsErr --> Tanya
+    InsOk -->|Ya| PayCard[Emit SHOW_PAYMENT_OPTIONS_JSON<br/>kode booking BELUM ditampilkan]
+
+    PayCard --> Metode{Metode<br/>pembayaran?}
+    Metode -->|Bayar nanti| Pending([Selesai: reservasi pending,<br/>bayar saat check-in])
+    Metode -->|Bayar sekarang| Transfer[Tamu transfer ke rekening<br/>BCA yang tertera]
+    Transfer --> ToolPay[Tool confirmPayment]
+    ToolPay --> Owner{Email tamu =<br/>guest_email reservasi?}
+    Owner -->|Tidak| OwnErr[Tolak: 'Anda tidak memiliki akses']
+    OwnErr --> PayCard
+    Owner -->|Ya| Bayar[INSERT payments +<br/>UPDATE payment_status='paid']
+    Bayar --> Receipt[Tampilkan KODE BOOKING<br/>+ e-receipt]
+    Receipt --> Done([Selesai: reservasi terbayar])
+
+    classDef startEnd fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef decision fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    classDef process fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef tool fill:#e1bee7,stroke:#6a1b9a,stroke-width:2px,color:#000
+    classDef error fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000
+    class Start,Pending,Done startEnd
+    class CfgChk,StreamErr,Intent,ValTgl,Ada,Login,AuthChk,InsOk,Metode,Owner decision
+    class Buka,Banner,Tanya,Jawab,DateCard,PilihTgl,Kartu,Pilih,LoginCard,DoLogin,FormCard,Konfirmasi,Guest,Insert,PayCard,Transfer,Bayar,Receipt,TawarLain process
+    class LLM,ToolCek,ToolCreate,ToolPay tool
+    class Cfg503,ErrToast,AuthErr,InsErr,OwnErr error
