@@ -1,0 +1,42 @@
+---
+title: Sequence Diagram - Manajemen Tugas Housekeeping
+---
+sequenceDiagram
+    autonumber
+    participant Sys as Sistem (Trigger)
+    actor HK as Petugas Housekeeping
+    participant UI as Halaman /rooms (filter HK)
+    participant API as /api/housekeeping/*
+    participant DB as Supabase
+
+    rect rgb(232, 245, 233)
+    note over Sys: Auto-Generate Saat Check-out
+    Sys->>API: POST /checkout-cleaning { roomId }
+    API->>DB: INSERT INTO housekeeping_tasks (room_id, task_type='checkout-cleaning', status='pending')
+    DB-->>API: { taskId }
+    end
+
+    rect rgb(255, 243, 224)
+    note over Sys: Auto-Generate Daily Maintenance
+    Sys->>API: POST /daily-maintenance (cron 06:00)
+    API->>DB: SELECT id FROM rooms WHERE status='occupied'
+    DB-->>API: occupiedRooms[]
+    loop tiap kamar
+        API->>DB: INSERT INTO housekeeping_tasks (room_id, task_type='daily', status='pending')
+    end
+    end
+
+    HK->>UI: Buka daftar tugas
+    UI->>DB: SELECT * FROM housekeeping_tasks WHERE staff_id=? AND status='pending'
+    DB-->>UI: tasks[]
+    UI-->>HK: Tampilkan tugas + nomor kamar
+
+    HK->>UI: Klik "Mulai" pada task
+    UI->>DB: UPDATE housekeeping_tasks SET status='in_progress', started_at=NOW()
+    DB-->>UI: ok
+
+    HK->>UI: Klik "Selesai" setelah bersih
+    UI->>DB: UPDATE housekeeping_tasks SET status='completed', completed_at=NOW()
+    UI->>DB: UPDATE rooms SET status='available' WHERE id=?
+    DB-->>UI: ok
+    UI-->>HK: Toast "Kamar siap dihuni"

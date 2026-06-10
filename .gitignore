@@ -67,3 +67,6 @@ next-env.d.ts
 # Supabase
 supabase/tmp
 supabase/.temp
+# Playwright output
+/test-results/
+docs/verification/bbt-html-report/

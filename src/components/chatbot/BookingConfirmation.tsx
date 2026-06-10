@@ -21,12 +21,35 @@ interface BookingDetails {
 
 interface BookingConfirmationProps {
     booking: BookingDetails;
-    onConfirm: () => void;
+    onConfirm: (guest: { guestName: string; guestEmail: string; guestPhone: string }) => void;
     onCancel: () => void;
 }
 
 export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingConfirmationProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [guestName, setGuestName] = useState(booking.guestName);
+    const [guestEmail, setGuestEmail] = useState(booking.guestEmail);
+    // Telepon sengaja selalu kosong saat modal muncul — wajib diisi manual
+    const [guestPhone, setGuestPhone] = useState('');
+
+    const nameValid = guestName.trim().length >= 3;
+    const emailValid = /^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(guestEmail.trim());
+    const phoneValid = guestPhone.replace(/\D/g, '').length >= 8;
+    const formValid = nameValid && emailValid && phoneValid;
+
+    // Error hanya ditampilkan untuk field yang sudah diisi tapi tidak valid —
+    // field kosong tampil netral (Confirm tetap disabled lewat formValid)
+    const showNameError = guestName !== '' && !nameValid;
+    const showEmailError = guestEmail !== '' && !emailValid;
+    const showPhoneError = guestPhone !== '' && !phoneValid;
+
+    // booking.* berisi data akun login (prop terbaru, termasuk hasil
+    // fetch tabel guests) — dipakai tombol "Samakan dengan data diri akun ini"
+    const fillFromAccount = () => {
+        setGuestName(booking.guestName);
+        setGuestEmail(booking.guestEmail);
+        setGuestPhone(booking.guestPhone);
+    };
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -37,9 +60,10 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
     };
 
     const handleConfirm = async () => {
+        if (!formValid) return;
         setIsSubmitting(true);
         await new Promise(resolve => setTimeout(resolve, 1500));
-        onConfirm();
+        onConfirm({ guestName: guestName.trim(), guestEmail: guestEmail.trim(), guestPhone: guestPhone.trim() });
     };
 
     return (
@@ -126,21 +150,65 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
-                                Guest Information
+                                Verifikasi Data Diri
                             </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">{booking.guestName}</span>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                Isi data tamu yang akan menginap. Reservasi bisa dibuat untuk orang lain.
+                            </p>
+                            <div className="space-y-3 text-sm">
+                                <div>
+                                    <label htmlFor="bc-guest-name" className="block text-gray-600 dark:text-gray-400 mb-1">Nama Lengkap</label>
+                                    <input
+                                        id="bc-guest-name"
+                                        type="text"
+                                        value={guestName}
+                                        onChange={(e) => setGuestName(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className={`w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${showNameError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                                        placeholder="Nama sesuai identitas"
+                                    />
+                                    {showNameError && (
+                                        <p className="mt-1 text-xs text-red-500">Nama minimal 3 karakter.</p>
+                                    )}
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">{booking.guestEmail}</span>
+                                <div>
+                                    <label htmlFor="bc-guest-phone" className="block text-gray-600 dark:text-gray-400 mb-1">No. Telepon</label>
+                                    <input
+                                        id="bc-guest-phone"
+                                        type="tel"
+                                        value={guestPhone}
+                                        onChange={(e) => setGuestPhone(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className={`w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${showPhoneError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                                        placeholder="+62 8xx xxxx xxxx"
+                                    />
+                                    {showPhoneError && (
+                                        <p className="mt-1 text-xs text-red-500">Nomor telepon minimal 8 digit.</p>
+                                    )}
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Phone:</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">{booking.guestPhone}</span>
+                                <div>
+                                    <label htmlFor="bc-guest-email" className="block text-gray-600 dark:text-gray-400 mb-1">Email</label>
+                                    <input
+                                        id="bc-guest-email"
+                                        type="email"
+                                        value={guestEmail}
+                                        onChange={(e) => setGuestEmail(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className={`w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${showEmailError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                                        placeholder="email@contoh.com"
+                                    />
+                                    {showEmailError && (
+                                        <p className="mt-1 text-xs text-red-500">Format email tidak valid.</p>
+                                    )}
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={fillFromAccount}
+                                    disabled={isSubmitting}
+                                    className="w-full text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-500/50 rounded-lg py-2 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                                >
+                                    Samakan dengan data diri akun ini
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -156,7 +224,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                         </button>
                         <button
                             onClick={handleConfirm}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !formValid}
                             className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isSubmitting ? (

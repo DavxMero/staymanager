@@ -40,6 +40,7 @@ import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { GuestReservationDialog } from "@/components/dialogs"
 import { PhoneInput } from "@/components/ui/phone-input"
+import { BookingActions } from "@/components/booking/BookingActions"
 
 interface Booking {
   id: string
@@ -163,6 +164,8 @@ export default function GuestsPage() {
                 guest_phone,
                 guest_email,
                 room_id,
+                room_number,
+                room_type,
                 guest_id,
                 adults,
                 children
@@ -198,6 +201,16 @@ export default function GuestsPage() {
                     room_number: roomData.number,
                     type: roomData.type
                   }
+                }
+              }
+
+              // Fallback: if FK lookup failed or room_id was null, use denormalized
+              // fields stored on the reservation row itself (handles legacy rows
+              // with missing room_id, plus rooms that were later deleted).
+              if (!mappedRoomData && (currentBooking.room_number || currentBooking.room_type)) {
+                mappedRoomData = {
+                  room_number: currentBooking.room_number || '-',
+                  type: currentBooking.room_type || '-'
                 }
               }
 
@@ -527,7 +540,7 @@ export default function GuestsPage() {
                     key={guest.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
+                    className="p-6 border border-gray-200 dark:border-neutral-800 rounded-lg cursor-pointer bg-white dark:bg-neutral-950 hover:bg-gray-50 dark:hover:bg-neutral-900 hover:border-gray-300 dark:hover:border-neutral-700 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-black/40 transition-all duration-200"
                     onClick={() => handleViewGuest(guest)}
                   >
                     <div className="flex items-start justify-between">
@@ -618,7 +631,9 @@ export default function GuestsPage() {
                       {/* Status & Actions */}
                       <div className="flex flex-col items-end gap-2 ml-4">
                         <div className="flex gap-2">
-                          {isCheckedOut ? (
+                          {booking?.status === 'cancelled' ? (
+                            <Badge variant="destructive">Dibatalkan</Badge>
+                          ) : isCheckedOut ? (
                             <Badge className="bg-gray-500">Check Out</Badge>
                           ) : (
                             <Badge className="bg-blue-500">Check In</Badge>
@@ -631,7 +646,7 @@ export default function GuestsPage() {
                         </div>
 
                         <div className="flex gap-2 mt-2">
-                          {!isCheckedOut && (
+                          {!isCheckedOut && booking?.status !== 'cancelled' && (
                             <Button
                               size="sm"
                               className={booking?.status === 'confirmed' ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
@@ -646,6 +661,22 @@ export default function GuestsPage() {
                             >
                               {booking?.status === 'confirmed' ? 'Check In' : 'Checkout Tamu'}
                             </Button>
+                          )}
+                          {booking && (
+                            <BookingActions
+                              bookingId={booking.id}
+                              status={booking.status}
+                              guestName={guest.full_name}
+                              onStatusChange={(newStatus) =>
+                                setGuests((prev) =>
+                                  prev.map((g) =>
+                                    g.id === guest.id && g.currentBooking
+                                      ? { ...g, currentBooking: { ...g.currentBooking, status: newStatus } }
+                                      : g
+                                  )
+                                )
+                              }
+                            />
                           )}
                           <Button
                             variant="outline"
@@ -708,7 +739,7 @@ export default function GuestsPage() {
 
               {/* Tab 1: Data Tamu */}
               <TabsContent value="guest" className="space-y-4 mt-4">
-                <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <div className="bg-muted/50 p-6 rounded-lg space-y-4">
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Nama Lengkap</Label>
                     <p className="text-lg font-semibold mt-1">{currentGuest.full_name}</p>
@@ -754,7 +785,7 @@ export default function GuestsPage() {
               {/* Tab 2: Detail Booking */}
               <TabsContent value="booking" className="space-y-4 mt-4">
                 {currentGuest.currentBooking ? (
-                  <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                  <div className="bg-muted/50 p-6 rounded-lg space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Reservation ID</Label>
@@ -868,7 +899,7 @@ export default function GuestsPage() {
                 {currentGuest.payments && currentGuest.payments.length > 0 ? (
                   <div className="space-y-4">
                     {/* Payment Summary */}
-                    <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="bg-muted/50 p-6 rounded-lg">
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground">Total Pembayaran</Label>
@@ -909,7 +940,7 @@ export default function GuestsPage() {
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Riwayat Pembayaran</Label>
                       {currentGuest.payments.map((payment, index) => (
-                        <div key={payment.id || index} className="border rounded-lg p-4 bg-white">
+                        <div key={payment.id || index} className="border rounded-lg p-4 bg-card">
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <p className="font-medium">Pembayaran #{index + 1}</p>

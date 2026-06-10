@@ -1,0 +1,33 @@
+---
+title: Sequence Diagram - Check-out Tamu
+---
+sequenceDiagram
+    autonumber
+    actor FD as Front Desk
+    participant UI as Halaman /occupancy
+    participant Act as Server Action checkOut
+    participant DB as Supabase
+    participant Inv as Modul Billing
+
+    FD->>UI: Pilih reservasi "checked-in"
+    UI->>DB: SELECT billing_items, payments WHERE reservation_id = ?
+    DB-->>UI: { items[], paid }
+    UI-->>FD: Tampilkan total biaya + status bayar
+    FD->>UI: Konfirmasi check-out
+    UI->>Act: checkOutReservation(reservationId)
+    alt Masih ada saldo belum bayar
+        Act-->>UI: { error: "Outstanding balance" }
+        UI-->>FD: Minta penyelesaian pembayaran
+    else Semua lunas
+        Act->>DB: UPDATE reservations SET status='checked-out', actual_check_out=NOW()
+        DB-->>Act: ok
+        Act->>DB: UPDATE rooms SET status='cleaning' WHERE id = ?
+        DB-->>Act: ok
+        Act->>DB: INSERT INTO housekeeping_tasks (room_id, task_type='checkout-cleaning', status='pending')
+        DB-->>Act: ok
+        Act->>Inv: Generate invoice final
+        Inv->>DB: INSERT INTO invoices (...)
+        DB-->>Inv: { invoiceId }
+        Act-->>UI: { success: true, invoice }
+        UI-->>FD: Tampilkan invoice + status kamar = cleaning
+    end

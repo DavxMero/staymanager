@@ -1,0 +1,26 @@
+---
+title: Sequence Diagram - Check-in Tamu
+---
+sequenceDiagram
+    autonumber
+    actor FD as Front Desk
+    participant UI as Halaman /occupancy
+    participant Act as Server Action checkIn
+    participant DB as Supabase
+    participant Notif as Toast Notification
+
+    FD->>UI: Cari reservasi via booking_reference
+    UI->>DB: SELECT * FROM reservations WHERE booking_reference = ?
+    DB-->>UI: { reservation, guest, room }
+    UI-->>FD: Tampilkan detail reservasi
+    FD->>UI: Klik tombol "Check-in"
+    UI->>Act: checkInReservation(reservationId)
+    Act->>DB: UPDATE reservations SET status='checked-in', actual_check_in = NOW() WHERE id = ?
+    DB-->>Act: ok
+    Act->>DB: UPDATE rooms SET status='occupied' WHERE id = ?
+    DB-->>Act: ok
+    Act->>DB: INSERT INTO billing_items (reservation_id, room_id, amount, description='Room charge')
+    DB-->>Act: ok
+    Act-->>UI: { success: true }
+    UI->>Notif: "Check-in berhasil"
+    Notif-->>FD: Tampilkan notifikasi sukses

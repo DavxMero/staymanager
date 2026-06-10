@@ -1,0 +1,54 @@
+---
+title: Sequence Diagram - Manajemen Kamar (CRUD)
+---
+sequenceDiagram
+    autonumber
+    actor Mgr as Manager
+    participant UI as Halaman /rooms
+    participant API as /api/rooms
+    participant DB as Supabase
+
+    rect rgb(232, 245, 233)
+    note right of Mgr: CREATE Kamar Baru
+    Mgr->>UI: Klik "Tambah Kamar"
+    UI->>API: POST { number, type, base_price, status }
+    API->>DB: INSERT INTO rooms (...)
+    DB-->>API: { id, ... }
+    API-->>UI: 201 Created
+    UI-->>Mgr: Tampilkan kamar baru di tabel
+    end
+
+    rect rgb(227, 242, 253)
+    note right of Mgr: READ Daftar Kamar
+    Mgr->>UI: Load /rooms
+    UI->>API: GET /api/rooms?status=...
+    API->>DB: SELECT * FROM rooms ORDER BY number
+    DB-->>API: rooms[]
+    API-->>UI: 200 OK
+    UI-->>Mgr: Tabel kamar dengan badge status
+    end
+
+    rect rgb(255, 243, 224)
+    note right of Mgr: UPDATE Status Kamar
+    Mgr->>UI: Ubah status (available → cleaning)
+    UI->>API: PATCH /api/rooms/:id { status }
+    API->>DB: UPDATE rooms SET status=? WHERE id=?
+    DB-->>API: ok
+    API-->>UI: 200
+    UI-->>Mgr: Badge update real-time
+    end
+
+    rect rgb(255, 235, 238)
+    note right of Mgr: DELETE Kamar
+    Mgr->>UI: Klik hapus + konfirmasi
+    UI->>API: DELETE /api/rooms/:id
+    API->>DB: Cek reservasi aktif
+    alt Ada reservasi aktif
+        API-->>UI: 409 Conflict
+        UI-->>Mgr: Tidak dapat dihapus
+    else Aman
+        API->>DB: DELETE FROM rooms WHERE id=?
+        DB-->>API: ok
+        API-->>UI: 204
+    end
+    end

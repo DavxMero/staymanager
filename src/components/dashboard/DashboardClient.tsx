@@ -15,6 +15,10 @@ import {
   ConciergeBell,
   ClipboardList,
   Clock,
+  ClipboardCheck,
+  X,
+  ExternalLink,
+  Zap,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -94,6 +98,20 @@ export function DashboardClient({
   const [facilityRequests, setFacilityRequests] = useState<GuestFacilityRequest[]>(initialFacilityRequests)
   const [staffCount] = useState(initialStaffCount)
 
+  // Thesis survey banner state — REMOVE AFTER DATA COLLECTION COMPLETE
+  const [surveyBannerVisible, setSurveyBannerVisible] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const dismissed = window.localStorage.getItem('staymanager:thesis-survey-dismissed')
+    if (!dismissed) setSurveyBannerVisible(true)
+  }, [])
+  const dismissSurveyBanner = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('staymanager:thesis-survey-dismissed', '1')
+    }
+    setSurveyBannerVisible(false)
+  }
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
     if (hour < 12) return "MORNING"
@@ -102,12 +120,23 @@ export function DashboardClient({
   }, [])
 
   useEffect(() => {
-    // Realtime subscriptions
-    const roomChannel = supabase
-      .channel('dashboard-rooms')
+    // Burst event (mis. check-in = beberapa mutasi beruntun) di-debounce
+    // supaya hanya satu refetch per tabel, bukan satu per event
+    const timers: Record<string, ReturnType<typeof setTimeout> | null> = {
+      reservations: null,
+      facilities: null,
+    }
+    const debounced = (key: 'reservations' | 'facilities', fn: () => void) => {
+      const t = timers[key]
+      if (t) clearTimeout(t)
+      timers[key] = setTimeout(() => { timers[key] = null; fn() }, 400)
+    }
+
+    // Satu channel (satu websocket join) untuk ketiga tabel
+    const channel = supabase
+      .channel('dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, (payload) => {
         // More efficient update: do not refetch all rooms, just update the payload
-        // The payload gives us payload.new or payload.old
         if (payload.eventType === 'UPDATE') {
           setRooms(prev => prev.map(r => r.id === payload.new.id ? payload.new as Room : r))
         } else if (payload.eventType === 'INSERT') {
@@ -116,38 +145,39 @@ export function DashboardClient({
           setRooms(prev => prev.filter(r => r.id !== payload.old.id))
         }
       })
-      .subscribe()
-
-    const reservationChannel = supabase
-      .channel('dashboard-reservations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-        supabase.from('reservations').select('*, guests(full_name), rooms(number)').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
-          if (data) setReservations(data as Reservation[])
+        debounced('reservations', () => {
+          supabase.from('reservations').select('*, guests(full_name), rooms(number)').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
+            if (data) setReservations(data as Reservation[])
+          })
         })
       })
-      .subscribe()
-
-    const facilityChannel = supabase
-      .channel('dashboard-facility')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'guest_facility_requests' }, () => {
-        supabase.from('guest_facility_requests').select('*').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
-          if (data) setFacilityRequests(data as GuestFacilityRequest[])
+        debounced('facilities', () => {
+          supabase.from('guest_facility_requests').select('*').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
+            if (data) setFacilityRequests(data as GuestFacilityRequest[])
+          })
         })
       })
       .subscribe()
 
     return () => {
-      supabase.removeChannel(roomChannel)
-      supabase.removeChannel(reservationChannel)
-      supabase.removeChannel(facilityChannel)
+      Object.values(timers).forEach(t => { if (t) clearTimeout(t) })
+      supabase.removeChannel(channel)
     }
   }, [supabase])
 
-  const totalRooms = rooms.length
-  const occupiedRooms = rooms.filter(r => r.status === 'occupied' || r.status === 'reserved').length
+  const { totalRooms, occupiedRooms, availableRooms, maintenanceRooms, cleaningRooms } = useMemo(() => {
+    const counts = { totalRooms: rooms.length, occupiedRooms: 0, availableRooms: 0, maintenanceRooms: 0, cleaningRooms: 0 }
+    for (const r of rooms) {
+      if (r.status === 'occupied' || r.status === 'reserved') counts.occupiedRooms++
+      else if (r.status === 'available') counts.availableRooms++
+      else if (r.status === 'maintenance') counts.maintenanceRooms++
+      if (r.status === 'cleaning') counts.cleaningRooms++
+    }
+    return counts
+  }, [rooms])
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0
-  const availableRooms = rooms.filter(r => r.status === 'available').length
-  const maintenanceRooms = rooms.filter(r => r.status === 'maintenance').length
 
   const derivedRoomTypes = useMemo(() => {
     const typeMap = new Map<string, { name: string; rooms: any[]; totalPrice: number; image: string; description: string; amenities: string[]; maxOccupancy: number }>()
@@ -181,7 +211,6 @@ export function DashboardClient({
       maxOccupancy: entry.maxOccupancy
     }))
   }, [rooms])
-  const cleaningRooms = rooms.filter(r => r.status === 'cleaning').length
 
   const todayCheckins = reservations.filter(r => {
     const checkIn = new Date(r.check_in)
@@ -284,9 +313,9 @@ export function DashboardClient({
   ]
 
   const propertyHighlights = [
-    { title: "Spa & Wellness", description: "Spa treatments to rejuvenate and revive your senses with premium services.", image: "/images/dashboard/spa-wellness.png" },
-    { title: "Fine Dining", description: "Gourmet dishes are prepared with a great attention to detail and quality.", image: "/images/dashboard/fine-dining.png" },
-    { title: "Concierge Services", description: "Concierge Services include accompanying guests and personalized assistance.", image: "/images/dashboard/concierge-services.png" },
+    { title: "Spa & Wellness", description: "Spa treatments to rejuvenate and revive your senses with premium services.", image: "/images/dashboard/spa-wellness.webp" },
+    { title: "Fine Dining", description: "Gourmet dishes are prepared with a great attention to detail and quality.", image: "/images/dashboard/fine-dining.webp" },
+    { title: "Concierge Services", description: "Concierge Services include accompanying guests and personalized assistance.", image: "/images/dashboard/concierge-services.webp" },
   ]
 
   const containerVariants = {
@@ -317,7 +346,7 @@ export function DashboardClient({
         <motion.div variants={itemVariants}>
           <div className="relative overflow-hidden rounded-2xl" style={{ minHeight: '280px' }}>
             <Image
-              src="/images/dashboard/hero-banner.png"
+              src="/images/dashboard/hero-banner.webp"
               alt="Hotel Resort"
               fill
               sizes="(max-width: 768px) 100vw, 1400px"
@@ -346,7 +375,17 @@ export function DashboardClient({
                 <strong>{todayCheckins}</strong> guests are scheduled for check-in today.
               </p>
               {!isGuest && (
-                <div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    asChild
+                    className="rounded-full px-6 py-5 text-sm font-semibold shadow-lg bg-[#FFB400] hover:bg-[#E5A200] text-[#002f6f]"
+                    style={{ fontFamily: 'var(--font-plus-jakarta)' }}
+                  >
+                    <Link href="/occupancy?quickAction=checkin">
+                      <Zap className="mr-2 h-4 w-4" />
+                      Check-in Cepat
+                    </Link>
+                  </Button>
                   <Button
                     asChild
                     className="rounded-full px-6 py-5 text-sm font-semibold shadow-lg bg-[#002f6f] hover:bg-[#001d47] text-white"
@@ -362,6 +401,59 @@ export function DashboardClient({
             </div>
           </div>
         </motion.div>
+
+        {/* Thesis Survey Banner — REMOVE AFTER DATA COLLECTION COMPLETE */}
+        {surveyBannerVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="relative rounded-2xl border border-[#1A468F]/15 dark:border-[#afc6ff]/15 bg-[#d8e2ff]/40 dark:bg-[#1A468F]/15 p-5 md:p-6"
+          >
+            <button
+              type="button"
+              onClick={dismissSurveyBanner}
+              aria-label="Tutup banner"
+              className="absolute top-3 right-3 p-1.5 rounded-lg text-[#1A468F] dark:text-[#afc6ff] hover:bg-[#d8e2ff] dark:hover:bg-[#1A468F]/30 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex flex-col md:flex-row md:items-center gap-4 pr-8">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#d8e2ff] dark:bg-[#1A468F]/30 flex items-center justify-center">
+                <ClipboardCheck className="w-6 h-6 text-[#1A468F] dark:text-[#afc6ff]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="text-base md:text-lg font-bold text-[#002f6f] dark:text-white mb-1"
+                  style={{ fontFamily: 'var(--font-manrope)' }}
+                >
+                  Bantu Penelitian Skripsi StayManager
+                </h3>
+                <p
+                  className="text-sm text-[#1A468F] dark:text-[#afc6ff]/90"
+                  style={{ fontFamily: 'var(--font-plus-jakarta)' }}
+                >
+                  Isi kuesioner singkat (5 menit) untuk evaluasi sistem. Feedback Anda sangat berarti untuk perbaikan StayManager.
+                </p>
+              </div>
+              <Button
+                asChild
+                className="flex-shrink-0 rounded-full px-5 py-5 text-sm font-semibold shadow-sm bg-[#002f6f] hover:bg-[#001d47] text-white"
+                style={{ fontFamily: 'var(--font-plus-jakarta)' }}
+              >
+                <a
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSezJ-8p5Xux47lfWOiifdcQTzIIuk6rs0-ZJVfpx7FLPnl54A/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Isi Kuesioner
+                  <ExternalLink className="ml-2 h-3.5 w-3.5 opacity-70" />
+                </a>
+              </Button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -602,7 +694,7 @@ export function DashboardClient({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {derivedRoomTypes.map((rt) => {
-                const roomImage = rt.image || '/images/dashboard/hero-banner.png'
+                const roomImage = rt.image || '/images/dashboard/hero-banner.webp'
                 return (
                   <div
                     key={rt.name}

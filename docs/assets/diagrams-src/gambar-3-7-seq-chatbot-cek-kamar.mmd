@@ -1,0 +1,27 @@
+---
+title: Sequence Diagram - Chatbot Cek Ketersediaan Kamar
+---
+sequenceDiagram
+    autonumber
+    actor Tamu
+    participant UI as Halaman /chatbot
+    participant API as /api/chat (streamText)
+    participant LLM as Gemini 2.5 Flash
+    participant Tool as Tool cekKetersediaan
+    participant DB as Supabase
+
+    Tamu->>UI: Tanya "Ada kamar 20-22 Juli?"
+    UI->>API: POST messages
+    API->>LLM: stream({ messages, tools, systemPrompt })
+    LLM->>LLM: Deteksi intent ketersediaan
+    LLM->>Tool: cekKetersediaan(checkIn, checkOut, tipeKamar?)
+    Tool->>DB: SELECT room_id FROM reservations WHERE status NOT IN (...)<br/>AND check_in < ? AND check_out > ?
+    DB-->>Tool: busyRoomIds[]
+    Tool->>DB: SELECT id, number, type, base_price, image_url FROM rooms<br/>WHERE id NOT IN busyRoomIds AND status NOT IN (maintenance, out_of_order)
+    DB-->>Tool: availableRooms[]
+    Tool->>DB: SELECT name, amenities, images FROM custom_room_types WHERE name IN (...)
+    DB-->>Tool: typeMetadata[]
+    Tool-->>LLM: { status: "available", rooms: [...] }
+    LLM->>API: Stream token + tool result
+    API-->>UI: SSE: kartu interaktif kamar
+    UI-->>Tamu: Galeri foto + tarif + tombol "Book This Room"
