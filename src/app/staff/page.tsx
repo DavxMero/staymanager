@@ -49,10 +49,10 @@ import {
   Coffee,
   UserX,
   Heart,
+  Loader2,
 } from "lucide-react"
 import { supabase } from "@/lib/supabaseClient"
-import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
+import { toast } from "sonner"
 
 interface StaffMember {
   id: number
@@ -113,7 +113,7 @@ export default function StaffPage() {
   const [filteredStaff, setFilteredStaff] = useState<StaffMember[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { toast } = useToast()
+  const [saving, setSaving] = useState(false)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
@@ -251,13 +251,10 @@ export default function StaffPage() {
   const handleSave = async () => {
     try {
       if (!formData.full_name || !formData.employee_id || !formData.role || !formData.department) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Please fill in all required fields",
-        })
+        toast.error('Please fill in all required fields')
         return
       }
+      setSaving(true)
 
       const staffData = {
         employee_id: formData.employee_id,
@@ -284,10 +281,7 @@ export default function StaffPage() {
 
         if (error) throw error
 
-        toast({
-          title: "Success",
-          description: "Staff member updated successfully",
-        })
+        toast.success('Staff member updated')
       } else {
         const { error } = await supabase
           .from('staff_members')
@@ -295,10 +289,7 @@ export default function StaffPage() {
 
         if (error) throw error
 
-        toast({
-          title: "Success",
-          description: "Staff member added successfully",
-        })
+        toast.success('Staff member added')
       }
 
       setIsDialogOpen(false)
@@ -306,11 +297,9 @@ export default function StaffPage() {
       fetchStaff()
     } catch (err) {
       console.error('Error saving staff:', err)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: 'Failed to save staff member: ' + (err as Error).message,
-      })
+      toast.error('Failed to save staff member', { description: (err as Error).message })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -327,19 +316,12 @@ export default function StaffPage() {
 
       if (error) throw error
 
-      toast({
-        title: "Success",
-        description: "Staff member deleted successfully",
-      })
+      toast.success('Staff member deleted')
 
       fetchStaff()
     } catch (err) {
       console.error('Error deleting staff:', err)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: 'Failed to delete staff member: ' + (err as Error).message,
-      })
+      toast.error('Failed to delete staff member', { description: (err as Error).message })
     }
   }
 
@@ -832,17 +814,21 @@ export default function StaffPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editingStaff ? 'Update Staff' : 'Add Staff'}
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : editingStaff ? 'Update Staff' : 'Add Staff'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Toaster />
     </motion.div>
   )
 }

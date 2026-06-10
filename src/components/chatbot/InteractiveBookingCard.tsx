@@ -88,13 +88,13 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
                         type="email"
                     />
                     <InfoField
-                        label="No. Telepon"
+                        label="Phone No."
                         value={localInfo.guestPhone}
                         editMode={editMode}
                         onChange={(v) => setLocalInfo({ ...localInfo, guestPhone: v })}
                         icon="📱"
                         type="tel"
-                        placeholder="Opsional — untuk konfirmasi reservasi"
+                        placeholder="Optional — for reservation confirmation"
                     />
                 </div>
 

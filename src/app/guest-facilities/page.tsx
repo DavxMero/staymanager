@@ -20,7 +20,8 @@ import {
   Trash2,
   Settings,
   Save,
-  X
+  X,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
 import { usePermissions } from "@/lib/hooks/usePermissions"
 import { useGuestReservation } from "@/lib/hooks/useGuestReservation"
+import { toast } from "sonner"
 
 interface ServiceItem {
   id: number
@@ -173,15 +175,15 @@ export default function GuestFacilitiesPage() {
 
     let finalGuestId, finalReservationId, finalRoomId;
     if (isGuest) {
-      if (guestReservation.error) { alert("Error: " + guestReservation.error); return; }
-      if (!guestReservation.reservation_id) { alert("No active reservation"); return; }
+      if (guestReservation.error) { toast.error('Reservation error', { description: guestReservation.error }); return; }
+      if (!guestReservation.reservation_id) { toast.error('No active reservation found'); return; }
       finalGuestId = guestReservation.guest_id;
       finalReservationId = guestReservation.reservation_id;
       finalRoomId = guestReservation.room_id;
     } else {
-      if (!selectedGuestId) { alert("Pilih kamar dulu"); return; }
+      if (!selectedGuestId) { toast.error('Please select a room'); return; }
       const guest = activeGuests.find(g => g.reservation_id === selectedGuestId || g.reservation_id.toString() === selectedGuestId);
-      if (!guest) { alert("Guest not found"); return; }
+      if (!guest) { toast.error('Guest not found'); return; }
       finalGuestId = guest.guest_id;
       finalReservationId = guest.reservation_id;
       finalRoomId = guest.room_id;
@@ -235,15 +237,15 @@ export default function GuestFacilitiesPage() {
 
       if (billingError) {
         console.error('Billing Error:', billingError)
-        alert('Service requested but failed to add to billing automatically.')
+        toast.warning('Service requested but billing entry could not be added automatically.')
       }
 
-      alert(`Successfully ordered ${selectedService.name}.`)
+      toast.success(`Order placed for ${selectedService.name}`)
       setIsOrderOpen(false)
 
     } catch (error: any) {
       console.error('Order failed:', error)
-      alert('Failed to place order: ' + error.message)
+      toast.error('Failed to place order', { description: error.message })
     } finally {
       setIsSubmitting(false)
     }
@@ -283,14 +285,15 @@ export default function GuestFacilitiesPage() {
       if (error) throw error
 
       setServices(services.filter(s => s.id !== id))
+      toast.success('Service deleted')
     } catch (error: any) {
-      alert('Failed to delete service: ' + error.message)
+      toast.error('Failed to delete service', { description: error.message })
     }
   }
 
   const handleSaveService = async () => {
     if (!formData.name || !formData.price) {
-      alert('Please fill in Name and Price')
+      toast.error('Please fill in Name and Price')
       return
     }
 
@@ -328,10 +331,11 @@ export default function GuestFacilitiesPage() {
         setServices([...services, data])
       }
 
+      toast.success(isEditing ? 'Service updated' : 'Service added')
       setIsManageOpen(false)
     } catch (error: any) {
       console.error('Save failed:', error)
-      alert('Failed to save service: ' + error.message)
+      toast.error('Failed to save service', { description: error.message })
     } finally {
       setIsSubmitting(false)
     }
@@ -485,11 +489,11 @@ export default function GuestFacilitiesPage() {
               {isGuest ? (
                 <div className="p-3 border rounded-md bg-muted text-sm flex items-center">
                   <div className="h-4 w-4 mr-2" />
-                  {guestReservation.loading 
-                    ? "Deteksi kamar aktif..." 
-                    : guestReservation.error 
-                      ? <span className="text-destructive">Gagal: {guestReservation.error}</span> 
-                      : <span className="font-medium text-blue-600">Terdeteksi: Kamar {guestReservation.room_number}</span>}
+                  {guestReservation.loading
+                    ? "Detecting active room..."
+                    : guestReservation.error
+                      ? <span className="text-destructive">Error: {guestReservation.error}</span>
+                      : <span className="font-medium text-blue-600">Detected: Room {guestReservation.room_number}</span>}
                 </div>
               ) : (
                 <Select value={selectedGuestId} onValueChange={setSelectedGuestId}>
@@ -558,7 +562,7 @@ export default function GuestFacilitiesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOrderOpen(false)}>Cancel</Button>
             <Button onClick={handleSubmitOrder} disabled={(!selectedGuestId && !isGuest) || isSubmitting || (isGuest && guestReservation.error !== null)}>
-              {isSubmitting ? "Processing..." : "Confirm Order"}
+              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : 'Confirm Order'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -641,7 +645,7 @@ export default function GuestFacilitiesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsManageOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveService} disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Service"}
+              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : 'Save Service'}
             </Button>
           </DialogFooter>
         </DialogContent>

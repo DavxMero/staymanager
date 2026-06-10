@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { getServerUserContext, hasPermission } from "@/lib/auth/server-permissions";
 
 const ImageSchema = z.object({
     file: z
@@ -19,14 +20,11 @@ const ImageSchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const ctx = await getServerUserContext(request);
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!hasPermission(ctx, "rooms")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = await createClient();
 
     if (request.body === null) {
         return new Response("Request body is empty", { status: 400 });

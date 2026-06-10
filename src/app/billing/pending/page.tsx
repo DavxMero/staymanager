@@ -23,11 +23,13 @@ import {
   CreditCard,
   Banknote,
   Wallet,
-  Edit
+  Edit,
+  Loader2
 } from "lucide-react"
 import { Invoice, BillingItem, Reservation, Guest, Room } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
 import { billingItemsApi } from "@/lib/billingApi"
+import { toast } from "sonner"
 import { UnpaidBillingsList } from "@/components/billing/UnpaidBillingsList"
 import { AddBillingItemForm } from "@/components/billing/AddBillingItemForm"
 import { format } from "date-fns"
@@ -44,6 +46,7 @@ export default function PendingPaymentsPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isAddingBillingItem, setIsAddingBillingItem] = useState(false)
+  const [isSavingBillingItem, setIsSavingBillingItem] = useState(false)
   const [unpaidBillings, setUnpaidBillings] = useState<BillingItem[]>([])
   const [amount, setAmount] = useState("")
   const [status, setStatus] = useState<"paid" | "pending" | "overdue">("pending")
@@ -137,15 +140,20 @@ export default function PendingPaymentsPage() {
   }
 
   const handleAddBillingItem = async (billingItems: Omit<BillingItem, 'id' | 'created_at'>[]) => {
+    setIsSavingBillingItem(true)
     try {
       for (const item of billingItems) {
         await billingItemsApi.create(item)
       }
       await fetchUnpaidBillings(String(selectedInvoice?.reservation_id || ""))
       setIsAddingBillingItem(false)
+      toast.success('Billing item added')
     } catch (err) {
       console.error('Error adding billing items:', err)
+      toast.error('Failed to add billing item', { description: (err as Error).message })
       setError(err instanceof Error ? err.message : 'Failed to add billing items')
+    } finally {
+      setIsSavingBillingItem(false)
     }
   }
 
@@ -153,8 +161,10 @@ export default function PendingPaymentsPage() {
     try {
       await billingItemsApi.update(id, updates)
       await fetchUnpaidBillings(String(selectedInvoice?.reservation_id || ""))
+      toast.success('Billing item updated')
     } catch (err) {
       console.error('Error updating billing item:', err)
+      toast.error('Failed to update billing item', { description: (err as Error).message })
       setError(err instanceof Error ? err.message : 'Failed to update billing item')
     }
   }
@@ -296,9 +306,16 @@ export default function PendingPaymentsPage() {
                   <Button
                     size="sm"
                     onClick={() => setIsAddingBillingItem(true)}
-                    disabled={isAddingBillingItem}
+                    disabled={isAddingBillingItem || isSavingBillingItem}
                   >
-                    Add Item
+                    {isSavingBillingItem ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Add Item'
+                    )}
                   </Button>
                 </div>
 

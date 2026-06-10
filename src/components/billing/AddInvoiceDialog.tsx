@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -10,13 +10,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
 import { Invoice } from '@/types';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface AddInvoiceDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddInvoice: (invoice: Omit<Invoice, 'id' | 'created_at'>) => void;
+  onAddInvoice: (invoice: Omit<Invoice, 'id' | 'created_at'>) => void | Promise<void>;
 }
 
 export function AddInvoiceDialog({ isOpen, onOpenChange, onAddInvoice }: AddInvoiceDialogProps) {
@@ -24,37 +26,45 @@ export function AddInvoiceDialog({ isOpen, onOpenChange, onAddInvoice }: AddInvo
   const [status, setStatus] = useState<'paid' | 'pending' | 'overdue'>('pending');
   const [reservationId, setReservationId] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const amountNum = parseFloat(amount);
-    onAddInvoice({
-      reservation_id: reservationId,
-      amount: amountNum,
-      subtotal: amountNum,
-      tax_amount: 0,
-      discount_amount: 0,
-      total_amount: amountNum,
-      status,
-      due_date: dueDate || undefined,
-      invoice_number: undefined,
-      service_charge: undefined,
-      payment_method: undefined,
-      payment_reference: undefined,
-      issue_date: undefined,
-      paid_at: undefined,
-      notes: undefined,
-      updated_at: undefined,
-      created_by: undefined,
-      guest_id: undefined,
-    });
-    
-    setAmount('');
-    setStatus('pending');
-    setReservationId('');
-    setDueDate('');
-    onOpenChange(false);
+    setIsSubmitting(true);
+    try {
+      const amountNum = parseFloat(amount);
+      await onAddInvoice({
+        reservation_id: reservationId,
+        amount: amountNum,
+        subtotal: amountNum,
+        tax_amount: 0,
+        discount_amount: 0,
+        total_amount: amountNum,
+        status,
+        due_date: dueDate || undefined,
+        invoice_number: undefined,
+        service_charge: undefined,
+        payment_method: undefined,
+        payment_reference: undefined,
+        issue_date: undefined,
+        paid_at: undefined,
+        notes: undefined,
+        updated_at: undefined,
+        created_by: undefined,
+        guest_id: undefined,
+      });
+
+      toast.success('Invoice created');
+      setAmount('');
+      setStatus('pending');
+      setReservationId('');
+      setDueDate('');
+      onOpenChange(false);
+    } catch (err) {
+      toast.error('Failed to create invoice', { description: (err as Error).message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -124,11 +134,18 @@ export function AddInvoiceDialog({ isOpen, onOpenChange, onAddInvoice }: AddInvo
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!reservationId || !amount || !dueDate || parseFloat(amount) <= 0}>
-              Create Invoice
+            <Button type="submit" disabled={isSubmitting || !reservationId || !amount || !dueDate || parseFloat(amount) <= 0}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Create Invoice'
+              )}
             </Button>
           </DialogFooter>
         </form>

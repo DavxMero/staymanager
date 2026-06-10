@@ -12,41 +12,41 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Building, Mail, Lock, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Map Supabase auth error → pesan Indonesia yang ramah ke user
+// Map Supabase auth error → user-friendly English message
 function friendlyAuthError(error: any): string {
     const msg = String(error?.message || '').toLowerCase();
     if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
-        return 'Email atau kata sandi yang Anda masukkan salah. Mohon periksa kembali.';
+        return 'The email or password you entered is incorrect. Please try again.';
     }
     if (msg.includes('email not confirmed')) {
-        return 'Email Anda belum terverifikasi. Mohon cek inbox email untuk link konfirmasi.';
+        return 'Your email has not been verified. Please check your inbox for the confirmation link.';
     }
     if (msg.includes('too many requests') || msg.includes('rate limit')) {
-        return 'Terlalu banyak percobaan login. Mohon tunggu beberapa menit lalu coba lagi.';
+        return 'Too many login attempts. Please wait a few minutes and try again.';
     }
     if (msg.includes('user not found')) {
-        return 'Akun dengan email ini tidak ditemukan. Pastikan email benar atau daftar akun baru.';
+        return 'No account found with this email. Check the address or create a new account.';
     }
     if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
-        return 'Koneksi gagal. Mohon periksa internet Anda dan coba lagi.';
+        return 'Connection failed. Please check your internet connection and try again.';
     }
-    return error?.message || 'Terjadi kesalahan saat login. Mohon coba lagi.';
+    return error?.message || 'An error occurred while signing in. Please try again.';
 }
 
-// Map URL error code (?error=...) dari OAuth callback → pesan Indonesia
+// Map URL error code (?error=...) from OAuth callback → user-friendly English message
 function friendlyUrlError(code: string | null): string | null {
     if (!code) return null;
     switch (code) {
         case 'auth_failed':
-            return 'Login Google gagal. Coba klik "Create account" untuk mendaftar dulu, atau pastikan akun Google Anda sudah terdaftar di sistem.';
+            return 'Google sign-in failed. Try clicking "Create account" to register first, or make sure your Google account is registered in the system.';
         case 'access_denied':
-            return 'Akses ditolak. Anda membatalkan proses login Google.';
+            return 'Access denied. You cancelled the Google sign-in process.';
         case 'server_error':
-            return 'Server bermasalah saat memproses login. Mohon coba lagi sebentar.';
+            return 'The server encountered an error while processing your sign-in. Please try again shortly.';
         case 'session_expired':
-            return 'Sesi Anda telah berakhir. Mohon login kembali.';
+            return 'Your session has expired. Please sign in again.';
         default:
-            return `Login gagal (kode: ${code}). Mohon coba lagi.`;
+            return `Sign-in failed (code: ${code}). Please try again.`;
     }
 }
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
                 const hasGuestRole = userRoles?.some((ur: any) => ur.role.name === 'guest');
 
-                toast.success('Berhasil masuk! Mengarahkan...');
+                toast.success('Signed in successfully! Redirecting...');
 
                 if (hasGuestRole && userRoles?.length === 1) {
                     window.location.href = '/chatbot';

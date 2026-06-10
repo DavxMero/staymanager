@@ -40,6 +40,7 @@ import {
   Minus,
   Download,
   AlertTriangle,
+  Loader2,
 
 } from "lucide-react"
 import { ChevronLeft, ChevronRight, Info } from "lucide-react"
@@ -52,6 +53,7 @@ import { cn, toLocalDateString } from "@/lib/utils"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { adminFetchCalendarReservations, adminFetchGuestHistory, adminFetchActiveReservations, adminFetchCheckoutData, adminFetchCheckinReservations, adminFetchCancelledReservations, adminFetchHousekeepingStaff } from "./actions"
 import { BookingActions } from "@/components/booking/BookingActions"
+import { toast } from 'sonner'
 
 const statusVariants: Record<string, string> = {
   available: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
@@ -431,10 +433,12 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
       setCheckoutInvoice(invoice)
 
       setCheckoutSuccess(true)
+      toast.success('Check-out completed successfully')
 
     } catch (err) {
       console.error('Checkout error:', err)
       setError('Checkout failed: ' + (err as Error).message)
+      toast.error('Check-out failed', { description: (err as Error).message })
     } finally {
       setLoading(false)
     }
@@ -579,8 +583,8 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/25 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm mb-4">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 <span>
-                  Tamu ini melewati tanggal check-out ({format(new Date(reservation.check_out), 'dd MMM yyyy')}).
-                  Late fee akan dihitung dan ditambahkan ke billing.
+                  This guest has passed the check-out date ({format(new Date(reservation.check_out), 'dd MMM yyyy')}).
+                  A late fee will be calculated and added to the billing.
                 </span>
               </div>
             )}
@@ -593,7 +597,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                     <h3 className="font-semibold text-slate-800 dark:text-gray-100">Guest Information</h3>
                     <div className="text-sm space-y-1">
                       <div><span className="font-medium">Name:</span> {reservation?.guest_name}</div>
-                      <div><span className="font-medium">No. KTP:</span> {reservation?.guest_phone}</div>
+                      <div><span className="font-medium">Phone No.:</span> {reservation?.guest_phone}</div>
                       {reservation?.guest_email && <div><span className="font-medium">Email:</span> {reservation?.guest_email}</div>}
                     </div>
                   </div>
@@ -905,10 +909,10 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
             className="bg-blue-600 hover:bg-blue-700"
           >
             {loading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Processing Checkout...
-              </div>
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
             ) : (
               `Complete Checkout`
             )}
@@ -1327,18 +1331,21 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         }
 
         let existingGuestId = null
-        const conditions = []
-        if (walkInEmail.trim()) conditions.push(`email.eq.${walkInEmail.trim()}`)
-        if (walkInPhone.trim()) conditions.push(`id_number.eq.${walkInPhone.trim()}`)
-
-        if (conditions.length > 0) {
-          const { data: existingGuest } = await supabase
+        if (walkInEmail.trim()) {
+          const { data: byEmail } = await supabase
             .from('guests')
             .select('id')
-            .or(conditions.join(','))
+            .eq('email', walkInEmail.trim())
             .maybeSingle()
-
-          if (existingGuest) existingGuestId = existingGuest.id
+          if (byEmail) existingGuestId = byEmail.id
+        }
+        if (!existingGuestId && walkInPhone.trim()) {
+          const { data: byPhone } = await supabase
+            .from('guests')
+            .select('id')
+            .eq('phone', walkInPhone.trim())
+            .maybeSingle()
+          if (byPhone) existingGuestId = byPhone.id
         }
 
         if (existingGuestId) {
@@ -1349,7 +1356,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
             .insert({
               full_name: walkInName.trim(),
               email: walkInEmail.trim() || null,
-              id_number: walkInPhone.trim()
+              phone: walkInPhone.trim()
             })
             .select('id')
             .single()
@@ -1452,11 +1459,13 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
       setInvoiceData(invoice)
       setPaymentSuccess(true)
+      toast.success('Guest checked in successfully')
 
     } catch (error: any) {
       console.error('Payment failed:', error)
       const errDetail = error?.message || error?.error_description || (typeof error === 'object' ? JSON.stringify(error) : String(error));
       setError('Payment failed: ' + errDetail)
+      toast.error('Check-in failed', { description: errDetail })
     } finally {
       setPaymentLoading(false)
     }
@@ -1467,11 +1476,11 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
     if (!showPayment) {
       if (isWalkIn && (!walkInName.trim() || !walkInPhone.trim())) {
-        setError("Nama tamu dan No. KTP wajib diisi")
+        setError("Guest name and phone number are required")
         return
       }
       if (!isWalkIn && !selectedReservation) {
-        setError("Pilih reservasi terlebih dahulu")
+        setError("Please select a reservation first")
         return
       }
       setShowPayment(true)
@@ -1649,7 +1658,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                             </div>
                             <div className="flex items-center gap-2">
                               <CreditCard className="h-4 w-4 text-slate-600 dark:text-gray-300" />
-                              <span className="font-medium">No. KTP:</span> {selectedReservation?.guest_phone}
+                              <span className="font-medium">Phone No.:</span> {selectedReservation?.guest_phone}
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-slate-600 dark:text-gray-400" />
@@ -1725,14 +1734,14 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="walkInPhone" className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        No. KTP *
+                        <Phone className="h-4 w-4" />
+                        Phone No. *
                       </Label>
                       <Input
                         id="walkInPhone"
                         value={walkInPhone}
                         onChange={(e) => setWalkInPhone(e.target.value)}
-                        placeholder="Masukkan nomor KTP"
+                        placeholder="Enter phone number"
                         className="h-11"
                       />
                     </div>
@@ -1898,7 +1907,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               {/* Cancelled reservations — persistent Restore */}
               {cancelledReservations.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Reservasi Dibatalkan</Label>
+                  <Label className="text-muted-foreground">Cancelled Reservations</Label>
                   {cancelledReservations.map((res) => (
                     <div
                       key={res.id}
@@ -2119,10 +2128,10 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
                         {paymentLoading ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Processing...
-                          </div>
+                          </>
                         ) : (
                           `Pay ${formatCurrencyCompat(currentTotal)}`
                         )}
@@ -2160,10 +2169,10 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               className="bg-green-600 hover:bg-green-700"
             >
               {paymentLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing Payment...
-                </div>
+                </>
               ) : (
                 `Complete Check-in - ${formatCurrencyCompat(currentTotal)}`
               )}
@@ -2224,7 +2233,7 @@ function GuestHistoryDialog({ reservation, open, onOpenChange }: {
                   <h3 className="font-semibold text-lg mb-2">Guest Information</h3>
                   <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-gray-200">
                     <div><strong>Name:</strong> {reservation?.guest_name}</div>
-                    <div><strong>No. KTP:</strong> {reservation?.guest_phone || '-'}</div>
+                    <div><strong>Phone No.:</strong> {reservation?.guest_phone || '-'}</div>
                     <div><strong>Email:</strong> {reservation?.guest_email || '-'}</div>
                   </div>
                 </CardContent>
@@ -2366,7 +2375,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
   const handleCreateReservation = async () => {
     if (!room || !date) return
     if (!guestName.trim() || !guestIdNumber.trim()) {
-      setError("Nama tamu dan No. KTP wajib diisi")
+      setError("Guest name and phone number are required")
       return
     }
     setLoading(true)
@@ -2377,7 +2386,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
       const { data: existingGuest } = await supabase
         .from('guests')
         .select('id')
-        .eq('id_number', guestIdNumber.trim())
+        .eq('phone', guestIdNumber.trim())
         .maybeSingle()
 
       if (existingGuest) {
@@ -2387,7 +2396,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
           .from('guests')
           .insert({
             full_name: guestName.trim(),
-            id_number: guestIdNumber.trim(),
+            phone: guestIdNumber.trim(),
             email: guestEmail.trim() || null
           })
           .select('id')
@@ -2429,11 +2438,13 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
 
       if (resError) throw resError
 
+      toast.success('Reservation created successfully')
       onReservationComplete()
       onOpenChange(false)
     } catch (err) {
       console.error('Error creating reservation:', err)
-      setError('Gagal membuat reservasi: ' + (err as Error).message)
+      setError('Failed to create reservation: ' + (err as Error).message)
+      toast.error('Failed to create reservation', { description: (err as Error).message })
     } finally {
       setLoading(false)
     }
@@ -2445,10 +2456,10 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 dark:text-white">
             <Calendar className="h-6 w-6 text-blue-600" />
-            Reservasi Baru — Kamar {room?.number}
+            New Reservation — Room {room?.number}
           </DialogTitle>
           <DialogDescription className="text-slate-600 dark:text-gray-300">
-            Buat reservasi untuk {date ? format(date, 'dd MMMM yyyy', { locale: localeId }) : ''} — {room?.type} ({formatCurrencyCompat(roomRate)}/malam)
+            Create a reservation for {date ? format(date, 'dd MMMM yyyy', { locale: localeId }) : ''} — {room?.type} ({formatCurrencyCompat(roomRate)}/night)
           </DialogDescription>
         </DialogHeader>
 
@@ -2459,23 +2470,23 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Nama Tamu *
+                  Guest Full Name *
                 </Label>
-                <Input value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="Nama lengkap tamu" className="h-11" />
+                <Input value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="Guest full name" className="h-11" />
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  No. KTP *
+                  <Phone className="h-4 w-4" />
+                  Phone No. *
                 </Label>
-                <Input value={guestIdNumber} onChange={e => setGuestIdNumber(e.target.value)} placeholder="Masukkan nomor KTP" className="h-11" />
+                <Input value={guestIdNumber} onChange={e => setGuestIdNumber(e.target.value)} placeholder="Enter phone number" className="h-11" />
               </div>
               <div className="md:col-span-2 space-y-2">
                 <Label className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   Email
                 </Label>
-                <Input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} placeholder="email@contoh.com (opsional)" className="h-11" />
+                <Input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} placeholder="email@example.com (optional)" className="h-11" />
               </div>
             </div>
 
@@ -2509,9 +2520,9 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label>Durasi Menginap</Label>
+                <Label>Length of Stay</Label>
                 <div className="h-11 px-3 py-2 bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md flex items-center justify-center font-bold text-lg">
-                  {nights} malam
+                  {nights} {nights === 1 ? 'night' : 'nights'}
                 </div>
               </div>
             </div>
@@ -2519,7 +2530,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
             {/* Guest Count */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Dewasa</Label>
+                <Label>Adults</Label>
                 <div className="flex items-center gap-3">
                   <Button type="button" variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => setAdults(Math.max(1, adults - 1))} disabled={adults <= 1}><Minus className="h-4 w-4" /></Button>
                   <div className="h-9 w-12 flex items-center justify-center bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md font-bold">{adults}</div>
@@ -2527,7 +2538,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Anak-anak</Label>
+                <Label>Children</Label>
                 <div className="flex items-center gap-3">
                   <Button type="button" variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => setChildren(Math.max(0, children - 1))} disabled={children <= 0}><Minus className="h-4 w-4" /></Button>
                   <div className="h-9 w-12 flex items-center justify-center bg-slate-200 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md font-bold">{children}</div>
@@ -2541,15 +2552,15 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
               <CardContent className="pt-3 pb-3">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Tarif per malam:</span>
+                    <span>Rate per night:</span>
                     <span className="font-medium">{formatCurrencyCompat(roomRate)}</span>
                   </div>
                   <hr className="border-slate-300 dark:border-gray-500" />
                   <div className="flex justify-between font-bold text-lg text-blue-600 dark:text-blue-400">
-                    <span>Total ({nights} malam):</span>
+                    <span>Total ({nights} {nights === 1 ? 'night' : 'nights'}):</span>
                     <span>{formatCurrencyCompat(totalAmount)}</span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">* Pembayaran dilakukan saat check-in</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">* Payment is collected at check-in</p>
                 </div>
               </CardContent>
             </Card>
@@ -2563,19 +2574,19 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Batal</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
           <Button
             onClick={handleCreateReservation}
             disabled={loading || !guestName.trim() || !guestIdNumber.trim()}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {loading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Memproses...
-              </div>
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Reservation...
+              </>
             ) : (
-              "Buat Reservasi"
+              "Create Reservation"
             )}
           </Button>
         </DialogFooter>
@@ -2648,7 +2659,7 @@ export default function OccupancyPage() {
             assigned_to: cleaningAssignedTo,
             status: 'completed',
             task_type: 'checkout',
-            title: `Cleaning kamar ${cleaningDialogRoom.number}`,
+            title: `Room ${cleaningDialogRoom.number} cleaning`,
             completed_at: new Date().toISOString(),
           })
         } catch (logErr) {
@@ -2657,12 +2668,14 @@ export default function OccupancyPage() {
         }
       }
 
+      toast.success('Room marked as clean')
       await fetchRooms()
       setCleaningDialogRoom(null)
       setCleaningAssignedTo("")
     } catch (err) {
       console.error('Error marking room clean:', err)
-      setError('Gagal menandai kamar bersih: ' + (err as Error).message)
+      setError('Failed to mark room as clean: ' + (err as Error).message)
+      toast.error('Failed to mark room as clean', { description: (err as Error).message })
     } finally {
       setCleaningSubmitting(false)
     }
@@ -3175,11 +3188,11 @@ export default function OccupancyPage() {
                                   setCleaningDialogRoom(room)
                                   setCleaningAssignedTo("")
                                 }}
-                                title="Klik untuk tandai sudah dibersihkan"
+                                title="Click to mark as cleaned"
                                 className="flex flex-col items-center justify-center h-full w-full bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/50 cursor-pointer transition-colors group/clean"
                               >
                                 <span className="text-base group-hover/clean:scale-125 transition-transform">🧹</span>
-                                <span className="text-[7px] font-bold text-yellow-800 dark:text-yellow-200 opacity-0 group-hover/clean:opacity-100 transition-opacity">Bersihkan</span>
+                                <span className="text-[7px] font-bold text-yellow-800 dark:text-yellow-200 opacity-0 group-hover/clean:opacity-100 transition-opacity">Clean</span>
                               </button>
                             ) : (
                               <div className="flex items-center justify-center h-full w-full opacity-0 hover:opacity-100 transition-opacity">
@@ -3370,8 +3383,8 @@ export default function OccupancyPage() {
                     <div className="text-xs font-medium flex items-start gap-2 bg-amber-50 dark:bg-amber-900/25 border border-amber-300 dark:border-amber-600 p-3 rounded-lg">
                       <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5 animate-pulse" />
                       <div>
-                        <div className="text-amber-800 dark:text-amber-200 font-bold">⚠️ WAJIB DIBERSIHKAN</div>
-                        <div className="text-amber-700 dark:text-amber-300 mt-0.5">Kamar belum siap untuk check-in baru</div>
+                        <div className="text-amber-800 dark:text-amber-200 font-bold">⚠️ MUST BE CLEANED</div>
+                        <div className="text-amber-700 dark:text-amber-300 mt-0.5">Room is not ready for new check-in</div>
                       </div>
                     </div>
                     {housekeepingStaff.length > 0 && (
@@ -3388,7 +3401,7 @@ export default function OccupancyPage() {
                         setCleaningAssignedTo("")
                       }}
                     >
-                      ✅ Tandai Sudah Bersih
+                      ✅ Mark as Clean
                     </Button>
                   </div>
                 )}
@@ -3462,10 +3475,10 @@ export default function OccupancyPage() {
               <span className="text-2xl">🧹</span>
             </div>
             <DialogTitle className="text-center text-xl">
-              Tandai Kamar Sudah Dibersihkan?
+              Mark Room as Clean?
             </DialogTitle>
             <DialogDescription className="text-center text-sm">
-              Setelah dikonfirmasi, status kamar akan berubah menjadi <strong>Tersedia</strong> dan siap untuk check-in tamu baru.
+              Once confirmed, the room status will change to <strong>Available</strong> and will be ready for new guest check-ins.
             </DialogDescription>
           </DialogHeader>
 
@@ -3473,30 +3486,30 @@ export default function OccupancyPage() {
             <div className="my-2 rounded-lg border bg-muted/50 p-4 space-y-3">
               <div className="grid gap-1.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nomor Kamar:</span>
+                  <span className="text-muted-foreground">Room Number:</span>
                   <span className="font-semibold">{cleaningDialogRoom.number}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tipe:</span>
+                  <span className="text-muted-foreground">Type:</span>
                   <span className="font-semibold">{cleaningDialogRoom.type}</span>
                 </div>
               </div>
 
               <div className="space-y-2 pt-2 border-t">
                 <Label htmlFor="cleaning-assignee" className="text-sm font-medium">
-                  Dibersihkan oleh <span className="text-muted-foreground font-normal">(opsional)</span>
+                  Cleaned by <span className="text-muted-foreground font-normal">(optional)</span>
                 </Label>
                 <Select
                   value={cleaningAssignedTo}
                   onValueChange={setCleaningAssignedTo}
                 >
                   <SelectTrigger id="cleaning-assignee">
-                    <SelectValue placeholder="Pilih staff housekeeping..." />
+                    <SelectValue placeholder="Select housekeeping staff..." />
                   </SelectTrigger>
                   <SelectContent>
                     {housekeepingStaff.length === 0 ? (
                       <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                        Belum ada staff housekeeping terdaftar
+                        No housekeeping staff registered
                       </div>
                     ) : (
                       housekeepingStaff.map((staff) => (
@@ -3509,7 +3522,7 @@ export default function OccupancyPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Pencatatan ini membantu audit trail housekeeping. Anda dapat mengonfirmasi tanpa memilih staff.
+                  This helps the housekeeping audit trail. You can confirm without selecting a staff member.
                 </p>
               </div>
             </div>
@@ -3525,14 +3538,19 @@ export default function OccupancyPage() {
               disabled={cleaningSubmitting}
               className="flex-1"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               onClick={handleConfirmRoomCleaned}
               disabled={cleaningSubmitting}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             >
-              {cleaningSubmitting ? "Memproses..." : "✅ Konfirmasi"}
+              {cleaningSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Marking Clean...
+                </>
+              ) : "✅ Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>

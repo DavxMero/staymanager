@@ -8,7 +8,7 @@ interface LoginPromptCardProps {
     reason?: string; // e.g., "membuat reservasi", "menyimpan riwayat chat"
 }
 
-export function LoginPromptCard({ reason = 'membuat reservasi' }: LoginPromptCardProps) {
+export function LoginPromptCard({ reason = 'make a reservation' }: LoginPromptCardProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -22,11 +22,11 @@ export function LoginPromptCard({ reason = 'membuat reservasi' }: LoginPromptCar
                 </div>
                 <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 dark:text-white text-base mb-1">
-                        Login dulu untuk {reason}
+                        Sign in to {reason}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Untuk lanjut, silakan masuk atau daftar akun. Setelah login, data kamu
-                        otomatis terisi dan reservasi tersimpan di riwayatmu.
+                        To continue, please log in or create an account. Once signed in, your details
+                        are filled in automatically and reservations are saved to your history.
                     </p>
                 </div>
             </div>
@@ -34,11 +34,11 @@ export function LoginPromptCard({ reason = 'membuat reservasi' }: LoginPromptCar
             <ul className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <li className="flex items-center gap-2">
                     <Save className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    Data tamu otomatis terisi dari profil
+                    Guest details auto-filled from your profile
                 </li>
                 <li className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    Riwayat reservasi tersimpan & bisa diakses kapan saja
+                    Reservation history saved & accessible anytime
                 </li>
             </ul>
 
@@ -55,12 +55,12 @@ export function LoginPromptCard({ reason = 'membuat reservasi' }: LoginPromptCar
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-sm font-semibold rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                 >
                     <UserPlus className="w-4 h-4" />
-                    Daftar
+                    Sign Up
                 </Link>
             </div>
 
             <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center">
-                Daftar cuma butuh email & password — tanpa verifikasi panjang.
+                Sign up only needs an email &amp; password — no lengthy verification.
             </p>
         </motion.div>
     );

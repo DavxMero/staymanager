@@ -97,13 +97,13 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                                 </h3>
                                 <p className="text-xs text-gray-600 dark:text-gray-400">
                                     {isGroup
-                                        ? `${count} kamar tersedia`
+                                        ? `${count} room${count !== 1 ? 's' : ''} available`
                                         : `Room ${room.number}`}
                                 </p>
                             </div>
                         </div>
                         <span className="bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-md text-xs font-medium shrink-0 border border-emerald-200 dark:border-emerald-900">
-                            Tersedia
+                            Available
                         </span>
                     </div>
                 </div>
@@ -156,7 +156,7 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                     <DialogHeader className="sr-only">
                         <DialogTitle>{room.type} – Room {room.number}</DialogTitle>
                         <DialogDescription>
-                            Detail kamar {room.type} nomor {room.number} dengan harga {formatPrice(room.base_price)} per malam
+                            {room.type} room {room.number} at {formatPrice(room.base_price)} per night
                         </DialogDescription>
                     </DialogHeader>
 
@@ -237,14 +237,14 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                                     {room.type}
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {isGroup ? `${count} kamar tersedia` : `Room ${room.number}`}
+                                    {isGroup ? `${count} room${count !== 1 ? 's' : ''} available` : `Room ${room.number}`}
                                 </p>
                             </div>
                             <div className="text-right">
                                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                     {formatPrice(room.base_price)}
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">per malam</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">per night</div>
                             </div>
                         </div>
 
@@ -257,24 +257,24 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                         {/* Specs grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 border-y border-gray-200 dark:border-gray-700">
                             <SpecItem
-                                label="Tipe"
+                                label="Type"
                                 value={room.type}
                             />
                             {room.max_occupancy && (
                                 <SpecItem
-                                    label="Kapasitas"
-                                    value={`${room.max_occupancy} tamu`}
+                                    label="Capacity"
+                                    value={`${room.max_occupancy} guest${room.max_occupancy !== 1 ? 's' : ''}`}
                                 />
                             )}
                             {room.room_size && (
                                 <SpecItem
-                                    label="Ukuran"
+                                    label="Size"
                                     value={`${room.room_size} m²`}
                                 />
                             )}
                             {room.bed_configuration && (
                                 <SpecItem
-                                    label="Tempat tidur"
+                                    label="Bed"
                                     value={room.bed_configuration}
                                 />
                             )}
@@ -291,7 +291,7 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                         {/* Amenities */}
                         <div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                Fasilitas
+                                Amenities
                             </h4>
                             <div className="flex flex-wrap gap-2">
                                 {amenities.map((a) => (

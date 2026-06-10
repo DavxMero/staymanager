@@ -41,6 +41,8 @@ import { formatCurrency } from "@/lib/utils"
 import { GuestReservationDialog } from "@/components/dialogs"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { BookingActions } from "@/components/booking/BookingActions"
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 
 interface Booking {
   id: string
@@ -105,6 +107,7 @@ export default function GuestsPage() {
   const [paymentAmount, setPaymentAmount] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [processingPayment, setProcessingPayment] = useState(false)
+  const [savingGuest, setSavingGuest] = useState(false)
   const [depositRefund, setDepositRefund] = useState(true)
   const [penaltyAmount, setPenaltyAmount] = useState(0)
   const DEPOSIT_AMOUNT = 100000
@@ -286,6 +289,7 @@ export default function GuestsPage() {
   }
 
   const handleSaveGuest = async () => {
+    setSavingGuest(true)
     try {
       if (currentGuest) {
         const { error } = await supabase
@@ -299,6 +303,7 @@ export default function GuestsPage() {
           .eq('id', currentGuest.id)
 
         if (error) throw error
+        toast.success('Guest updated successfully')
       } else {
         const { error } = await supabase
           .from('guests')
@@ -310,13 +315,16 @@ export default function GuestsPage() {
           })
 
         if (error) throw error
+        toast.success('Guest added successfully')
       }
 
       await fetchGuests()
       setIsDialogOpen(false)
     } catch (err) {
       console.error('Error saving guest:', err)
-      setError('Failed to save guest')
+      toast.error('Failed to save guest', { description: (err as Error).message })
+    } finally {
+      setSavingGuest(false)
     }
   }
 
@@ -336,10 +344,11 @@ export default function GuestsPage() {
       }
 
       setGuests(prevGuests => prevGuests.filter(g => g.id !== guest.id));
+      toast.success('Guest deleted successfully')
 
     } catch (err: any) {
       console.error('Error deleting guest:', err)
-      setError(`Failed to delete guest: ${err.message}. Make sure there are no related records (like reservations) that prevent deletion.`)
+      toast.error('Failed to delete guest', { description: err.message })
     }
   }
 
@@ -432,10 +441,15 @@ export default function GuestsPage() {
 
       await fetchGuests()
       setIsPaymentDialogOpen(false)
+      if (paymentType === 'checkin') {
+        toast.success('Guest checked in')
+      } else {
+        toast.success('Guest checked out')
+      }
 
     } catch (err: any) {
       console.error('Error processing action:', err)
-      setError(`Action failed: ${err.message}`)
+      toast.error('Action failed', { description: err.message })
     } finally {
       setProcessingPayment(false)
     }
@@ -484,14 +498,14 @@ export default function GuestsPage() {
       {/* Guests Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Manajemen Tamu</CardTitle>
-          <CardDescription>Kelola data tamu hotel</CardDescription>
+          <CardTitle>Guest Management</CardTitle>
+          <CardDescription>Manage hotel guest data</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
             <div className="flex-1 max-w-sm">
               <Input
-                placeholder="Cari tamu atau nomor kamar..."
+                placeholder="Search guest or room number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -504,9 +518,9 @@ export default function GuestsPage() {
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua Tamu</SelectItem>
-                <SelectItem value="active">Sedang Menginap</SelectItem>
-                <SelectItem value="history">Riwayat (Checkout)</SelectItem>
+                <SelectItem value="all">All Guests</SelectItem>
+                <SelectItem value="active">Currently Staying</SelectItem>
+                <SelectItem value="history">History (Checkout)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -519,11 +533,11 @@ export default function GuestsPage() {
                   guest.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   guest.phone?.includes(searchTerm) ||
-                  booking?.rooms?.room_number.toLowerCase().includes(searchTerm.toLowerCase())
+                  booking?.rooms?.room_number?.toLowerCase().includes(searchTerm.toLowerCase())
 
                 if (!matchesSearch) return false
 
-                if (filterStatus === 'active') return !isCheckedOut && booking
+                if (filterStatus === 'active') return booking?.status === 'checked-in'
                 if (filterStatus === 'history') return isCheckedOut
 
                 return true
@@ -556,14 +570,14 @@ export default function GuestsPage() {
                             <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{guest.full_name}</h3>
                             {room ? (
                               <span className="text-sm text-muted-foreground">
-                                • {room.type} • Kamar {room.room_number}
+                                • {room.type} • Room {room.room_number}
                               </span>
                             ) : booking ? (
                               <Badge
                                 variant="outline"
                                 className="border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 text-[10px] font-medium"
                               >
-                                ⚠️ Data Kamar Tidak Lengkap
+                                ⚠️ Incomplete Room Data
                               </Badge>
                             ) : null}
                           </div>
@@ -585,7 +599,7 @@ export default function GuestsPage() {
                             <div className="grid grid-cols-3 gap-6 mt-4">
                               {/* Dates */}
                               <div>
-                                <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Tanggal</p>
+                                <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Dates</p>
                                 <div className="flex items-center text-sm text-muted-foreground mb-1">
                                   <Calendar className="mr-1 h-4 w-4 text-blue-500" />
                                   In: {new Date(booking.check_in).toLocaleDateString('id-ID')}
@@ -598,29 +612,29 @@ export default function GuestsPage() {
 
                               {/* Payment */}
                               <div>
-                                <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Pembayaran</p>
+                                <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Payment</p>
                                 <div className="text-sm text-muted-foreground">
                                   {guest.payments && guest.payments.length > 0 ? (
                                     <>
                                       {guest.payments[0].payment_method || 'Cash'}
                                       <div className="text-xs">
-                                        {Math.ceil((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / (1000 * 60 * 60 * 24))} malam
+                                        {Math.ceil((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / (1000 * 60 * 60 * 24))} nights
                                       </div>
                                     </>
                                   ) : (
-                                    'Belum bayar'
+                                    'Not paid'
                                   )}
                                 </div>
                               </div>
 
                               {/* Total */}
                               <div>
-                                <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Total Biaya</p>
+                                <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Total Cost</p>
                                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                   {formatCurrency(booking.total_amount || 0)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {formatCurrency(booking.room_rate || 0)}/malam × {Math.ceil((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / (1000 * 60 * 60 * 24))} malam
+                                  {formatCurrency(booking.room_rate || 0)}/night × {Math.ceil((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / (1000 * 60 * 60 * 24))} nights
                                 </p>
                               </div>
                             </div>
@@ -632,34 +646,34 @@ export default function GuestsPage() {
                       <div className="flex flex-col items-end gap-2 ml-4">
                         <div className="flex gap-2">
                           {booking?.status === 'cancelled' ? (
-                            <Badge variant="destructive">Dibatalkan</Badge>
+                            <Badge variant="destructive">Cancelled</Badge>
                           ) : isCheckedOut ? (
                             <Badge className="bg-gray-500">Check Out</Badge>
                           ) : (
                             <Badge className="bg-blue-500">Check In</Badge>
                           )}
                           {isPaid ? (
-                            <Badge className="bg-green-500">Lunas</Badge>
+                            <Badge className="bg-green-500">Paid</Badge>
                           ) : (
-                            <Badge variant="destructive">Belum Lunas</Badge>
+                            <Badge variant="destructive">Unpaid</Badge>
                           )}
                         </div>
 
                         <div className="flex gap-2 mt-2">
-                          {!isCheckedOut && booking?.status !== 'cancelled' && (
+                          {(booking?.status === 'confirmed' || booking?.status === 'checked-in') && (
                             <Button
                               size="sm"
-                              className={booking?.status === 'confirmed' ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
+                              className={booking.status === 'confirmed' ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
                               onClick={(e) => {
                                 e.stopPropagation()
-                                if (booking?.status === 'confirmed') {
+                                if (booking.status === 'confirmed') {
                                   handleCheckInClick(guest)
                                 } else {
                                   handleCheckOutClick(guest)
                                 }
                               }}
                             >
-                              {booking?.status === 'confirmed' ? 'Check In' : 'Checkout Tamu'}
+                              {booking.status === 'confirmed' ? 'Check In' : 'Check Out Guest'}
                             </Button>
                           )}
                           {booking && (
@@ -713,10 +727,10 @@ export default function GuestsPage() {
         <DialogContent className={isViewMode ? "sm:max-w-2xl max-h-[90vh] overflow-y-auto" : "sm:max-w-lg max-h-[90vh] overflow-y-auto"}>
           <DialogHeader>
             <DialogTitle>
-              {isViewMode ? "Detail Tamu" : currentGuest ? "Edit Tamu" : "Tambah Tamu Baru"}
+              {isViewMode ? "Guest Details" : currentGuest ? "Edit Guest" : "Add New Guest"}
             </DialogTitle>
             <DialogDescription>
-              {isViewMode ? "Informasi lengkap tamu, booking, dan pembayaran" : currentGuest ? "Edit data tamu" : "Buat profil tamu baru"}
+              {isViewMode ? "Complete guest, booking, and payment information" : currentGuest ? "Edit guest data" : "Create a new guest profile"}
             </DialogDescription>
           </DialogHeader>
 
@@ -725,23 +739,23 @@ export default function GuestsPage() {
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="guest">
                   <User className="mr-2 h-4 w-4" />
-                  Data Tamu
+                  Guest Data
                 </TabsTrigger>
                 <TabsTrigger value="booking">
                   <BedDouble className="mr-2 h-4 w-4" />
-                  Detail Booking
+                  Booking Details
                 </TabsTrigger>
                 <TabsTrigger value="payment">
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Pembayaran
+                  Payment
                 </TabsTrigger>
               </TabsList>
 
-              {/* Tab 1: Data Tamu */}
+              {/* Tab 1: Guest Info */}
               <TabsContent value="guest" className="space-y-4 mt-4">
                 <div className="bg-muted/50 p-6 rounded-lg space-y-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Nama Lengkap</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">Full Name</Label>
                     <p className="text-lg font-semibold mt-1">{currentGuest.full_name}</p>
                   </div>
 
@@ -752,14 +766,14 @@ export default function GuestsPage() {
                       <Label className="text-sm font-medium text-muted-foreground">Email</Label>
                       <div className="flex items-center mt-1">
                         <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm">{currentGuest.email || "Tidak ada email"}</p>
+                        <p className="text-sm">{currentGuest.email || "No email"}</p>
                       </div>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">No. Telepon</Label>
+                      <Label className="text-sm font-medium text-muted-foreground">Phone No.</Label>
                       <div className="flex items-center mt-1">
                         <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm">{currentGuest.phone || "Tidak ada no. telepon"}</p>
+                        <p className="text-sm">{currentGuest.phone || "No phone number"}</p>
                       </div>
                     </div>
                   </div>
@@ -768,21 +782,21 @@ export default function GuestsPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">ID Identitas (KTP/Passport)</Label>
+                      <Label className="text-sm font-medium text-muted-foreground">ID Number (KTP/Passport)</Label>
                       <div className="flex items-center mt-1">
                         <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm">{currentGuest.id_number || "Tidak ada data identitas"}</p>
+                        <p className="text-sm">{currentGuest.id_number || "No identity data"}</p>
                       </div>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">ID Tamu (Sistem)</Label>
+                      <Label className="text-sm font-medium text-muted-foreground">Guest ID (System)</Label>
                       <p className="text-sm mt-1 font-mono">#{currentGuest.id}</p>
                     </div>
                   </div>
                 </div>
               </TabsContent>
 
-              {/* Tab 2: Detail Booking */}
+              {/* Tab 2: Booking Details */}
               <TabsContent value="booking" className="space-y-4 mt-4">
                 {currentGuest.currentBooking ? (
                   <div className="bg-muted/50 p-6 rounded-lg space-y-4">
@@ -800,8 +814,8 @@ export default function GuestsPage() {
                       <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
                         <span className="leading-none">⚠️</span>
                         <span>
-                          Data kamar tidak tercatat untuk reservasi ini (kemungkinan kamar telah dihapus
-                          atau data legacy). Field kamar di bawah akan menampilkan <code>N/A</code>.
+                          Room data is not recorded for this reservation (the room may have been deleted
+                          or it is legacy data). Room fields below will show <code>N/A</code>.
                         </span>
                       </div>
                     )}
@@ -843,7 +857,7 @@ export default function GuestsPage() {
 
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Kamar</Label>
+                        <Label className="text-sm font-medium text-muted-foreground">Room</Label>
                         <div className="flex items-center mt-1">
                           <BedDouble className="mr-2 h-4 w-4 text-muted-foreground" />
                           <p className="text-sm font-medium">
@@ -852,15 +866,15 @@ export default function GuestsPage() {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Tipe Kamar</Label>
+                        <Label className="text-sm font-medium text-muted-foreground">Room Type</Label>
                         <p className="text-sm font-medium mt-1">
                           {currentGuest.currentBooking.rooms?.type || 'N/A'}
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Jumlah Tamu</Label>
+                        <Label className="text-sm font-medium text-muted-foreground">Guest Count</Label>
                         <p className="text-sm font-medium mt-1">
-                          {currentGuest.currentBooking.adults || 1} orang
+                          {currentGuest.currentBooking.adults || 1} guest(s)
                         </p>
                       </div>
                     </div>
@@ -868,11 +882,11 @@ export default function GuestsPage() {
                     <Separator />
 
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Durasi Menginap</Label>
+                      <Label className="text-sm font-medium text-muted-foreground">Length of Stay</Label>
                       <div className="flex items-center mt-1">
                         <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                         <p className="text-sm font-medium">
-                          {Math.ceil((new Date(currentGuest.currentBooking.check_out).getTime() - new Date(currentGuest.currentBooking.check_in).getTime()) / (1000 * 60 * 60 * 24))} malam
+                          {Math.ceil((new Date(currentGuest.currentBooking.check_out).getTime() - new Date(currentGuest.currentBooking.check_in).getTime()) / (1000 * 60 * 60 * 24))} night(s)
                         </p>
                       </div>
                     </div>
@@ -880,7 +894,7 @@ export default function GuestsPage() {
                     <Separator />
 
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Total Harga</Label>
+                      <Label className="text-sm font-medium text-muted-foreground">Total Price</Label>
                       <p className="text-3xl font-bold text-blue-600 mt-1">
                         {formatCurrency(currentGuest.currentBooking.total_amount || 0)}
                       </p>
@@ -889,12 +903,12 @@ export default function GuestsPage() {
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <BedDouble className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p>Tidak ada booking aktif</p>
+                    <p>No active booking</p>
                   </div>
                 )}
               </TabsContent>
 
-              {/* Tab 3: Pembayaran */}
+              {/* Tab 3: Payment */}
               <TabsContent value="payment" className="space-y-4 mt-4">
                 {currentGuest.payments && currentGuest.payments.length > 0 ? (
                   <div className="space-y-4">
@@ -902,32 +916,38 @@ export default function GuestsPage() {
                     <div className="bg-muted/50 p-6 rounded-lg">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Total Pembayaran</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Amount Paid</Label>
                           <p className="text-3xl font-bold text-green-600 mt-1">
                             {formatCurrency(currentGuest.payments.reduce((sum, p) => sum + (p.amount || 0), 0))}
                           </p>
                         </div>
-                        <Badge className="bg-green-500 text-lg px-4 py-2">
-                          <CheckCircle2 className="mr-2 h-5 w-5" />
-                          Lunas
-                        </Badge>
+                        {currentGuest.payments.reduce((sum, p) => sum + (p.amount || 0), 0) >= (currentGuest.currentBooking?.total_amount || 0) ? (
+                          <Badge className="bg-green-500 text-lg px-4 py-2">
+                            <CheckCircle2 className="mr-2 h-5 w-5" />
+                            Paid
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive" className="text-lg px-4 py-2">
+                            Unpaid
+                          </Badge>
+                        )}
                       </div>
 
                       {currentGuest.currentBooking && (
                         <>
                           <Separator className="my-4" />
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Total Tagihan</span>
+                            <span className="text-sm text-muted-foreground">Total Bill</span>
                             <span className="font-semibold">{formatCurrency(currentGuest.currentBooking.total_amount || 0)}</span>
                           </div>
                           <div className="flex justify-between items-center mt-2">
-                            <span className="text-sm text-muted-foreground">Sudah Dibayar</span>
+                            <span className="text-sm text-muted-foreground">Amount Paid</span>
                             <span className="font-semibold text-green-600">
                               {formatCurrency(currentGuest.payments.reduce((sum, p) => sum + (p.amount || 0), 0))}
                             </span>
                           </div>
                           <div className="flex justify-between items-center mt-2">
-                            <span className="text-sm font-medium">Sisa</span>
+                            <span className="text-sm font-medium">Balance</span>
                             <span className="font-bold text-lg">
                               {formatCurrency(Math.max(0, (currentGuest.currentBooking.total_amount || 0) - currentGuest.payments.reduce((sum, p) => sum + (p.amount || 0), 0)))}
                             </span>
@@ -938,12 +958,12 @@ export default function GuestsPage() {
 
                     {/* Payment History */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Riwayat Pembayaran</Label>
+                      <Label className="text-sm font-medium">Payment History</Label>
                       {currentGuest.payments.map((payment, index) => (
                         <div key={payment.id || index} className="border rounded-lg p-4 bg-card">
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <p className="font-medium">Pembayaran #{index + 1}</p>
+                              <p className="font-medium">Payment #{index + 1}</p>
                               <p className="text-sm text-muted-foreground">
                                 {new Date(payment.payment_date).toLocaleDateString('id-ID', {
                                   weekday: 'long',
@@ -975,7 +995,7 @@ export default function GuestsPage() {
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <XCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p>Belum ada pembayaran</p>
+                    <p>No payments yet</p>
                   </div>
                 )}
               </TabsContent>
@@ -983,7 +1003,7 @@ export default function GuestsPage() {
           ) : (
             <div className="space-y-5 mt-4 mb-2">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Nama Lengkap</Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -991,7 +1011,7 @@ export default function GuestsPage() {
                     className="pl-10"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Masukkan nama lengkap"
+                    placeholder="Enter full name"
                   />
                 </div>
               </div>
@@ -1005,13 +1025,13 @@ export default function GuestsPage() {
                     className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Masukkan alamat email"
+                    placeholder="Enter email address"
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">
-                  No. Telepon <span className="text-red-500">*</span>
+                  Phone No. <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <PhoneInput
@@ -1022,13 +1042,13 @@ export default function GuestsPage() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Kontak utama untuk konfirmasi reservasi & komunikasi.
+                  Primary contact for reservation confirmation & communication.
                 </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="idNumber" className="text-muted-foreground">
-                  No. Identitas (KTP/Paspor)
-                  <span className="ml-2 text-xs font-normal">— opsional</span>
+                  ID Number (KTP/Passport)
+                  <span className="ml-2 text-xs font-normal">— optional</span>
                 </Label>
                 <div className="relative">
                   <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -1037,11 +1057,11 @@ export default function GuestsPage() {
                     className="pl-10"
                     value={idNumber}
                     onChange={(e) => setIdNumber(e.target.value)}
-                    placeholder="Diisi saat tamu check-in (NIK / No. Paspor)"
+                    placeholder="Filled at guest check-in (ID / Passport No.)"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Hanya wajib saat proses check-in di front desk untuk verifikasi identitas.
+                  Only required at front-desk check-in for identity verification.
                 </p>
               </div>
             </div>
@@ -1049,11 +1069,18 @@ export default function GuestsPage() {
 
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              {isViewMode ? "Tutup" : "Batal"}
+              {isViewMode ? "Close" : "Cancel"}
             </Button>
             {!isViewMode && (
-              <Button onClick={handleSaveGuest}>
-                {currentGuest ? "Update Tamu" : "Tambah Tamu"}
+              <Button onClick={handleSaveGuest} disabled={savingGuest}>
+                {savingGuest ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  currentGuest ? "Update Guest" : "Add Guest"
+                )}
               </Button>
             )}
           </DialogFooter>
@@ -1076,7 +1103,7 @@ export default function GuestsPage() {
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Total Tagihan (Room + Deposit)</Label>
+              <Label>Total Bill (Room + Deposit)</Label>
               <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(currentGuest?.currentBooking?.total_amount || 0)}
               </div>
@@ -1153,7 +1180,7 @@ export default function GuestsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="paymentAmount">
-                {paymentType === 'checkout' ? 'Amount to Collect' : 'Jumlah Pembayaran (POS)'}
+                {paymentType === 'checkout' ? 'Amount to Collect' : 'Payment Amount (POS)'}
               </Label>
               <Input
                 id="paymentAmount"
@@ -1168,7 +1195,7 @@ export default function GuestsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="paymentMethod">Metode Pembayaran</Label>
+              <Label htmlFor="paymentMethod">Payment Method</Label>
               <Select
                 value={paymentMethod}
                 onValueChange={setPaymentMethod}
@@ -1179,8 +1206,8 @@ export default function GuestsPage() {
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
                   <SelectItem value="qris">QRIS</SelectItem>
-                  <SelectItem value="transfer">Transfer Bank</SelectItem>
-                  <SelectItem value="credit-card">Kartu Kredit</SelectItem>
+                  <SelectItem value="transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="credit-card">Credit Card</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1191,7 +1218,12 @@ export default function GuestsPage() {
               Cancel
             </Button>
             <Button onClick={processPaymentAndAction} disabled={processingPayment}>
-              {processingPayment ? 'Processing...' : (
+              {processingPayment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
                 paymentType === 'checkin' ? 'Confirm Check In' : 'Confirm Check Out'
               )}
             </Button>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -21,6 +22,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 export async function GET(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const status = searchParams.get('status')
@@ -68,6 +73,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
     const {
       name,
@@ -143,27 +152,37 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Inventory item ID is required' }, { status: 400 })
     }
 
+    const allowed = ['name', 'description', 'category', 'current_stock', 'min_stock', 'max_stock', 'unit', 'unit_cost', 'supplier', 'location', 'status']
+    const updateData: Record<string, unknown> = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)))
+
     if (updateData.current_stock !== undefined) {
+      const newStock = Number(updateData.current_stock)
+      const minStock = Number(updateData.min_stock)
+
       const { data: currentItem } = await supabase
         .from('inventory_items')
         .select('current_stock')
         .eq('id', id)
         .single()
 
-      if (currentItem && updateData.current_stock > currentItem.current_stock) {
+      if (currentItem && newStock > Number(currentItem.current_stock)) {
         updateData.last_restocked = new Date().toISOString()
       }
 
-      if (updateData.current_stock === 0) {
+      if (newStock === 0) {
         updateData.status = 'out-of-stock'
-      } else if (updateData.min_stock && updateData.current_stock <= updateData.min_stock) {
+      } else if (minStock && newStock <= minStock) {
         updateData.status = 'low-stock'
       } else {
         updateData.status = 'in-stock'
@@ -200,6 +219,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

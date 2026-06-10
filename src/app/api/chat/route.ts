@@ -303,7 +303,7 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
           const { data: busyBookings, error: busyError } = await supabase
             .from('reservations')
             .select('room_id')
-            .not('status', 'in', '("cancelled","no_show","checked-out","checked_out")')
+            .not('status', 'in', '("cancelled","no_show","checked-out")')
             .not('room_id', 'is', null)
             .lt('check_in', checkOut)
             .gt('check_out', checkIn);
@@ -328,7 +328,9 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
           }
 
           if (tipeKamar) {
-            query = query.ilike('type', `%${tipeKamar}%`);
+            // Escape wildcard ILIKE agar input tamu tidak bisa mem-bypass filter
+            const escaped = tipeKamar.replace(/[%_]/g, '\\$&');
+            query = query.ilike('type', `%${escaped}%`);
           }
 
           const { data: availableRooms } = await query;
@@ -407,6 +409,35 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
 
             const checkInDate = new Date(bookingData.checkIn);
             const checkOutDate = new Date(bookingData.checkOut);
+
+            // Validasi tanggal: format benar, check-in < check-out, tidak di masa lalu
+            if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+              return { success: false, error: 'INVALID_DATE: Format tanggal tidak valid. Gunakan YYYY-MM-DD.' };
+            }
+            if (checkOutDate <= checkInDate) {
+              return { success: false, error: 'INVALID_DATE: Tanggal check-out harus setelah check-in.' };
+            }
+            const todayStr = new Date().toISOString().slice(0, 10);
+            if (bookingData.checkIn < todayStr) {
+              return { success: false, error: 'INVALID_DATE: Tanggal check-in sudah lewat. Minta tamu memilih tanggal mulai hari ini.' };
+            }
+
+            // Re-check ketersediaan tepat sebelum insert — jeda percakapan bisa
+            // membuat hasil cekKetersediaan sebelumnya basi
+            const { count: overlapCount } = await supabase
+              .from('reservations')
+              .select('id', { count: 'exact', head: true })
+              .eq('room_id', bookingData.roomId)
+              .in('status', ['confirmed', 'checked-in'])
+              .lt('check_in', bookingData.checkOut)
+              .gt('check_out', bookingData.checkIn);
+            if (overlapCount && overlapCount > 0) {
+              return {
+                success: false,
+                error: 'ROOM_NO_LONGER_AVAILABLE: Kamar ini baru saja dipesan tamu lain untuk tanggal tersebut. Jalankan cekKetersediaan lagi dan tawarkan kamar alternatif.',
+              };
+            }
+
             const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
 
             const roomTotal = bookingData.roomRate * nights;
@@ -479,6 +510,13 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
 
             if (error) {
               console.error('Booking creation error:', error);
+              // 23P01 = pelanggaran EXCLUDE constraint anti-double-booking di DB
+              if (error.code === '23P01') {
+                return {
+                  success: false,
+                  error: 'ROOM_NO_LONGER_AVAILABLE: Kamar ini baru saja dipesan tamu lain untuk tanggal tersebut. Jalankan cekKetersediaan lagi dan tawarkan kamar alternatif.',
+                };
+              }
               return {
                 success: false,
                 error: 'Gagal membuat reservasi karena masalah sistem internal. Silakan coba lagi atau hubungi staf hotel. Jangan minta tamu mengubah data input.',
@@ -596,11 +634,13 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
               };
             }
 
-            if (
-              verifiedUser.email &&
-              reservation.guest_email &&
-              reservation.guest_email.toLowerCase() !== verifiedUser.email.toLowerCase()
-            ) {
+            // Kepemilikan harus terbukti positif — email kosong di salah satu
+            // sisi berarti TOLAK, bukan lolos
+            const ownsReservationByEmail =
+              !!verifiedUser.email &&
+              !!reservation.guest_email &&
+              reservation.guest_email.toLowerCase() === verifiedUser.email.toLowerCase();
+            if (!ownsReservationByEmail) {
               console.warn(`[confirmPayment] OWNERSHIP MISMATCH: user=${verifiedUser.email} booking=${reservation.guest_email}`);
               return {
                 success: false,

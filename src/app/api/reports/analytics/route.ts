@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 import { startOfMonth, endOfMonth, format, subMonths, parseISO, startOfDay, endOfDay } from 'date-fns'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 export async function GET(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'reports', 'dashboard')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get('startDate') || format(startOfMonth(new Date()), 'yyyy-MM-dd')
     const endDate = searchParams.get('endDate') || format(endOfMonth(new Date()), 'yyyy-MM-dd')

@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface User {
     id: string;
@@ -53,7 +53,6 @@ export default function RolesManagementPage() {
     const [users, setUsers] = useState<UserWithRoles[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
-    const { toast } = useToast();
     const supabase = createClient();
 
     useEffect(() => {
@@ -104,11 +103,7 @@ export default function RolesManagementPage() {
             setRoles(rolesData || []);
         } catch (error) {
             console.error('Error fetching data:', error);
-            toast({
-                title: 'Error',
-                description: 'Failed to load users and roles',
-                variant: 'destructive',
-            });
+            toast.error('Failed to load users and roles');
         } finally {
             setLoading(false);
         }
@@ -131,18 +126,11 @@ export default function RolesManagementPage() {
 
             if (error) throw error;
 
-            toast({
-                title: 'Success',
-                description: 'Role assigned successfully',
-            });
+            toast.success('Role assigned');
 
             fetchData();
         } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error.message || 'Failed to assign role',
-                variant: 'destructive',
-            });
+            toast.error('Failed to assign role', { description: error.message });
         }
     };
 
@@ -156,18 +144,11 @@ export default function RolesManagementPage() {
 
             if (error) throw error;
 
-            toast({
-                title: 'Success',
-                description: 'Role removed successfully',
-            });
+            toast.success('Role removed');
 
             fetchData();
         } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error.message || 'Failed to remove role',
-                variant: 'destructive',
-            });
+            toast.error('Failed to remove role', { description: error.message });
         }
     };
 
