@@ -748,7 +748,7 @@ export default function RoomsPage() {
       await fetchRooms()
       await fetchTypeImages() // refresh typeMetaByName setelah save
       setIsDialogOpen(false)
-      toast.success(currentRoom ? 'Room updated successfully' : 'Tambah kamar berhasil')
+      toast.success(currentRoom ? 'Room updated successfully' : 'Room added successfully')
     } catch (err) {
       console.error('Error saving room:', err)
       console.error('Error details:', {
