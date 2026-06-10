@@ -12,6 +12,7 @@
 - Publication `supabase_realtime` di project `ncjneagfadrmivgicszm` **kosong (0 tabel)** sejak awal → semua subscription `postgres_changes` di `/occupancy` dan `/dashboard` tidak pernah menerima event.
 - Fix: migration `supabase/migrations/20260610120000_enable_realtime_publication.sql` menambahkan `reservations`, `payments`, `rooms`, `guest_facility_requests` ke publication. Sudah di-apply ke project live dan terverifikasi (4 baris di `pg_publication_tables`).
 - Jika menambah tabel baru yang perlu realtime: `alter publication supabase_realtime add table public.<nama_tabel>;`
+- Terverifikasi end-to-end 2026-06-10: subscribe `postgres_changes` + no-op UPDATE pada `rooms` → event diterima <1 detik. Catatan: poller server butuh ±beberapa detik saat koneksi pertama (cold start) — tunggu ack `system: Subscribed to PostgreSQL` sebelum menganggap gagal.
 
 ### Middleware Next.js — sengaja tidak ada
 - `src/middleware.ts` tidak pernah ada; `src/lib/supabase/middleware.ts` (`updateSession`) adalah dead code dan sudah dihapus.
