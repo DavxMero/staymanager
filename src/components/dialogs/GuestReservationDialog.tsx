@@ -298,7 +298,7 @@ export function GuestReservationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-2xl flex items-center gap-2">
             {mode === 'walkin' ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <BedDouble className="h-6 w-6 text-blue-600" />}

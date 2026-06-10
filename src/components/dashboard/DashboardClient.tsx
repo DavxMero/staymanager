@@ -745,7 +745,7 @@ export function DashboardClient({
                                 <span className="relative z-10 transition-colors duration-300 group-hover/btn:text-[#1A468F] dark:group-hover/btn:text-[#afc6ff]">View Details</span>
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white dark:bg-[#15171c] border-x-0 sm:border-x sm:rounded-[24px]">
+                            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white dark:bg-[#15171c] border-x-0 sm:border-x sm:rounded-[24px]">
                               <DialogHeader className="sr-only">
                                 <DialogTitle>{rt.name} Details</DialogTitle>
                                 <DialogDescription>Details and booking for {rt.name}</DialogDescription>

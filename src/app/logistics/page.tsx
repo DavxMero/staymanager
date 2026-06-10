@@ -432,7 +432,7 @@ export default function LogisticsPage() {
                   <Plus className="h-4 w-4 mr-2" /> Add Item
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>{editingItem ? 'Edit Item' : 'Add New Item'}</DialogTitle>
                 </DialogHeader>
@@ -629,7 +629,7 @@ export default function LogisticsPage() {
               <DialogTrigger asChild>
                 <Button><FileText className="h-4 w-4 mr-2" /> Create Purchase Order</Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                   <DialogTitle>Create Purchase Order</DialogTitle>
                 </DialogHeader>

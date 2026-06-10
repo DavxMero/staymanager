@@ -107,7 +107,7 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Billing Item</DialogTitle>
           <DialogDescription>
