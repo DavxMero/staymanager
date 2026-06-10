@@ -50,7 +50,8 @@ import { format, addDays, subDays, eachDayOfInterval, isSameDay, parseISO, diffe
 import { id as localeId } from "date-fns/locale"
 import { cn, toLocalDateString } from "@/lib/utils"
 import { PhoneInput } from "@/components/ui/phone-input"
-import { adminFetchCalendarReservations, adminFetchGuestHistory, adminFetchActiveReservations, adminFetchCheckoutData, adminFetchCheckinReservations, adminFetchHousekeepingStaff } from "./actions"
+import { adminFetchCalendarReservations, adminFetchGuestHistory, adminFetchActiveReservations, adminFetchCheckoutData, adminFetchCheckinReservations, adminFetchCancelledReservations, adminFetchHousekeepingStaff } from "./actions"
+import { BookingActions } from "@/components/booking/BookingActions"
 
 const statusVariants: Record<string, string> = {
   available: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
@@ -927,6 +928,7 @@ interface CheckinDialogProps {
 
 function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinDialogProps) {
   const [reservations, setReservations] = useState<any[]>([])
+  const [cancelledReservations, setCancelledReservations] = useState<any[]>([])
   const [selectedReservation, setSelectedReservation] = useState<any>(null)
   const [isWalkIn, setIsWalkIn] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -1052,6 +1054,9 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
       const data = await adminFetchCheckinReservations(String(room.id))
 
       console.log(`Found ${data?.length || 0} reservations for room ${room.number}`)
+
+      const cancelled = await adminFetchCancelledReservations(String(room.id))
+      setCancelledReservations(cancelled || [])
 
       setReservations(data || [])
       if (data && data.length > 0) {
@@ -1673,6 +1678,23 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                               </div>
                             )}
                           </div>
+                          {selectedReservation && (
+                            <div className="mt-4 flex justify-end">
+                              <BookingActions
+                                bookingId={selectedReservation.id}
+                                status={selectedReservation.status}
+                                guestName={selectedReservation.guest_name}
+                                onStatusChange={(newStatus) => {
+                                  if (newStatus === 'cancelled') {
+                                    setCancelledReservations((prev) => [{ ...selectedReservation, status: 'cancelled' }, ...prev])
+                                    setReservations((prev) => prev.filter((r) => r.id !== selectedReservation.id))
+                                    setSelectedReservation(null)
+                                    setIsWalkIn(true)
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </div>
@@ -1869,6 +1891,37 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+              )}
+
+              {/* Cancelled reservations — persistent Restore */}
+              {cancelledReservations.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Reservasi Dibatalkan</Label>
+                  {cancelledReservations.map((res) => (
+                    <div
+                      key={res.id}
+                      className="flex items-center justify-between rounded-lg border border-dashed border-red-300 dark:border-red-900 p-3 text-sm"
+                    >
+                      <div>
+                        <span className="font-medium">{res.guest_name}</span>
+                        <span className="text-muted-foreground ml-2">
+                          {format(new Date(res.check_in), 'dd MMM')} – {format(new Date(res.check_out), 'dd MMM yyyy')}
+                        </span>
+                      </div>
+                      <BookingActions
+                        bookingId={res.id}
+                        status="cancelled"
+                        guestName={res.guest_name}
+                        onStatusChange={(newStatus) => {
+                          if (newStatus === 'confirmed') {
+                            setCancelledReservations((prev) => prev.filter((r) => r.id !== res.id))
+                            fetchReservations()
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -3019,7 +3072,12 @@ export default function OccupancyPage() {
                           if (!r.status || !KNOWN_STATUSES.has(r.status)) return false;
                           if (!r.check_in || !r.check_out) return false;
                           const ci = new Date(r.check_in); ci.setHours(0,0,0,0);
-                          const co = new Date(r.check_out); co.setHours(0,0,0,0);
+                          // For checked-out reservations, use actual_check_out so calendar
+                          // doesn't keep the slot occupied past when guest physically left.
+                          const effectiveCheckOutRaw = r.status === 'checked-out' && r.actual_check_out
+                            ? r.actual_check_out
+                            : r.check_out;
+                          const co = new Date(effectiveCheckOutRaw); co.setHours(0,0,0,0);
                           if (isNaN(ci.getTime()) || isNaN(co.getTime())) return false;
                           return d >= ci && d <= co;
                         })
@@ -3068,7 +3126,7 @@ export default function OccupancyPage() {
                                 <span className="block font-semibold truncate text-[9px] w-full text-center">{reservation.guest_name?.split(' ')[0]}</span>
                                 <div className="flex gap-0.5 items-center">
                                   {isSameDay(new Date(reservation.check_in), date) && <span className="bg-white/60 dark:bg-black/40 px-0.5 rounded-[3px] text-[8px] font-bold">IN</span>}
-                                  {isSameDay(new Date(reservation.check_out), date) && <span className="bg-white/60 dark:bg-black/40 px-0.5 rounded-[3px] text-[8px] font-bold">OUT</span>}
+                                  {isSameDay(new Date(reservation.status === 'checked-out' && reservation.actual_check_out ? reservation.actual_check_out : reservation.check_out), date) && <span className="bg-white/60 dark:bg-black/40 px-0.5 rounded-[3px] text-[8px] font-bold">OUT</span>}
                                 </div>
                               </div>
                             ) : room.status === 'cleaning' ? (
