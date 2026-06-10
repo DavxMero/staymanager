@@ -1,9 +1,0 @@
-# Isolated dependencies untuk Playwright capture
-node_modules/
-
-# Credentials Playwright (jangan commit)
-.env
-
-# Tidak commit screenshot Bab 4 ke git (ukuran besar, regenerate via Playwright)
-# Hapus baris ini kalau mau commit screenshot juga
-# screenshots/*.png
