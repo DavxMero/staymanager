@@ -1,0 +1,108 @@
+---
+title: Class Diagram StayManager (Entitas Inti)
+---
+classDiagram
+    class User {
+        +UUID id
+        +String email
+        +DateTime createdAt
+        +signIn()
+        +signOut()
+    }
+    class Profile {
+        +UUID id
+        +String fullName
+        +String phone
+        +String avatarUrl
+        +update()
+    }
+    class Role {
+        +UUID id
+        +String name
+        +String displayName
+        +JSON permissions
+        +hasPermission(perm)
+    }
+    class UserRole {
+        +UUID id
+        +UUID userId
+        +UUID roleId
+    }
+    class Guest {
+        +UUID id
+        +String fullName
+        +String email
+        +String phone
+        +UUID userId
+        +createBooking()
+    }
+    class Room {
+        +UUID id
+        +String number
+        +String type
+        +Decimal basePrice
+        +String status
+        +setStatus(s)
+    }
+    class Reservation {
+        +UUID id
+        +UUID guestId
+        +UUID roomId
+        +Date checkIn
+        +Date checkOut
+        +String status
+        +String bookingReference
+        +checkIn()
+        +checkOut()
+        +cancel()
+    }
+    class Payment {
+        +UUID id
+        +UUID reservationId
+        +Decimal amount
+        +String method
+        +String status
+        +confirm()
+    }
+    class BillingItem {
+        +UUID id
+        +UUID reservationId
+        +UUID guestId
+        +Decimal amount
+        +String description
+    }
+    class Invoice {
+        +UUID id
+        +UUID createdBy
+        +String invoiceNumber
+        +Decimal total
+        +generate()
+    }
+    class HousekeepingTask {
+        +UUID id
+        +UUID roomId
+        +UUID staffId
+        +String taskType
+        +String status
+        +complete()
+    }
+    class ChatbotService {
+        +cekKetersediaan(in, out, type)
+        +getRoomTypes()
+        +createBooking(data)
+        +confirmPayment(ref)
+    }
+
+    User "1" -- "0..1" Profile : extends
+    User "1" -- "*" UserRole : has
+    Role "1" -- "*" UserRole : assigned_to
+    User "1" -- "0..1" Guest : impersonates
+    Guest "1" -- "*" Reservation : makes
+    Room "1" -- "*" Reservation : occupies
+    Reservation "1" -- "*" Payment : settles
+    Reservation "1" -- "*" BillingItem : generates
+    Profile "1" -- "*" Invoice : creates
+    Room "1" -- "*" HousekeepingTask : needs
+    Guest "1" ..> ChatbotService : interacts
+    ChatbotService ..> Reservation : creates_via_tool
+    ChatbotService ..> Room : queries

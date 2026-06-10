@@ -1,0 +1,49 @@
+---
+title: Activity Diagram - Pencatatan Transaksi Keuangan
+---
+flowchart TD
+    Start([Sumber Transaksi]) --> Source{Jenis<br/>Transaksi?}
+    Source -->|Pendapatan| Income[Booking / Service Charge]
+    Source -->|Pengeluaran| Outflow[Operasional / Inventory]
+    Source -->|Deposit| Deposit1[Deposit Tamu]
+
+    Income --> InvCreate[Generate Invoice via /billing]
+    InvCreate --> InsertInv[INSERT INTO invoices]
+    InsertInv --> InsertItems[INSERT INTO billing_items]
+    InsertItems --> WaitPay[Status: Pending Payment]
+    WaitPay --> PaymentIn[Tamu Bayar]
+    PaymentIn --> RecordPayment[INSERT INTO payments status='confirmed']
+    RecordPayment --> UpdateInv[UPDATE invoice status='paid']
+    UpdateInv --> Report
+
+    Outflow --> CreateExp[Buat Expense via /financial]
+    CreateExp --> InsertExp[INSERT INTO expenses category, amount]
+    InsertExp --> Approve{Butuh<br/>Approval?}
+    Approve -->|Ya| ManagerApp[Manager Setujui]
+    Approve -->|Tidak| Recorded
+    ManagerApp --> Recorded[Status: Recorded]
+    Recorded --> Report
+
+    Deposit1 --> InsertDep[INSERT INTO deposits collected_by]
+    InsertDep --> HoldFunds[Saldo Ditahan Sistem]
+    HoldFunds --> CheckoutTime{Check-out<br/>Tamu?}
+    CheckoutTime -->|Ya| Refund{Ada<br/>Kerusakan?}
+    Refund -->|Tidak| FullRefund[UPDATE refunded_by + Refund Penuh]
+    Refund -->|Ya| PartialRefund[UPDATE refunded_by + Refund Sebagian]
+    FullRefund --> Report
+    PartialRefund --> Report
+
+    Report[Generate Laporan di /reports] --> End([Selesai])
+
+    classDef startEnd fill:#c8e6c9,stroke:#2e7d32,color:#000
+    classDef decision fill:#fff9c4,stroke:#f57f17,color:#000
+    classDef action fill:#bbdefb,stroke:#1565c0,color:#000
+    classDef income fill:#dcedc8,stroke:#558b2f,color:#000
+    classDef outflow fill:#ffccbc,stroke:#d84315,color:#000
+    classDef deposit fill:#b3e5fc,stroke:#01579b,color:#000
+    class Start,End startEnd
+    class Source,Approve,CheckoutTime,Refund decision
+    class Income,InvCreate,InsertInv,InsertItems,WaitPay,PaymentIn,RecordPayment,UpdateInv income
+    class Outflow,CreateExp,InsertExp,ManagerApp,Recorded outflow
+    class Deposit1,InsertDep,HoldFunds,FullRefund,PartialRefund deposit
+    class Report action

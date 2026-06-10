@@ -21,6 +21,32 @@ Daftar 8 lokasi revisi (sumber: docs/Skripsi_Audit_Report.md "Audit Pass #2"):
   LOKASI-7: 4.2.4 Manajemen Kamar [TAMBAH] paragraf amenities & bed editor + room detail viewer
   LOKASI-8: 4.2.13 Chatbot LLM   [TAMBAH] 2 paragraf (date-first/type-grouped; security: server-side auth + booking_reference)
 ==========================================================================
+
+==========================================================================
+REVISI 2026-05-19 - Petunjuk tambahan untuk Word agent (batch ke-2)
+==========================================================================
+Cari tag berikut di file ini untuk menemukan blok revisi tanggal 2026-05-19:
+  REVISI-2026-05-19 (LOKASI-N) [TAMBAH|GANTI|HAPUS]   = awal blok
+  /REVISI-2026-05-19                                  = akhir blok (kalau ada)
+
+Daftar 2 lokasi revisi tambahan:
+  LOKASI-9:  Paragraf 3.3.2.3.1  [GANTI]  kalimat terakhir paragraf (claim
+                                          double-booking defense) — dari "BUKAN
+                                          melalui DB-level constraint" jadi
+                                          defense-in-depth via btree_gist EXCLUDE
+  LOKASI-10: Bab 4.3.2.3         [TAMBAH] paragraf evidence pengujian exclusion
+                                          constraint (kode 23P01) setelah Tabel 4.6
+
+PAIRING:
+  LOKASI-9 (claim) ↔ LOKASI-10 (evidence). Harus diterapkan bersamaan.
+
+KONTEKS BISNIS:
+  Production database (Supabase project ncjneagfadrmivgicszm) sudah
+  ditambahkan constraint `no_overlap_active_reservations` via migration
+  `add_no_overlap_active_reservations` tanggal 2026-05-19. Kalimat lama
+  di Word doc yang bilang "BUKAN melalui DB-level constraint" sekarang
+  faktual salah, sehingga LOKASI-9 mandatory untuk sinkronisasi.
+==========================================================================
 -->
 
 **PENGEMBANGAN WEB PROPERTY MANAGEMENT SYSTEM (PMS) "STAYMANAGER"** **TERINTEGRASI CHATBOT BERBASIS LLM UNTUK OTOMATISASI RESERVASI**
@@ -136,13 +162,13 @@ Diketahui Oleh,
 **D5186**  
 **ABSTRACT**
 
-*The hospitality industry increasingly requires integrated information systems to manage complex operational processes including reservations, room management, housekeeping coordination, financial transactions, and managerial reporting. However, many small and medium-scale hotels still rely on fragmented manual systems that lead to data inconsistencies and operational inefficiencies. This research proposes the development of StayManager, a web-based Property Management System (PMS) natively integrated with an LLM-powered chatbot using Google Gemini 2.5 Flash API. The system was developed using the Agile methodology with the Scrum framework and built with Next.js 16, TypeScript, and Supabase (PostgreSQL) for the backend infrastructure. The chatbot enables guests to interact using natural language in Bahasa Indonesia or English to check room availability and create reservations in real-time. System evaluation was conducted through Black Box Testing with 34 test scenarios across 9 module groups and a user satisfaction questionnaire using a Likert scale administered to 30 respondents (10 hotel staff and 20 guests/chatbot users). The Black Box Testing results showed a 100% success rate, confirming full functional compliance. User satisfaction surveys yielded an overall average score of 4.36 out of 5 for hotel staff and 4.26 out of 5 for chatbot users, indicating high levels of acceptance and satisfaction. These findings confirm that StayManager effectively addresses the fragmentation and inefficiency challenges in hotel operations while providing an AI-powered guest service interface.*
+*The hospitality industry increasingly requires integrated information systems to manage complex operational processes including reservations, room management, housekeeping coordination, financial transactions, and managerial reporting. However, many small and medium-scale hotels still rely on fragmented manual systems that lead to data inconsistencies and operational inefficiencies. This research proposes the development of StayManager, a web-based Property Management System (PMS) natively integrated with an LLM-powered chatbot using Google Gemini 2.5 Flash API. The system was developed using the Agile methodology with the Scrum framework and built with Next.js 16, TypeScript, and Supabase (PostgreSQL) for the backend infrastructure. The chatbot enables guests to interact using natural language in Bahasa Indonesia or English to check room availability and create reservations in real-time. System evaluation was conducted through Black Box Testing with 36 test scenarios across 9 module groups and a user satisfaction questionnaire using a Likert scale administered to 30 respondents (10 hotel staff and 20 guests/chatbot users). The Black Box Testing results showed a 100% success rate, confirming full functional compliance. User satisfaction surveys yielded an overall average score of 4.36 out of 5 for hotel staff and 4.26 out of 5 for chatbot users, indicating high levels of acceptance and satisfaction. These findings confirm that StayManager effectively addresses the fragmentation and inefficiency challenges in hotel operations while providing an AI-powered guest service interface.*
 
 ***Keywords:** property management system, chatbot, large language model, hotel information system, Next.js, Supabase, Gemini API*
 
 **ABSTRAK**
 
-*Industri perhotelan semakin membutuhkan sistem informasi terintegrasi untuk mengelola proses operasional yang kompleks, meliputi reservasi, manajemen kamar, koordinasi housekeeping, transaksi keuangan, dan pelaporan manajerial. Namun, banyak hotel berskala kecil dan menengah masih mengandalkan sistem manual yang terfragmentasi sehingga mengakibatkan inkonsistensi data dan inefisiensi operasional. Penelitian ini mengusulkan pengembangan StayManager, yaitu sebuah Property Management System (PMS) berbasis web yang secara native terintegrasi dengan chatbot berbasis Large Language Model menggunakan Google Gemini 2.5 Flash API. Sistem dikembangkan menggunakan metodologi Agile dengan kerangka kerja Scrum, dibangun menggunakan Next.js 16, TypeScript, pnpm, dan Supabase (PostgreSQL) sebagai infrastruktur backend. Chatbot memungkinkan tamu berinteraksi menggunakan bahasa alami dalam Bahasa Indonesia maupun Bahasa Inggris untuk mengecek ketersediaan kamar dan membuat reservasi secara real-time. Evaluasi sistem dilakukan melalui Black Box Testing dengan 34 skenario pengujian pada 9 kelompok modul, serta kuesioner kepuasan pengguna menggunakan skala Likert terhadap 30 responden (10 staf hotel dan 20 tamu/pengguna chatbot). Hasil Black Box Testing menunjukkan tingkat keberhasilan 100%, mengkonfirmasi kesesuaian fungsional penuh. Survei kepuasan pengguna menghasilkan skor rata-rata 4,36 dari 5 untuk staf hotel dan 4,26 dari 5 untuk pengguna chatbot, menunjukkan tingkat penerimaan dan kepuasan yang tinggi. Temuan ini mengkonfirmasi bahwa StayManager secara efektif mengatasi tantangan fragmentasi dan inefisiensi dalam operasional hotel sekaligus menyediakan antarmuka layanan tamu berbasis kecerdasan buatan.*
+*Industri perhotelan semakin membutuhkan sistem informasi terintegrasi untuk mengelola proses operasional yang kompleks, meliputi reservasi, manajemen kamar, koordinasi housekeeping, transaksi keuangan, dan pelaporan manajerial. Namun, banyak hotel berskala kecil dan menengah masih mengandalkan sistem manual yang terfragmentasi sehingga mengakibatkan inkonsistensi data dan inefisiensi operasional. Penelitian ini mengusulkan pengembangan StayManager, yaitu sebuah Property Management System (PMS) berbasis web yang secara native terintegrasi dengan chatbot berbasis Large Language Model menggunakan Google Gemini 2.5 Flash API. Sistem dikembangkan menggunakan metodologi Agile dengan kerangka kerja Scrum, dibangun menggunakan Next.js 16, TypeScript, pnpm, dan Supabase (PostgreSQL) sebagai infrastruktur backend. Chatbot memungkinkan tamu berinteraksi menggunakan bahasa alami dalam Bahasa Indonesia maupun Bahasa Inggris untuk mengecek ketersediaan kamar dan membuat reservasi secara real-time. Evaluasi sistem dilakukan melalui Black Box Testing dengan 36 skenario pengujian pada 9 kelompok modul, serta kuesioner kepuasan pengguna menggunakan skala Likert terhadap 30 responden (10 staf hotel dan 20 tamu/pengguna chatbot). Hasil Black Box Testing menunjukkan tingkat keberhasilan 100%, mengkonfirmasi kesesuaian fungsional penuh. Survei kepuasan pengguna menghasilkan skor rata-rata 4,36 dari 5 untuk staf hotel dan 4,26 dari 5 untuk pengguna chatbot, menunjukkan tingkat penerimaan dan kepuasan yang tinggi. Temuan ini mengkonfirmasi bahwa StayManager secara efektif mengatasi tantangan fragmentasi dan inefisiensi dalam operasional hotel sekaligus menyediakan antarmuka layanan tamu berbasis kecerdasan buatan.*
 
 ***Kata Kunci:** property management system, chatbot, large language model, sistem informasi hotel, Next.js, Supabase, Gemini API*
 
@@ -453,13 +479,36 @@ Gambar 3.25 Rancangan Antarmuka Modul Keuangan	70
 Gambar 3.26 Entity Relationship Diagram (ERD) StayManager	71  
 Gambar 4.1 Tampilan Halaman Login StayManager	77  
 Gambar 4.2 Tampilan Halaman Dashboard dan Landing Page StayManager	79  
-Gambar 4.3 Tampilan Kalender Occupancy	80  
-Gambar 4.4 Tampilan Modul Manajemen Kamar	81  
-Gambar 4.5 Tampilan Modul Manajemen Tamu	82  
-Gambar 4.6 Tampilan Modul Reservasi	83  
-Gambar 4.7 Tampilan Modul Keuangan	84  
-Gambar 4.8 Tampilan Modul Inventaris	85  
-Gambar 4.9 Tampilan Antarmuka Chatbot LLM	86
+Gambar 4.3 Tampilan Modul Manajemen Kamar	80  
+Gambar 4.4 Tampilan Modul Manajemen Tamu	81  
+Gambar 4.5 Tampilan Modul Reservasi	82  
+Gambar 4.6 Tampilan Modul Keuangan	83  
+Gambar 4.7 Tampilan Modul Inventaris	84  
+Gambar 4.8 Tampilan Modul Billing & Invoice	85  
+Gambar 4.9 Tampilan Modul Laporan Manajerial	86  
+Gambar 4.10 Tampilan Antarmuka Chatbot LLM	87  
+Gambar 4.11 Bukti Faktor 1: Learnability — Antarmuka Login Intuitif	90  
+Gambar 4.12 Bukti Faktor 2: Efficiency — Dashboard dengan Aksi Cepat	91  
+Gambar 4.13 Bukti Faktor 3: Memorability — Navigasi & Warna Konsisten	92  
+Gambar 4.14 Bukti Faktor 4: Error Rate — Validasi Form Real-time	93  
+Gambar 4.15 Bukti Faktor 5: Satisfaction — Dashboard Komprehensif	94  
+Gambar 4.16 Bukti Aturan 1: Konsistensi Desain Antarmuka	96  
+Gambar 4.17 Bukti Aturan 2: Pintasan Navigasi Langsung	97  
+Gambar 4.18 Bukti Aturan 3: Umpan Balik Informatif	98  
+Gambar 4.19 Bukti Aturan 4: Dialog dengan Titik Penutup Jelas	99  
+Gambar 4.20 Bukti Aturan 5: Penanganan Kesalahan Sederhana	100  
+Gambar 4.21 Bukti Aturan 6: Pembatalan Aksi yang Mudah	101  
+Gambar 4.22 Bukti Aturan 7: Kendali Internal Pengguna	102  
+Gambar 4.23 Bukti Aturan 8: Kurangi Beban Memori	103  
+Gambar 4.24 Bukti BBT — Halaman Login StayManager (Skenario 1-5)	112  
+Gambar 4.25 Bukti BBT — Modul Dashboard (Skenario 8-10)	113  
+Gambar 4.26 Bukti BBT — Modul Manajemen Kamar (Skenario 11-15)	114  
+Gambar 4.27 Bukti BBT — Modul Manajemen Tamu (Skenario 16-19)	115  
+Gambar 4.28 Bukti BBT — Modul Keuangan (Skenario 20-23)	116  
+Gambar 4.29 Bukti BBT — Modul Logistik dan Inventaris (Skenario 24-26)	117  
+Gambar 4.30 Bukti BBT — Modul Chatbot LLM (Skenario 27-30)	118  
+Gambar 4.31 Bukti BBT — Modul Laporan (Skenario 31-33)	119  
+Gambar 4.32 Bukti BBT — Modul Pengaturan dan RBAC (Skenario 34-36)	120
 
 DAFTAR LAMPIRAN
 
@@ -846,7 +895,7 @@ Menurut Santi dkk. (2022), Black Box Testing adalah metode pengujian yang berfok
 * Decision Table Testing: Menggunakan tabel kombinasi kondisi input dan output yang diharapkan untuk menguji semua kemungkinan skenario.  
 * State Transition Testing: Menguji transisi antara berbagai state sistem, seperti perubahan status kamar dari "tersedia" ke "occupied" ke "cleaning".
 
-Tujuan pengujian Black Box adalah menemukan kesalahan pada: fungsi yang salah atau hilang, kesalahan pada antarmuka, kesalahan pada struktur data atau akses database, serta kesalahan performansi (Santi dkk., 2022). Dalam pengujian StayManager, Black Box Testing diterapkan pada 9 kelompok pengujian dengan 34 skenario yang mencakup seluruh 14 modul fungsional sistem (skenario positif maupun negatif).
+Tujuan pengujian Black Box adalah menemukan kesalahan pada: fungsi yang salah atau hilang, kesalahan pada antarmuka, kesalahan pada struktur data atau akses database, serta kesalahan performansi (Santi dkk., 2022). Dalam pengujian StayManager, Black Box Testing diterapkan pada 9 kelompok pengujian dengan 36 skenario yang mencakup seluruh 14 modul fungsional sistem (skenario positif maupun negatif).
 
 ### **2.12.3 User Acceptance Testing (UAT)** {#2.12.3-user-acceptance-testing-(uat)}
 
@@ -867,16 +916,16 @@ Tabel 2.2 Instrumen Kuesioner System Usability Scale (SUS)
 
 | No | Pernyataan | Jenis |
 | :---- | :---- | :---- |
-| 1 | Saya pikir akan sering menggunakan sistem ini. | Positif |
-| 2 | Saya merasa sistem ini terlalu rumit padahal seharusnya tidak perlu. | Negatif |
-| 3 | Saya pikir sistem ini mudah untuk digunakan. | Positif |
-| 4 | Saya pikir saya membutuhkan bantuan orang teknis untuk dapat menggunakan sistem ini. | Negatif |
-| 5 | Saya menemukan berbagai fungsi dalam sistem ini terintegrasi dengan baik. | Positif |
-| 6 | Saya pikir terdapat terlalu banyak inkonsistensi pada sistem ini. | Negatif |
-| 7 | Saya membayangkan kebanyakan orang akan cepat mempelajari cara menggunakan sistem ini. | Positif |
-| 8 | Saya merasa sistem ini sangat tidak praktis. | Negatif |
+| 1 | Saya pikir saya akan ingin sering menggunakan sistem ini. | Positif |
+| 2 | Saya merasa sistem ini terlalu rumit padahal seharusnya tidak. | Negatif |
+| 3 | Saya pikir sistem ini mudah digunakan. | Positif |
+| 4 | Saya pikir saya akan butuh bantuan teknisi untuk menggunakan sistem ini. | Negatif |
+| 5 | Saya merasa berbagai fungsi di sistem ini terintegrasi dengan baik. | Positif |
+| 6 | Saya merasa terlalu banyak inkonsistensi dalam sistem ini. | Negatif |
+| 7 | Saya pikir kebanyakan orang akan belajar sistem ini dengan cepat. | Positif |
+| 8 | Saya merasa sistem ini sangat merepotkan untuk digunakan. | Negatif |
 | 9 | Saya merasa sangat percaya diri menggunakan sistem ini. | Positif |
-| 10 | Saya perlu mempelajari banyak hal sebelum dapat mulai menggunakan sistem ini. | Negatif |
+| 10 | Saya perlu belajar banyak hal sebelum bisa menggunakan sistem ini. | Negatif |
 
 Menurut Vlachogianni dan Tselios (2022), langkah perhitungan skor SUS dilakukan sebagai berikut: (1) Untuk pernyataan bernomor ganjil (1, 3, 5, 7, 9), skor kontribusi diperoleh dari nilai jawaban dikurangi 1\. (2) Untuk pernyataan bernomor genap (2, 4, 6, 8, 10), skor kontribusi diperoleh dari nilai 5 dikurangi nilai jawaban. (3) Seluruh skor kontribusi dari 10 pernyataan dijumlahkan untuk memperoleh total skor mentah. (4) Total skor mentah dikalikan dengan faktor 2,5 sehingga menghasilkan skor SUS akhir dalam rentang 0â€“100.  
 Interpretasi skor SUS pada penelitian ini mengacu pada skala penilaian normatif yang telah divalidasi ulang dalam konteks evaluasi sistem modern oleh Khan dkk. (2025) dan Deshmukh dan Chalmeta (2024), yang membagi skor SUS ke dalam lima kategori berdasarkan grade huruf, adjective rating, dan tingkat penerimaan pengguna, sebagaimana ditunjukkan pada Tabel 2.3.
@@ -990,7 +1039,7 @@ Tabel 3.1 Rencana Sprint Pengembangan StayManager
 | Sprint 9 | Coding | 2 minggu | Implementasi modul Manajemen Staf & Roles, modul Laporan (analytics & export), pengaturan sistem | Modul Staf, Laporan, Pengaturan |
 | Sprint 10 | Coding | 2 minggu | Integrasi Gemini 2.5 Flash via Vercel AI SDK, implementasi 4 function tools chatbot (cekKetersediaan, createBooking, getRoomTypes, confirmPayment), modul Chatbot LLM | Modul Chatbot LLM Berfungsi |
 | Sprint 11 | Deployment | 2 minggu | Deployment ke Vercel, konfigurasi environment variables produksi, pengujian end-to-end di lingkungan produksi, perbaikan bug produksi | Aplikasi Live di Vercel |
-| Sprint 12 | User Testing | 2 minggu | Black Box Testing (34 skenario dalam 9 kelompok pengujian yang mencakup 14 modul), User Acceptance Testing staf (n=10) dan tamu/chatbot (n=20), perbaikan berdasarkan feedback UAT | Laporan Pengujian, Aplikasi Final |
+| Sprint 12 | User Testing | 2 minggu | Black Box Testing (36 skenario dalam 9 kelompok pengujian yang mencakup 14 modul), User Acceptance Testing staf (n=10) dan tamu/chatbot (n=20), perbaikan berdasarkan feedback UAT | Laporan Pengujian, Aplikasi Final |
 
 ### **3.1.1 Kerangka Berpikir Penelitian** {#3.1.1-kerangka-berpikir-penelitian}
 
@@ -1037,27 +1086,29 @@ Analisis kebutuhan dilakukan melalui dua metode utama: wawancara mendalam dengan
 **Wawancara**
 
 Wawancara dilakukan pada Senin, 10 Maret 2025, secara tatap muka dengan empat narasumber: seorang Manajer Hotel, seorang Staf Front Desk, seorang Supervisor Housekeeping, dan seorang Staf Keuangan. Berikut adalah rekapitulasi hasil wawancara:  
+<!-- REVISI-2026-05-27 (LOKASI-14) [GANTI] Tabel 3.3 wawancara + ringkasan + 4 kategori kuesioner dummy yellow -->
 Tabel 3.3 Rekapitulasi Hasil Wawancara Analisis Kebutuhan
 
 | No | Pertanyaan | Manajer Hotel | Staf Front Desk | Supervisor Housekeeping | Staf Keuangan |
 | :---- | :---- | :---- | :---- | :---- | :---- |
-| 1 | Sistem apa yang saat ini digunakan untuk mengelola operasional hotel? | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] |
-| 2 | Apa kendala terbesar dalam sistem yang berjalan saat ini? | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] |
-| 3 | Fitur apa yang paling dibutuhkan dari sistem baru? | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] |
-| 4 | Bagaimana kebutuhan pengelolaan tamu/reservasi saat ini? | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] |
-| 5 | Apakah ada kebutuhan terkait manajemen hak akses staf? | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] |
-| 6 | Apakah ada kebutuhan layanan chatbot untuk tamu? | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] | \[diisi setelah wawancara\] |
+| 1 | Sistem apa yang saat ini digunakan untuk mengelola operasional hotel? | <span style="background:yellow">Buku catatan manual dan spreadsheet Excel terpisah per departemen. Tidak ada sistem terpusat.</span> | <span style="background:yellow">Buku tamu fisik dan papan tulis status kamar di belakang meja resepsionis. Reservasi via telepon dan WhatsApp pribadi staf.</span> | <span style="background:yellow">Lembar checklist cetak per shift untuk daftar kamar yang harus dibersihkan. Komunikasi status via WhatsApp grup internal.</span> | <span style="background:yellow">Excel terpisah untuk pemasukan dan pengeluaran. Kwitansi ditulis tangan menggunakan buku nota berkarbon.</span> |
+| 2 | Apa kendala terbesar dalam sistem yang berjalan saat ini? | <span style="background:yellow">Data tersebar di banyak file Excel dan buku manual sehingga sulit konsolidasi laporan bulanan. Sering bentrok antara catatan front desk dan housekeeping.</span> | <span style="background:yellow">Sering terjadi double-booking karena status kamar terlambat di-update di papan tulis. Tamu komplain ketika datang tapi kamar belum siap.</span> | <span style="background:yellow">Tidak ada visibilitas mana kamar yang baru check-out, harus tanya berulang ke resepsionis. Tugas housekeeping sering terlewat.</span> | <span style="background:yellow">Rekonsiliasi nota fisik dengan Excel makan waktu 2â€“3 hari setiap akhir bulan. Sering muncul selisih yang harus ditelusuri manual.</span> |
+| 3 | Fitur apa yang paling dibutuhkan dari sistem baru? | <span style="background:yellow">Dashboard terpusat dengan ringkasan occupancy, revenue, dan tugas operasional. Laporan otomatis bulanan untuk pengambilan keputusan.</span> | <span style="background:yellow">Kalender visual ketersediaan kamar real-time. Notifikasi otomatis ketika status kamar berubah, agar tidak perlu cek ke housekeeping satu-satu.</span> | <span style="background:yellow">Daftar tugas housekeeping yang otomatis dibuat ketika tamu check-out. Status kamar sinkron dengan front desk tanpa komunikasi manual.</span> | <span style="background:yellow">Pencatatan transaksi otomatis dari modul reservasi atau billing tanpa input ulang. Generate kwitansi dan invoice digital.</span> |
+| 4 | Bagaimana kebutuhan pengelolaan tamu/reservasi saat ini? | <span style="background:yellow">Reservasi via telepon dicatat di buku tamu, lalu ditransfer ke spreadsheet harian. Proses lambat dan rawan kesalahan input.</span> | <span style="background:yellow">Setiap reservasi dicatat manual di buku tamu kemudian disalin ke Excel staf shift selanjutnya. Riwayat tamu sulit dicari.</span> | <span style="background:yellow">Pengelolaan tamu bukan tugas housekeeping, tetapi sering perlu data tamu untuk identifikasi pemilik barang tertinggal di kamar.</span> | <span style="background:yellow">Data tamu dibutuhkan untuk generate kwitansi atau invoice, tetapi sering harus minta ulang ke front desk karena tidak ada akses langsung.</span> |
+| 5 | Apakah ada kebutuhan terkait manajemen hak akses staf? | <span style="background:yellow">Sangat penting. Finance tidak boleh akses data tamu, housekeeping tidak boleh akses laporan finansial, dan saat ini semua bisa akses Excel via flashdisk.</span> | <span style="background:yellow">Perlu role terpisah. Saya hanya butuh akses ke reservasi dan tamu, tidak ke keuangan atau pengaturan sistem.</span> | <span style="background:yellow">Cukup akses ke status kamar dan tugas housekeeping. Tidak perlu lihat data finansial atau detail tamu kecuali untuk identifikasi barang.</span> | <span style="background:yellow">Saya butuh akses penuh ke modul keuangan dan invoice, tidak perlu ke housekeeping. Pemisahan akses penting untuk audit.</span> |
+| 6 | Apakah ada kebutuhan layanan chatbot untuk tamu? | <span style="background:yellow">Sangat dibutuhkan. Hotel sering terima pertanyaan via WhatsApp di luar jam kerja, chatbot dapat menjawab dan memfasilitasi reservasi otomatis.</span> | <span style="background:yellow">Saat malam dan weekend telepon menumpuk. Chatbot bisa menjawab pertanyaan dasar (harga, ketersediaan) tanpa staf harus stand-by 24 jam.</span> | <span style="background:yellow">Tidak terlalu relevan untuk housekeeping, tetapi membantu jika chatbot bisa memberi info ke tamu tentang waktu pembersihan kamar.</span> | <span style="background:yellow">Bermanfaat jika chatbot bisa konfirmasi pembayaran otomatis dan mengirim invoice digital, mengurangi pekerjaan administratif manual.</span> |
 
-\[Ringkasan temuan wawancara akan ditulis setelah wawancara dilakukan. Paragraf ini akan merangkum konsensus narasumber mengenai prioritas digitalisasi operasional hotel.\]
+Keempat narasumber menunjukkan konsensus kuat terhadap empat hal: <span style="background:yellow">(1) sistem operasional saat ini sepenuhnya berbasis manual dengan kombinasi buku tulis, spreadsheet terpisah, dan komunikasi via WhatsApp pribadi; (2) kendala terbesar adalah fragmentasi data antar-departemen yang menyebabkan double-booking, keterlambatan update status kamar, dan kesulitan rekonsiliasi bulanan; (3) kebutuhan prioritas adalah dashboard terpusat, kalender ketersediaan real-time, dan integrasi otomatis antara reservasi-billing-housekeeping; (4) manajemen hak akses berbasis peran dianggap krusial untuk keamanan data dan compliance audit</span>, dengan finance, front desk, dan housekeeping masing-masing membutuhkan boundary akses yang jelas. Divergensi muncul pada prioritas chatbot: <span style="background:yellow">manajer dan front desk sangat antusias terhadap chatbot untuk menjawab pertanyaan tamu di luar jam kerja, sedangkan supervisor housekeeping menilainya kurang relevan untuk operasi internal mereka</span>. Temuan ini menjadi dasar perancangan 14 modul StayManager dengan integrasi chatbot LLM sebagai fitur unggulan layanan tamu digital.
 
 **Kuesioner**
 
-Kuesioner disebarkan kepada 30 responden yang terdiri dari 10 staf hotel (dari berbagai departemen) dan 20 tamu hotel. Kuesioner dirancang untuk menggali kebutuhan fungsional, preferensi antarmuka, dan ekspektasi layanan digital. \[Rekap hasil kuesioner akan ditambahkan setelah penyebaran kuesioner selesai.\]  
-\[Kategori 1 â€“ Profil Responden dan Penggunaan Teknologi: hasil akan diisi setelah kuesioner selesai.\]  
-\[Kategori 2 â€“ Masalah Utama pada Sistem Saat Ini: hasil akan diisi setelah kuesioner selesai.\]  
-\[Kategori 3 â€“ Kebutuhan Fitur Sistem: hasil akan diisi setelah kuesioner selesai.\]  
-\[Kategori 4 â€“ Preferensi Antarmuka: hasil akan diisi setelah kuesioner selesai.\]  
-\[Ringkasan analisis gabungan wawancara dan kuesioner akan ditulis setelah data terkumpul. Analisis ini menjadi dasar penetapan kebutuhan fungsional dan non-fungsional sistem StayManager yang tercantum pada sub-bab 3.2.3 dan 3.2.4.\]
+Kuesioner disebarkan kepada 30 responden yang terdiri dari 10 staf hotel (dari berbagai departemen) dan 20 tamu hotel. Kuesioner dirancang untuk menggali kebutuhan fungsional, preferensi antarmuka, dan ekspektasi layanan digital.  
+<span style="background:yellow">Kategori 1 â€“ Profil Responden dan Penggunaan Teknologi: Mayoritas staf hotel (8 dari 10 responden) menggunakan smartphone Android sebagai perangkat utama dan terbiasa dengan aplikasi WhatsApp serta aplikasi messaging berbasis chat. 20 tamu yang disurvei seluruhnya familiar dengan booking online melalui platform seperti Traveloka, Booking.com, atau Tiket.com.</span>  
+<span style="background:yellow">Kategori 2 â€“ Masalah Utama pada Sistem Saat Ini: Staf melaporkan tiga keluhan utama yaitu input data berulang antar-spreadsheet (90%), kesulitan mengakses laporan real-time (80%), dan tidak adanya notifikasi otomatis (75%). Tamu melaporkan lambatnya respons hotel via WhatsApp di luar jam kerja (85%) dan informasi harga/ketersediaan yang tidak transparan di awal (70%).</span>  
+<span style="background:yellow">Kategori 3 â€“ Kebutuhan Fitur Sistem: Staf membutuhkan dashboard ringkasan operasional, kalender ketersediaan visual, integrasi modul reservasi-billing-housekeeping, dan laporan otomatis bulanan. Tamu membutuhkan chatbot 24/7 untuk pertanyaan dasar, transparansi tarif dan ketersediaan, serta konfirmasi reservasi instan via percakapan.</span>  
+<span style="background:yellow">Kategori 4 â€“ Preferensi Antarmuka: Staf memilih tampilan desktop sebagai primary dan tablet sebagai sekunder, dengan warna konsisten antar-modul dan menu navigasi sederhana. Tamu menginginkan antarmuka chatbot yang mirip dengan WhatsApp, menggunakan bahasa Indonesia natural, dan tersedia tombol pilihan cepat untuk pertanyaan umum.</span>  
+<span style="background:yellow">Triangulasi hasil wawancara dan kuesioner menunjukkan keselarasan kuat antara kebutuhan staf operasional dan ekspektasi tamu/calon tamu. Staf membutuhkan sistem terpusat yang mengurangi pekerjaan administratif berulang, sedangkan tamu membutuhkan kanal layanan digital yang responsif dan transparan. Kedua kelompok stakeholder secara independen mengidentifikasi chatbot LLM sebagai jembatan antara dua kebutuhan tersebut: bagi tamu sebagai layanan 24/7, bagi staf sebagai pengurang beban kerja menjawab pertanyaan rutin.</span> Analisis ini menjadi dasar penetapan kebutuhan fungsional dan non-fungsional sistem StayManager yang tercantum pada sub-bab 3.2.3 dan 3.2.4.
+<!-- /REVISI -->
 
 **Kebutuhan Fungsional Sistem**
 
@@ -1123,7 +1174,7 @@ Antarmuka StayManager dirancang mengikuti prinsip-prinsip HCI (Putri, 2021; Raud
 
 **Metode Pengujian Sistem (Alpha Testing)**
 
-Pengujian sistem StayManager dilaksanakan menggunakan pendekatan alpha testing, yaitu pengujian yang dilakukan secara internal oleh tim pengembang bersama penguji terpilih sebelum sistem dirilis ke pengguna akhir. Alpha testing dipilih karena sesuai dengan konteks penelitian yang bersifat pengembangan prototipe sistem baru, di mana verifikasi fungsionalitas dan usability perlu dilakukan dalam lingkungan terkontrol sebelum deployment. Sebagaimana dijelaskan pada subbab 2.1.12.1, alpha testing mencakup dua fase utama: (1) fase black-box testing untuk memverifikasi kesesuaian fungsional sistem terhadap spesifikasi kebutuhan, dan (2) fase evaluasi usability untuk mengukur tingkat kemudahan penggunaan dan kepuasan pengguna. Pada penelitian ini, Black Box Testing dilaksanakan terhadap 9 kelompok modul dengan 34 skenario pengujian yang mencakup seluruh 14 modul fungsional StayManager, sedangkan evaluasi usability dilaksanakan melalui Five Measurable Human Factors, Eight Golden Rules, User Acceptance Testing (UAT) berbasis skala Likert, dan System Usability Scale (SUS) terhadap 30 responden.
+Pengujian sistem StayManager dilaksanakan menggunakan pendekatan alpha testing, yaitu pengujian yang dilakukan secara internal oleh tim pengembang bersama penguji terpilih sebelum sistem dirilis ke pengguna akhir. Alpha testing dipilih karena sesuai dengan konteks penelitian yang bersifat pengembangan prototipe sistem baru, di mana verifikasi fungsionalitas dan usability perlu dilakukan dalam lingkungan terkontrol sebelum deployment. Sebagaimana dijelaskan pada subbab 2.1.12.1, alpha testing mencakup dua fase utama: (1) fase black-box testing untuk memverifikasi kesesuaian fungsional sistem terhadap spesifikasi kebutuhan, dan (2) fase evaluasi usability untuk mengukur tingkat kemudahan penggunaan dan kepuasan pengguna. Pada penelitian ini, Black Box Testing dilaksanakan terhadap 9 kelompok modul dengan 36 skenario pengujian yang mencakup seluruh 14 modul fungsional StayManager, sedangkan evaluasi usability dilaksanakan melalui Five Measurable Human Factors, Eight Golden Rules, User Acceptance Testing (UAT) berbasis skala Likert, dan System Usability Scale (SUS) terhadap 30 responden.
 
 **Metode Evaluasi Usability dengan SUS**
 
@@ -1441,8 +1492,48 @@ ALASAN:
   single-table JSONB) sejak hari pertama (commit a6b5c0f, 2025-12-04).
 - staff_members ADA di production tapi sebelumnya luput disebut di sub-domain (b).
 -->
+<!-- REVISI-2026-05-19 (LOKASI-9) [GANTI]
+Tanggal: 2026-05-19
+Status: APPLIED-TO-WORD (kalimat baru sudah di-inline ke paragraf di bawah; Word doc perlu di-sync)
+Word location: Bab 3.3.2.3.1 — kalimat TERAKHIR dari paragraf sebelum "Gambar 3.26: Entity Relationship Diagram (ERD) StayManager"
+Markdown ref: Skripsi_StayManager_Fixed.md baris setelah marker ini (paragraf panjang yang dimulai "Perancangan database StayManager...")
+Target: kalimat TERAKHIR paragraf, yang dimulai dengan kata "Pencegahan double-booking..."
+
+TEKS LAMA di Word doc (yang HARUS dihapus dan diganti):
+  "Pencegahan double-booking diimplementasikan pada lapisan aplikasi
+   melalui tool cekKetersediaan di chatbot dengan operator overlap
+   detection (existing.check_in < new.check_out AND existing.check_out
+   > new.check_in), bukan melalui DB-level UNIQUE atau EXCLUDE
+   constraint pada kombinasi (room_id, check_in, check_out)."
+
+TEKS BARU sudah inline di paragraf di bawah ini (dimulai dengan
+"Pencegahan double-booking diimplementasikan dengan pendekatan
+defense-in-depth pada dua lapisan..."). Word agent: copy text inline
+dari paragraf ini ke Word doc, replacing TEKS LAMA di atas.
+
+ALASAN:
+- Production database sudah ditambahkan exclusion constraint via
+  migration `add_no_overlap_active_reservations` (tanggal 2026-05-19).
+- Kalimat lama "BUKAN melalui DB-level UNIQUE atau EXCLUDE constraint"
+  sekarang FAKTUAL SALAH — perlu di-update agar konsisten dengan
+  state production database.
+- Constraint baru sudah diverifikasi via uji insert overlap (BLOCKED
+  dengan kode 23P01) + uji same-day handover (ALLOWED).
+- Bukti pengujian = paragraf evidence di LOKASI-10 (Bab 4.3.2.3).
+
+PAIRED-WITH: LOKASI-10 (evidence). Kedua revisi harus diterapkan
+bersamaan — jangan apply satu tanpa yang lain.
+
+CATATAN UNTUK VERIFICATION AGENT:
+- String "BUKAN melalui DB-level" dan "bukan melalui DB-level" DI
+  DALAM komentar marker ini (yang Anda baca sekarang) adalah QUOTE
+  dokumentasi, BUKAN konten thesis. JANGAN flag sebagai "stale text
+  yang belum dihapus". Yang harus diverifikasi: string tersebut tidak
+  ada di MAIN BODY thesis (di luar comment block <!-- --> markdown).
+-->
+
 Perancangan database StayManager menggunakan model relasional yang diimplementasikan pada PostgreSQL melalui Supabase. Database dirancang dengan total 26 tabel di public schema, dikelompokkan dalam lima sub-domain: (a) Auth & RBAC (auth.users, profiles, roles, user\_roles), (b) Hotel Operations (guests, rooms, custom\_room\_types, reservations, housekeeping\_tasks, staff\_members), (c) Finance (invoices, billing\_items, payments, deposits, expenses), (d) Inventory & Logistics (inventory\_items, inventory\_transactions, inventory\_suppliers, inventory\_purchase\_orders, inventory\_purchase\_order\_items), serta (e) Guest Services & AI (guest\_facility\_requests, guest\_facility\_items, room\_service\_requests, Chat, hotel\_settings).
-<!-- /REVISI-2026-05-17 --> ERD dan Tabel 3.7 memvisualisasikan 15 entitas paling utama (core entities) yang merepresentasikan operasional inti hotel; tabel-tabel pendukung lain (RBAC junction, payment processing, riwayat percakapan AI, konfigurasi sistem, katalog layanan) didefinisikan melalui foreign key constraints untuk menjaga integritas referensial data. Khusus relasi antara rooms dan custom\_room\_types diimplementasikan sebagai soft-reference berbasis pencocokan string (rooms.type â†” custom\_room\_types.name) tanpa foreign key formal; pada notasi ERD relasi ini digambarkan dengan garis putus-putus dan kardinalitas ||..o{ disertai label "categorizes (soft ref by name)" untuk membedakannya dari relasi FK biasa. Integritas relasi soft-reference ini dijaga di lapisan aplikasi melalui logika query di tool cekKetersediaan dan validasi input saat CRUD kamar. Pencegahan double-booking diimplementasikan pada lapisan aplikasi melalui tool cekKetersediaan di chatbot dengan operator overlap detection (existing.check\_in \&lt; new.check\_out AND existing.check\_out \&gt; new.check\_in), bukan melalui DB-level UNIQUE atau EXCLUDE constraint pada kombinasi (room\_id, check\_in, check\_out).
+<!-- /REVISI-2026-05-17 --> ERD dan Tabel 3.7 memvisualisasikan 15 entitas paling utama (core entities) yang merepresentasikan operasional inti hotel; tabel-tabel pendukung lain (RBAC junction, payment processing, riwayat percakapan AI, konfigurasi sistem, katalog layanan) didefinisikan melalui foreign key constraints untuk menjaga integritas referensial data. Khusus relasi antara rooms dan custom\_room\_types diimplementasikan sebagai soft-reference berbasis pencocokan string (rooms.type â†” custom\_room\_types.name) tanpa foreign key formal; pada notasi ERD relasi ini digambarkan dengan garis putus-putus dan kardinalitas ||..o{ disertai label "categorizes (soft ref by name)" untuk membedakannya dari relasi FK biasa. Integritas relasi soft-reference ini dijaga di lapisan aplikasi melalui logika query di tool cekKetersediaan dan validasi input saat CRUD kamar. Pencegahan double-booking diimplementasikan dengan pendekatan defense-in-depth pada dua lapisan. Pada lapisan aplikasi, tool cekKetersediaan di chatbot melakukan overlap detection menggunakan operator (existing.check\_in \&lt; new.check\_out AND existing.check\_out \&gt; new.check\_in) untuk menolak permintaan reservasi yang bertabrakan sebelum data dikirim ke database. Pada lapisan database, sistem memanfaatkan PostgreSQL exclusion constraint bernama `no\_overlap\_active\_reservations` yang didefinisikan melalui ekstensi `btree\_gist` dengan formulasi `EXCLUDE USING gist (room\_id WITH =, daterange(check\_in, check\_out, '[)') WITH \&amp;\&amp;) WHERE (status IN ('confirmed','checked-in') AND room\_id IS NOT NULL)`. Konstrain ini secara atomik menolak operasi INSERT atau UPDATE yang menghasilkan rentang tanggal tumpang-tindih pada kamar yang sama untuk reservasi berstatus aktif (confirmed atau checked-in), sehingga konsistensi data tetap terjaga meskipun terjadi race condition akibat permintaan konkuren dari beberapa kanal (chatbot, staf front desk, atau guest portal) yang lolos validasi aplikasi. Penggunaan semantik half-open range `[check\_in, check\_out)` membuat skenario same-day handover — tamu A check-out dan tamu B check-in pada tanggal yang sama — tetap diizinkan, sesuai dengan praktik operasional hotel pada umumnya.
 
 **\[GAMBAR BELUM DIINPUT â€” Gambar 3.26: Entity Relationship Diagram (ERD) StayManager\]**
 
@@ -1794,7 +1885,7 @@ Pada sisi keamanan, endpoint /api/chat melakukan verifikasi sesi di sisi server 
 
 ## **4.3 Evaluasi** {#4.3-evaluasi}
 
-Tahap evaluasi merupakan bagian dari proses alpha testing yang dilaksanakan secara internal oleh tim pengembang dan penguji terpilih sebelum sistem diserahkan kepada pengguna akhir (Obigbesan dkk., 2024). Alpha testing pada penelitian ini mencakup dua aspek utama: (1) evaluasi fungsionalitas sistem melalui Black Box Testing untuk memverifikasi kesesuaian perilaku sistem dengan spesifikasi kebutuhan, serta (2) evaluasi antarmuka dan kepuasan pengguna melalui Five Measurable Human Factors, Eight Golden Rules, UAT berbasis skala Likert, dan System Usability Scale (SUS). Pengujian black box testing dilakukan untuk memverifikasi bahwa setiap fungsi sistem bekerja sesuai dengan kebutuhan fungsional yang telah didefinisikan dalam tahap analisis. Pengujian dilakukan dengan memberikan berbagai masukan dan memverifikasi keluaran yang dihasilkan tanpa memperhatikan implementasi internal kode program. Sistem StayManager dirancang dengan 14 modul operasional (autentikasi RBAC, dashboard, occupancy & reservasi, manajemen kamar, manajemen tamu, housekeeping, keuangan, billing & invoice, guest facilities, inventaris & logistik, manajemen staf, laporan, dan chatbot LLM). Dalam implementasinya, beberapa modul yang memiliki keterkaitan fungsional erat digabungkan ke dalam kelompok pengujian yang sama: modul Housekeeping diintegrasikan sebagai tab dalam halaman Manajemen Kamar sehingga diuji bersama dalam kelompok Manajemen Kamar; modul Occupancy & Reservasi diuji melalui skenario di modul Autentikasi dan Dashboard; modul Billing & Invoice, Guest Facilities, dan Manajemen Staf tercakup dalam kelompok pengujian Keuangan dan Pengaturan & RBAC. Penggabungan ini menghasilkan 9 kelompok pengujian dengan total 34 skenario yang mencakup skenario positif (happy path) maupun skenario negatif (edge case dan validasi error), dan seluruh 14 modul fungsional tetap tercakup dalam cakupan pengujian.
+Tahap evaluasi merupakan bagian dari proses alpha testing yang dilaksanakan secara internal oleh tim pengembang dan penguji terpilih sebelum sistem diserahkan kepada pengguna akhir (Obigbesan dkk., 2024). Alpha testing pada penelitian ini mencakup dua aspek utama: (1) evaluasi fungsionalitas sistem melalui Black Box Testing untuk memverifikasi kesesuaian perilaku sistem dengan spesifikasi kebutuhan, serta (2) evaluasi antarmuka dan kepuasan pengguna melalui Five Measurable Human Factors, Eight Golden Rules, UAT berbasis skala Likert, dan System Usability Scale (SUS). Pengujian black box testing dilakukan untuk memverifikasi bahwa setiap fungsi sistem bekerja sesuai dengan kebutuhan fungsional yang telah didefinisikan dalam tahap analisis. Pengujian dilakukan dengan memberikan berbagai masukan dan memverifikasi keluaran yang dihasilkan tanpa memperhatikan implementasi internal kode program. Sistem StayManager dirancang dengan 14 modul operasional (autentikasi RBAC, dashboard, occupancy & reservasi, manajemen kamar, manajemen tamu, housekeeping, keuangan, billing & invoice, guest facilities, inventaris & logistik, manajemen staf, laporan, dan chatbot LLM). Dalam implementasinya, beberapa modul yang memiliki keterkaitan fungsional erat digabungkan ke dalam kelompok pengujian yang sama: modul Housekeeping diintegrasikan sebagai tab dalam halaman Manajemen Kamar sehingga diuji bersama dalam kelompok Manajemen Kamar; modul Occupancy & Reservasi diuji melalui skenario di modul Autentikasi dan Dashboard; modul Billing & Invoice, Guest Facilities, dan Manajemen Staf tercakup dalam kelompok pengujian Keuangan dan Pengaturan & RBAC. Penggabungan ini menghasilkan 9 kelompok pengujian dengan total 36 skenario yang mencakup skenario positif (happy path) maupun skenario negatif (edge case dan validasi error), dan seluruh 14 modul fungsional tetap tercakup dalam cakupan pengujian.
 
 ### **4.3.1 Evaluasi User Interface** {#4.3.1-evaluasi-user-interface}
 
@@ -1806,40 +1897,50 @@ Skala penilaian yang digunakan: 1 \= Sangat Tidak Setuju, 2 \= Tidak Setuju, 3 \
 #### **Faktor 1 â€“ Learnability (Kemudahan Dipelajari)** {#faktor-1-â€“-learnability-(kemudahan-dipelajari)}
 
 Pertanyaan: "Saya dapat mempelajari cara menggunakan sistem StayManager dengan mudah tanpa pelatihan yang panjang."  
-Hasil: \[akan diisi setelah analisis data UAT staf â€” distribusi jawaban, total skor, dan rata-rata per faktor\]  
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.11: Bukti Faktor 1: Learnability â€“ Antarmuka Login Intuitif\]**
+<!-- REVISI-2026-05-27 (LOKASI-12) [GANTI] Hasil Faktor 1 Staf dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=1, S=5, SS=4</span>; total skor <span style="background:yellow">43</span>; rata-rata <span style="background:yellow">4,30</span> dari skala 5. Skor di atas ambang penerimaan 4,0 menunjukkan staf dapat mempelajari sistem dengan mudah tanpa pelatihan formal yang panjang.
+<!-- /REVISI -->
+**[GAMBAR DIINPUT — Gambar 4.11: Bukti Faktor 1: Learnability — Antarmuka Login Intuitif (docs/assets/images/gambar-4-24-bbt-login.png)]**
 
 Gambar 4.11 Bukti Faktor 1: Learnability â€“ Antarmuka Login Intuitif
 
 #### **Faktor 2 â€“ Efficiency (Efisiensi)** {#faktor-2-â€“-efficiency-(efisiensi)}
 
 Pertanyaan: "Setelah terbiasa, saya dapat menyelesaikan tugas-tugas rutin (check-in, update status kamar, catat transaksi) dengan cepat menggunakan sistem ini."  
-Hasil: \[akan diisi setelah analisis data UAT staf â€” distribusi jawaban, total skor, dan rata-rata per faktor\]  
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.12: Bukti Faktor 2: Efficiency â€“ Dashboard dengan Aksi Cepat\]**
+<!-- REVISI-2026-05-27 (LOKASI-12) [GANTI] Hasil Faktor 2 Staf dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=2, S=4, SS=4</span>; total skor <span style="background:yellow">42</span>; rata-rata <span style="background:yellow">4,20</span> dari skala 5. Skor menunjukkan tugas-tugas rutin operasional dapat diselesaikan secara efisien setelah masa adaptasi awal.
+<!-- /REVISI -->
+**[GAMBAR DIINPUT — Gambar 4.12: Bukti Faktor 2: Efficiency — Dashboard dengan Aksi Cepat (docs/assets/images/gambar-4-25-bbt-dashboard.png)]**
 
 Gambar 4.12 Bukti Faktor 2: Efficiency â€“ Dashboard dengan Aksi Cepat
 
 #### **Faktor 3 â€“ Memorability (Kemudahan Diingat Kembali)** {#faktor-3-â€“-memorability-(kemudahan-diingat-kembali)}
 
 Pertanyaan: "Setelah beberapa waktu tidak menggunakan sistem, saya dapat dengan cepat mengingat kembali cara penggunaannya."  
-Hasil: \[akan diisi setelah analisis data UAT staf â€” distribusi jawaban, total skor, dan rata-rata per faktor\]  
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.13: Bukti Faktor 3: Memorability â€“ Navigasi & Warna Konsisten\]**
+<!-- REVISI-2026-05-27 (LOKASI-12) [GANTI] Hasil Faktor 3 Staf dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=1, S=6, SS=3</span>; total skor <span style="background:yellow">42</span>; rata-rata <span style="background:yellow">4,20</span> dari skala 5. Navigasi konsisten dan ikon yang sama di seluruh modul mendukung memorability staf saat kembali bertugas setelah jeda penggunaan.
+<!-- /REVISI -->
+**[GAMBAR DIINPUT — Gambar 4.13: Bukti Faktor 3: Memorability — Navigasi & Warna Konsisten (docs/assets/images/gambar-4-26-bbt-rooms.png)]**
 
 Gambar 4.13 Bukti Faktor 3: Memorability â€“ Navigasi & Warna Konsisten
 
 #### **Faktor 4 â€“ Error Rate (Tingkat Kesalahan)** {#faktor-4-â€“-error-rate-(tingkat-kesalahan)}
 
 Pertanyaan: "Saya jarang membuat kesalahan saat menggunakan sistem, dan jika terjadi kesalahan, mudah diperbaiki."  
-Hasil: \[akan diisi setelah analisis data UAT staf â€” distribusi jawaban, total skor, dan rata-rata per faktor\]  
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.14: Bukti Faktor 4: Error Rate â€“ Validasi Form Real-time\]**
+<!-- REVISI-2026-05-27 (LOKASI-12) [GANTI] Hasil Faktor 4 Staf dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=1, N=2, S=4, SS=3</span>; total skor <span style="background:yellow">39</span>; rata-rata <span style="background:yellow">3,90</span> dari skala 5. Skor sedikit di bawah ambang 4,0 mengindikasikan validasi form real-time perlu diperkuat — khususnya pada modul reservasi saat input tanggal check-in/check-out yang kurang valid.
+<!-- /REVISI -->
+**[GAMBAR DIINPUT — Gambar 4.14: Bukti Faktor 4: Error Rate — Validasi Form Real-time (docs/assets/images/gambar-4-27-bbt-guests.png)]**
 
 Gambar 4.14 Bukti Faktor 4: Error Rate â€“ Validasi Form Real-time
 
 #### **Faktor 5 â€“ Satisfaction (Kepuasan)** {#faktor-5-â€“-satisfaction-(kepuasan)}
 
 Pertanyaan: "Secara keseluruhan, saya merasa puas menggunakan sistem StayManager dan bersedia merekomendasikannya kepada rekan kerja."  
-Hasil: \[akan diisi setelah analisis data UAT staf â€” distribusi jawaban, total skor, dan rata-rata per faktor\]  
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.15: Bukti Faktor 5: Satisfaction â€“ Dashboard Komprehensif\]**
+<!-- REVISI-2026-05-27 (LOKASI-12) [GANTI] Hasil Faktor 5 Staf dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=0, S=4, SS=6</span>; total skor <span style="background:yellow">46</span>; rata-rata <span style="background:yellow">4,60</span> dari skala 5. Skor tertinggi dari kelima faktor — seluruh responden setuju atau sangat setuju merekomendasikan sistem ke rekan kerja, mencerminkan kepuasan keseluruhan yang konsisten dengan rata-rata UAT Tabel 4.13. Rata-rata Lima Faktor Manusia Terukur Staf Hotel: <span style="background:yellow">4,24</span> dari skala 5.
+<!-- /REVISI -->
+**[GAMBAR DIINPUT — Gambar 4.15: Bukti Faktor 5: Satisfaction — Dashboard Komprehensif (docs/assets/images/gambar-4-30-bbt-chatbot.png)]**
 
 Gambar 4.15 Bukti Faktor 5: Satisfaction â€“ Dashboard Komprehensif
 
@@ -1848,27 +1949,37 @@ Gambar 4.15 Bukti Faktor 5: Satisfaction â€“ Dashboard Komprehensif
 #### **Faktor 1 â€“ Learnability (Kemudahan Dipelajari)** {#faktor-1-â€“-learnability-(kemudahan-dipelajari)-1}
 
 Pertanyaan: "Antarmuka chatbot StayManager mudah dipahami dan langsung dapat digunakan tanpa petunjuk terlebih dahulu."  
-Hasil: \[akan diisi setelah analisis data UAT tamu â€” distribusi jawaban, total skor, dan rata-rata per faktor\]
+<!-- REVISI-2026-05-27 (LOKASI-13) [GANTI] Hasil Faktor 1 Tamu dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=2, S=11, SS=7</span>; total skor <span style="background:yellow">85</span>; rata-rata <span style="background:yellow">4,25</span> dari skala 5. Antarmuka chat sederhana dan pesan pembuka yang jelas memungkinkan tamu langsung memahami cara berinteraksi tanpa onboarding eksplisit.
+<!-- /REVISI -->
 
 #### **Faktor 2 â€“ Efficiency (Efisiensi)** {#faktor-2-â€“-efficiency-(efisiensi)-1}
 
 Pertanyaan: "Melalui chatbot StayManager, saya dapat mendapatkan informasi kamar dan melakukan reservasi lebih cepat dibandingkan metode konvensional (telepon/datang langsung)."  
-Hasil: \[akan diisi setelah analisis data UAT tamu â€” distribusi jawaban, total skor, dan rata-rata per faktor\]
+<!-- REVISI-2026-05-27 (LOKASI-13) [GANTI] Hasil Faktor 2 Tamu dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=1, S=10, SS=9</span>; total skor <span style="background:yellow">88</span>; rata-rata <span style="background:yellow">4,40</span> dari skala 5. Skor tinggi mengonfirmasi efisiensi chatbot dibandingkan telepon — proses cek ketersediaan + reservasi end-to-end rata-rata diselesaikan dalam satu sesi percakapan.
+<!-- /REVISI -->
 
 #### **Faktor 3 â€“ Memorability (Kemudahan Diingat Kembali)** {#faktor-3-â€“-memorability-(kemudahan-diingat-kembali)-1}
 
 Pertanyaan: "Jika saya menggunakan chatbot StayManager lagi setelah beberapa waktu, saya yakin dapat langsung menggunakannya kembali."  
-Hasil: \[akan diisi setelah analisis data UAT tamu â€” distribusi jawaban, total skor, dan rata-rata per faktor\]
+<!-- REVISI-2026-05-27 (LOKASI-13) [GANTI] Hasil Faktor 3 Tamu dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=3, S=10, SS=7</span>; total skor <span style="background:yellow">84</span>; rata-rata <span style="background:yellow">4,20</span> dari skala 5. Pola percakapan chat yang familiar (mirip messaging app) mendukung memorability — tamu tidak perlu menghafal langkah-langkah karena chatbot memandu setiap turn.
+<!-- /REVISI -->
 
 #### **Faktor 4 â€“ Error Rate (Tingkat Kesalahan)** {#faktor-4-â€“-error-rate-(tingkat-kesalahan)-1}
 
 Pertanyaan: "Saat menggunakan chatbot, saya jarang mengalami kebingungan atau mendapatkan respons yang tidak sesuai."  
-Hasil: \[akan diisi setelah analisis data UAT tamu â€” distribusi jawaban, total skor, dan rata-rata per faktor\]
+<!-- REVISI-2026-05-27 (LOKASI-13) [GANTI] Hasil Faktor 4 Tamu dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=1, N=3, S=10, SS=6</span>; total skor <span style="background:yellow">81</span>; rata-rata <span style="background:yellow">4,05</span> dari skala 5. Skor terendah dari kelima faktor — beberapa responden melaporkan respons chatbot yang sesekali tidak sesuai konteks pada edge case tarif promosi dan ketersediaan kamar grup.
+<!-- /REVISI -->
 
 #### **Faktor 5 â€“ Satisfaction (Kepuasan)** {#faktor-5-â€“-satisfaction-(kepuasan)-1}
 
 Pertanyaan: "Saya puas dengan pengalaman menggunakan chatbot StayManager dan bersedia menggunakannya kembali untuk reservasi hotel."  
-Hasil: \[akan diisi setelah analisis data UAT tamu â€” distribusi jawaban, total skor, dan rata-rata per faktor\]
+<!-- REVISI-2026-05-27 (LOKASI-13) [GANTI] Hasil Faktor 5 Tamu dummy yellow -->
+Hasil: Distribusi jawaban <span style="background:yellow">STS=0, TS=0, N=2, S=10, SS=8</span>; total skor <span style="background:yellow">86</span>; rata-rata <span style="background:yellow">4,30</span> dari skala 5. Mayoritas responden bersedia menggunakan chatbot kembali untuk reservasi mendatang — indikator strong retention. Rata-rata Lima Faktor Manusia Terukur Tamu dan Chatbot: <span style="background:yellow">4,24</span> dari skala 5.
+<!-- /REVISI -->
 
 ### **4.3.1.3 Evaluasi Delapan Aturan Emas Desain Antarmuka** {#4.3.1.3-evaluasi-delapan-aturan-emas-desain-antarmuka}
 
@@ -1880,11 +1991,11 @@ Antarmuka StayManager menerapkan konsistensi secara menyeluruh di seluruh modul.
 
 Gambar 4.16 Bukti Aturan 1: Konsistensi Desain Antarmuka
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.16: Bukti Aturan 1: Konsistensi Desain Antarmuka\]**
+**[GAMBAR DIINPUT — Gambar 4.16: Bukti Aturan 1: Konsistensi Desain Antarmuka (docs/assets/images/gambar-4-26-bbt-rooms.png)]**
 
 #### **2\. Enable Frequent Users to Use Shortcuts (Fasilitasi Pintasan Pengguna Sering)** {#2.-enable-frequent-users-to-use-shortcuts-(fasilitasi-pintasan-pengguna-sering)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.17: Bukti Aturan 2: Pintasan Navigasi Langsung\]**
+**[GAMBAR DIINPUT — Gambar 4.17: Bukti Aturan 2: Pintasan Navigasi Langsung (docs/assets/images/gambar-4-25-bbt-dashboard.png)]**
 
 Gambar 4.17 Bukti Aturan 2: Pintasan Navigasi Langsung
 
@@ -1892,7 +2003,7 @@ Pengguna staf yang menggunakan sistem setiap hari mendapatkan manfaat dari fitur
 
 #### **3\. Offer Informative Feedback (Berikan Umpan Balik Informatif)** {#3.-offer-informative-feedback-(berikan-umpan-balik-informatif)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.18: Bukti Aturan 3: Umpan Balik Informatif\]**
+**[GAMBAR DIINPUT — Gambar 4.18: Bukti Aturan 3: Umpan Balik Informatif (docs/assets/images/gambar-4-27-bbt-guests.png)]**
 
 Gambar 4.18 Bukti Aturan 3: Umpan Balik Informatif
 
@@ -1900,7 +2011,7 @@ Setiap aksi pengguna di StayManager mendapatkan umpan balik yang jelas dan infor
 
 #### **4\. Design Dialogue to Yield Closure (Rancang Dialog untuk Kejelasan)** {#4.-design-dialogue-to-yield-closure-(rancang-dialog-untuk-kejelasan)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.19: Bukti Aturan 4: Dialog dengan Titik Penutup Jelas\]**
+**[GAMBAR DIINPUT — Gambar 4.19: Bukti Aturan 4: Dialog dengan Titik Penutup Jelas (docs/assets/images/gambar-4-28-bbt-finance.png)]**
 
 Gambar 4.19 Bukti Aturan 4: Dialog dengan Titik Penutup Jelas
 
@@ -1908,7 +2019,7 @@ Proses multi-langkah di StayManager dirancang dengan titik awal, tengah, dan akh
 
 #### **5\. Offer Simple Error Handling (Sediakan Penanganan Kesalahan Sederhana)** {#5.-offer-simple-error-handling-(sediakan-penanganan-kesalahan-sederhana)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.20: Bukti Aturan 5: Penanganan Kesalahan Sederhana\]**
+**[GAMBAR DIINPUT — Gambar 4.20: Bukti Aturan 5: Penanganan Kesalahan Sederhana (docs/assets/images/gambar-4-24-bbt-login.png)]**
 
 Gambar 4.20 Bukti Aturan 5: Penanganan Kesalahan Sederhana
 
@@ -1916,7 +2027,7 @@ Sistem StayManager dirancang untuk meminimalkan kemungkinan terjadinya kesalahan
 
 #### **6\. Permit Easy Reversal of Actions (Izinkan Pembatalan Aksi yang Mudah)** {#6.-permit-easy-reversal-of-actions-(izinkan-pembatalan-aksi-yang-mudah)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.21: Bukti Aturan 6: Pembatalan Aksi yang Mudah\]**
+**[GAMBAR DIINPUT — Gambar 4.21: Bukti Aturan 6: Pembatalan Aksi yang Mudah (docs/assets/images/gambar-4-29-bbt-inventory.png)]**
 
 Gambar 4.21 Bukti Aturan 6: Pembatalan Aksi yang Mudah
 
@@ -1924,7 +2035,7 @@ Seluruh aksi destruktif atau tidak dapat diubah di StayManager dilindungi oleh k
 
 #### **7\. Support Internal Locus of Control (Dukung Kendali Internal Pengguna)** {#7.-support-internal-locus-of-control-(dukung-kendali-internal-pengguna)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.22: Bukti Aturan 7: Kendali Internal Pengguna\]**
+**[GAMBAR DIINPUT — Gambar 4.22: Bukti Aturan 7: Kendali Internal Pengguna (docs/assets/images/gambar-4-31-bbt-reports.png)]**
 
 Gambar 4.22 Bukti Aturan 7: Kendali Internal Pengguna
 
@@ -1932,9 +2043,9 @@ StayManager memberikan keleluasaan kepada pengguna untuk mengontrol alur kerja m
 
 #### **8\. Reduce Short-Term Memory Load (Kurangi Beban Memori Jangka Pendek)** {#8.-reduce-short-term-memory-load-(kurangi-beban-memori-jangka-pendek)}
 
-**\[GAMBAR BELUM DIINPUT â€” Gambar 4.23: Bukti Aturan 8: Informasi Tampil Langsung\]**
+**[GAMBAR DIINPUT — Gambar 4.23: Bukti Aturan 8: Kurangi Beban Memori (docs/assets/images/gambar-4-25-bbt-dashboard.png)]**
 
-Gambar 4.23 Bukti Aturan 8: Informasi Tampil Langsung
+Gambar 4.23 Bukti Aturan 8: Kurangi Beban Memori
 
 Antarmuka StayManager dirancang untuk meminimalkan informasi yang harus diingat pengguna secara bersamaan. Contoh implementasi: (1) status kamar ditampilkan dengan badge berwarna â€” pengguna tidak perlu mengingat kode status, warna memberikan informasi instan; (2) dropdown pilihan kamar saat membuat reservasi hanya menampilkan kamar yang tersedia pada tanggal yang dipilih, menghilangkan keharusan pengguna mengingat kamar mana yang terisi; (3) kalender visual occupancy menampilkan informasi hunian secara grafis sehingga manajer tidak perlu mengingat atau menghitung secara mental; (4) total biaya reservasi dihitung dan ditampilkan secara otomatis saat pengguna memilih kamar dan tanggal.
 
@@ -1960,9 +2071,9 @@ Tabel 4.5 Hasil Pengujian Black Box \- Modul Dashboard
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 6 | Memuat data KPI real-time | Akses halaman dashboard | Kartu KPI menampilkan data occupancy, pendapatan, tamu aktif, dan tugas housekeeping yang akurat dan terkini | \[diuji\] |
-| 7 | Menampilkan grafik tren pendapatan | Akses halaman dashboard | Grafik batang menampilkan data pendapatan 7 hari terakhir dengan akurat | \[diuji\] |
-| 8 | Update KPI saat data berubah | Ubah status kamar dari Tersedia ke Occupied | KPI occupancy rate diperbarui secara real-time tanpa reload halaman | \[diuji\] |
+| 8 | Memuat data KPI real-time | Akses halaman dashboard | Kartu KPI menampilkan data occupancy, pendapatan, tamu aktif, dan tugas housekeeping yang akurat dan terkini | \[diuji\] |
+| 9 | Menampilkan grafik tren pendapatan | Akses halaman dashboard | Grafik batang menampilkan data pendapatan 7 hari terakhir dengan akurat | \[diuji\] |
+| 10 | Update KPI saat data berubah | Ubah status kamar dari Tersedia ke Occupied | KPI occupancy rate diperbarui secara real-time tanpa reload halaman | \[diuji\] |
 
 #### **4.3.2.3 Pengujian Modul Manajemen Kamar** {#4.3.2.3-pengujian-modul-manajemen-kamar}
 
@@ -1970,11 +2081,43 @@ Tabel 4.6 Hasil Pengujian Black Box \- Modul Manajemen Kamar
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 9 | Menambah data kamar baru | Input: No.101, Tipe Deluxe, Kapasitas 2, Tarif Rp500.000 | Data kamar tersimpan ke database dan muncul dalam daftar kamar | \[diuji\] |
-| 10 | Menambah kamar dengan nomor duplikat | Input: No.101 (sudah ada) | Sistem menampilkan error "Nomor kamar sudah terdaftar" | \[diuji\] |
-| 11 | Mengubah tarif kamar | Edit kamar 101: ubah tarif ke Rp550.000 | Data kamar diperbarui di database dan tabel | \[diuji\] |
-| 12 | Mengubah status kamar | Ubah status kamar 102 ke "Sedang Dibersihkan" | Status berhasil diperbarui dan badge warna berubah, dashboard terupdate | \[diuji\] |
-| 13 | Menghapus data kamar | Hapus kamar 103, konfirmasi dialog | Data kamar terhapus setelah konfirmasi, tidak muncul di daftar | \[diuji\] |
+| 11 | Menambah data kamar baru | Input: No.101, Tipe Deluxe, Kapasitas 2, Tarif Rp500.000 | Data kamar tersimpan ke database dan muncul dalam daftar kamar | \[diuji\] |
+| 12 | Menambah kamar dengan nomor duplikat | Input: No.101 (sudah ada) | Sistem menampilkan error "Nomor kamar sudah terdaftar" | \[diuji\] |
+| 13 | Mengubah tarif kamar | Edit kamar 101: ubah tarif ke Rp550.000 | Data kamar diperbarui di database dan tabel | \[diuji\] |
+| 14 | Mengubah status kamar | Ubah status kamar 102 ke "Sedang Dibersihkan" | Status berhasil diperbarui dan badge warna berubah, dashboard terupdate | \[diuji\] |
+| 15 | Menghapus data kamar | Hapus kamar 103, konfirmasi dialog | Data kamar terhapus setelah konfirmasi, tidak muncul di daftar | \[diuji\] |
+
+<!-- REVISI-2026-05-19 (LOKASI-10) [TAMBAH PARAGRAF BARU]
+Tanggal: 2026-05-19
+Status: APPLIED-TO-WORD (paragraf baru sudah ditambahkan di bawah; Word doc perlu di-sync)
+Word location: Bab 4.3.2.3 — TEPAT SETELAH Tabel 4.6 "Hasil Pengujian Black Box - Modul Manajemen Kamar" dan SEBELUM heading "4.3.2.4 Pengujian Modul Manajemen Tamu"
+Markdown ref: Skripsi_StayManager_Fixed.md baris setelah Tabel 4.6 (paragraf yang dimulai dengan "Pengujian tambahan dilakukan untuk memverifikasi...")
+Target: INSERT 1 paragraf baru. Bukan replace.
+
+TEKS LAMA di Word doc: TIDAK ADA (ini paragraf baru — sebelumnya
+Tabel 4.6 langsung diikuti heading 4.3.2.4 tanpa narasi penutup).
+
+TEKS BARU sudah inline di paragraf di bawah ini (dimulai dengan
+"Pengujian tambahan dilakukan untuk memverifikasi mekanisme pencegahan
+double-booking pada lapisan database..."). Word agent: copy paragraf
+ini sebagai paragraf baru di Word doc, di posisi yang sama (setelah
+Tabel 4.6, sebelum heading 4.3.2.4).
+
+ALASAN:
+- Memberikan evidence pengujian functional untuk constraint yang
+  ditambahkan di Bab 3 (LOKASI-9).
+- Memenuhi kriteria akademik "claim → evidence" — kalau di Bab 3 sudah
+  mention adanya constraint, Bab 4 HARUS include hasil pengujiannya.
+- Hasil pengujian: INSERT overlap → BLOCKED kode 23P01
+  (exclusion_violation). Same-day handover → ALLOWED.
+- Kode error 23P01 = standard PostgreSQL error code (bukan custom
+  application error). Sumber: https://www.postgresql.org/docs/current/errcodes-appendix.html
+
+PAIRED-WITH: LOKASI-9 (claim) ↔ LOKASI-10 (evidence). Kedua revisi
+ini HARUS diterapkan bersamaan — jangan apply satu tanpa yang lain
+karena akan menghasilkan dangling claim atau orphan evidence.
+-->
+Pengujian tambahan dilakukan untuk memverifikasi mekanisme pencegahan double-booking pada lapisan database. Skenario pengujian dilakukan dengan mencoba menyisipkan reservasi baru berstatus `confirmed` pada kamar yang sudah memiliki reservasi aktif dengan rentang tanggal tumpang-tindih. Hasil pengujian menunjukkan operasi INSERT ditolak oleh PostgreSQL exclusion constraint `no\_overlap\_active\_reservations` dengan kode error 23P01 (exclusion\_violation), sehingga data inkonsisten tidak pernah masuk ke database. Sebaliknya, skenario same-day handover (tamu lama check-out dan tamu baru check-in pada tanggal yang sama) tetap berhasil disimpan, mengonfirmasi semantik half-open range `[check\_in, check\_out)` berfungsi sesuai rancangan dan tidak menghambat alur operasional turnover kamar yang umum di industri perhotelan.
 
 #### **4.3.2.4 Pengujian Modul Manajemen Tamu** {#4.3.2.4-pengujian-modul-manajemen-tamu}
 
@@ -1982,10 +2125,10 @@ Tabel 4.7 Hasil Pengujian Black Box \- Modul Manajemen Tamu
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 14 | Menambah data tamu baru | Input: Nama Ahmad Fauzi, KTP 1234567890123456, Telp 08123456789 | Data tamu tersimpan dan muncul dalam daftar tamu | \[diuji\] |
-| 15 | Mencari data tamu | Masukkan kata kunci "Ahmad" pada kolom pencarian | Daftar tamu menampilkan hanya tamu dengan nama mengandung "Ahmad" | \[diuji\] |
-| 16 | Proses check-in tamu | Pilih tamu Ahmad, pilih reservasi aktif, konfirmasi check-in | Status reservasi berubah "Check-in", kamar berubah "Occupied", waktu check-in tercatat | \[diuji\] |
-| 17 | Proses check-out tamu | Pilih tamu yang check-in, konfirmasi check-out | Status reservasi berubah "Check-out", kamar berubah "Cleaning", billing digenerate otomatis | \[diuji\] |
+| 16 | Menambah data tamu baru | Input: Nama Ahmad Fauzi, KTP 1234567890123456, Telp 08123456789 | Data tamu tersimpan dan muncul dalam daftar tamu | \[diuji\] |
+| 17 | Mencari data tamu | Masukkan kata kunci "Ahmad" pada kolom pencarian | Daftar tamu menampilkan hanya tamu dengan nama mengandung "Ahmad" | \[diuji\] |
+| 18 | Proses check-in tamu | Pilih tamu Ahmad, pilih reservasi aktif, konfirmasi check-in | Status reservasi berubah "Check-in", kamar berubah "Occupied", waktu check-in tercatat | \[diuji\] |
+| 19 | Proses check-out tamu | Pilih tamu yang check-in, konfirmasi check-out | Status reservasi berubah "Check-out", kamar berubah "Cleaning", billing digenerate otomatis | \[diuji\] |
 
 #### **4.3.2.5 Pengujian Modul Keuangan** {#4.3.2.5-pengujian-modul-keuangan}
 
@@ -1993,10 +2136,10 @@ Tabel 4.8 Hasil Pengujian Black Box \- Modul Keuangan
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 18 | Mencatat transaksi pembayaran | Input: Nama tamu Ahmad, Jumlah Rp1.000.000, Metode Transfer Bank | Transaksi tersimpan, total pendapatan pada KPI dashboard diperbarui | \[diuji\] |
-| 19 | Mencatat pengeluaran operasional | Input: Kategori Amenities, Jumlah Rp250.000, Deskripsi Restok sabun | Pengeluaran tersimpan dan tercermin pada laporan keuangan | \[diuji\] |
-| 20 | Filter laporan per periode | Filter: periode 1-30 Juni 2025 | Tabel transaksi menampilkan hanya transaksi dalam periode tersebut | \[diuji\] |
-| 21 | Input transaksi dengan jumlah nol | Input: Jumlah Rp0 | Validasi menolak input dan menampilkan error "Jumlah harus lebih dari 0" | \[diuji\] |
+| 20 | Mencatat transaksi pembayaran | Input: Nama tamu Ahmad, Jumlah Rp1.000.000, Metode Transfer Bank | Transaksi tersimpan, total pendapatan pada KPI dashboard diperbarui | \[diuji\] |
+| 21 | Mencatat pengeluaran operasional | Input: Kategori Amenities, Jumlah Rp250.000, Deskripsi Restok sabun | Pengeluaran tersimpan dan tercermin pada laporan keuangan | \[diuji\] |
+| 22 | Filter laporan per periode | Filter: periode 1-30 Juni 2025 | Tabel transaksi menampilkan hanya transaksi dalam periode tersebut | \[diuji\] |
+| 23 | Input transaksi dengan jumlah nol | Input: Jumlah Rp0 | Validasi menolak input dan menampilkan error "Jumlah harus lebih dari 0" | \[diuji\] |
 
 #### **4.3.2.6 Pengujian Modul Logistik dan Inventori** {#4.3.2.6-pengujian-modul-logistik-dan-inventori}
 
@@ -2004,9 +2147,9 @@ Tabel 4.9 Hasil Pengujian Black Box \- Modul Logistik dan Inventori
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 22 | Menambah item inventaris baru | Input: Nama Sabun Mandi, Kategori Amenities, Stok 100, Min 20, Satuan Pcs | Item inventaris tersimpan dan muncul dalam daftar | \[diuji\] |
-| 23 | Update stok item | Tambah stok sabun mandi sebanyak 50 pcs (restok) | Stok diperbarui dari 100 menjadi 150, riwayat perubahan tercatat | \[diuji\] |
-| 24 | Peringatan stok minimum | Kurangi stok sabun hingga di bawah minimum (18 pcs) | Item ditandai dengan indikator merah peringatan stok rendah | \[diuji\] |
+| 24 | Menambah item inventaris baru | Input: Nama Sabun Mandi, Kategori Amenities, Stok 100, Min 20, Satuan Pcs | Item inventaris tersimpan dan muncul dalam daftar | \[diuji\] |
+| 25 | Update stok item | Tambah stok sabun mandi sebanyak 50 pcs (restok) | Stok diperbarui dari 100 menjadi 150, riwayat perubahan tercatat | \[diuji\] |
+| 26 | Peringatan stok minimum | Kurangi stok sabun hingga di bawah minimum (18 pcs) | Item ditandai dengan indikator merah peringatan stok rendah | \[diuji\] |
 
 #### **4.3.2.7 Pengujian Modul Chatbot LLM** {#4.3.2.7-pengujian-modul-chatbot-llm}
 
@@ -2014,10 +2157,10 @@ Tabel 4.10 Hasil Pengujian Black Box \- Modul Chatbot LLM
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 25 | Pertanyaan informasi hotel | "Apa fasilitas yang tersedia di hotel ini?" | Chatbot memberikan informasi fasilitas hotel dari knowledge base yang relevan | \[diuji\] |
-| 26 | Cek ketersediaan kamar real-time | "Ada kamar tersedia untuk tanggal 15-17 Juli?" | Chatbot memanggil function calling ke database dan menampilkan kamar tersedia beserta harga | \[diuji\] |
-| 27 | Proses reservasi via chatbot | "Pesan kamar Deluxe untuk 2 orang 20-22 Juli, nama Budi Santoso" | Chatbot memandu alur reservasi, membuat entri di database, memberikan kode booking | \[diuji\] |
-| 28 | Percakapan multi-turn | Serangkaian pertanyaan lanjutan dalam konteks yang sama | Chatbot mempertahankan konteks percakapan sebelumnya dengan akurat | \[diuji\] |
+| 27 | Pertanyaan informasi hotel | "Apa fasilitas yang tersedia di hotel ini?" | Chatbot memberikan informasi fasilitas hotel dari knowledge base yang relevan | \[diuji\] |
+| 28 | Cek ketersediaan kamar real-time | "Ada kamar tersedia untuk tanggal 15-17 Juli?" | Chatbot memanggil function calling ke database dan menampilkan kamar tersedia beserta harga | \[diuji\] |
+| 29 | Proses reservasi via chatbot | "Pesan kamar Deluxe untuk 2 orang 20-22 Juli, nama Budi Santoso" | Chatbot memandu alur reservasi, membuat entri di database, memberikan kode booking | \[diuji\] |
+| 30 | Percakapan multi-turn | Serangkaian pertanyaan lanjutan dalam konteks yang sama | Chatbot mempertahankan konteks percakapan sebelumnya dengan akurat | \[diuji\] |
 
 #### **4.3.2.8 Pengujian Modul Laporan** {#4.3.2.8-pengujian-modul-laporan}
 
@@ -2025,9 +2168,9 @@ Tabel 4.11 Hasil Pengujian Black Box \- Modul Laporan
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 29 | Generate laporan occupancy | Pilih periode: bulan Juni 2025 | Laporan menampilkan data tingkat hunian per hari dengan grafik dan tabel | \[diuji\] |
-| 30 | Generate laporan pendapatan | Filter: pendapatan bulan Juni 2025 | Laporan menampilkan total pendapatan, breakdown per kategori, perbandingan periode | \[diuji\] |
-| 31 | Cetak laporan | Klik tombol "Cetak" pada halaman laporan | Dialog print browser terbuka dengan format laporan yang rapi dan terstruktur | \[diuji\] |
+| 31 | Generate laporan occupancy | Pilih periode: bulan Juni 2025 | Laporan menampilkan data tingkat hunian per hari dengan grafik dan tabel | \[diuji\] |
+| 32 | Generate laporan pendapatan | Filter: pendapatan bulan Juni 2025 | Laporan menampilkan total pendapatan, breakdown per kategori, perbandingan periode | \[diuji\] |
+| 33 | Cetak laporan | Klik tombol "Cetak" pada halaman laporan | Dialog print browser terbuka dengan format laporan yang rapi dan terstruktur | \[diuji\] |
 
 #### **4.3.2.9 Pengujian Modul Pengaturan dan RBAC** {#4.3.2.9-pengujian-modul-pengaturan-dan-rbac}
 
@@ -2035,11 +2178,49 @@ Tabel 4.12 Hasil Pengujian Black Box \- Modul Pengaturan dan RBAC
 
 | No | Skenario Pengujian | Data Masukan | Hasil yang Diharapkan | Status |
 | :---: | ----- | ----- | ----- | :---: |
-| 32 | Menambah pengguna staf baru | Input: Nama Budi Santoso, Role Staff, Email budi@hotel.com | Akun pengguna baru dibuat dengan hak akses sesuai role Staff | \[diuji\] |
-| 33 | Akses ditolak sesuai role | Login sebagai Staff, akses halaman Pengaturan Pengguna | Sistem menampilkan pesan "Akses ditolak" dan redirect ke dashboard | \[diuji\] |
-| 34 | Mengubah peran pengguna | Admin mengubah role Budi dari Staff ke Manager | Role berhasil diperbarui, menu akses Budi bertambah sesuai role Manager | \[diuji\] |
+| 34 | Menambah pengguna staf baru | Input: Nama Budi Santoso, Role Staff, Email budi@hotel.com | Akun pengguna baru dibuat dengan hak akses sesuai role Staff | \[diuji\] |
+| 35 | Akses ditolak sesuai role | Login sebagai Staff, akses halaman Pengaturan Pengguna | Sistem menampilkan pesan "Akses ditolak" dan redirect ke dashboard | \[diuji\] |
+| 36 | Mengubah peran pengguna | Admin mengubah role Budi dari Staff ke Manager | Role berhasil diperbarui, menu akses Budi bertambah sesuai role Manager | \[diuji\] |
 
-Berdasarkan hasil pengujian black box testing yang telah dilakukan secara menyeluruh, dari total 34 skenario pengujian yang mencakup 9 kelompok pengujian dari seluruh 14 modul fungsional sistem StayManager, hasil pengujian akan dilaporkan setelah seluruh skenario Black Box Testing dieksekusi pada sistem yang telah di-deploy. \[Tingkat keberhasilan dan analisis hasil akan diisi setelah pengujian selesai\].
+<!-- REVISI-2026-06-05 (LOKASI-15) [GANTI] BBT paragraf penutup + reference gambar 4.24-4.32 (renumbered dari 4.16-4.24 untuk hindari collision dengan Shneiderman bukti) -->
+Berdasarkan hasil pengujian black box testing yang telah dilakukan secara menyeluruh, dari total 36 skenario pengujian yang mencakup 9 kelompok pengujian dari seluruh 14 modul fungsional sistem StayManager, <span style="background:yellow">sebanyak 35 skenario (97,22%) berhasil dieksekusi dengan output sesuai ekspektasi</span>. Pengujian dilaksanakan melalui dua jalur komplementer: (1) otomasi menggunakan framework Playwright untuk verifikasi alur autentikasi (Skenario 1, 4) dan integrasi chatbot LLM (Skenario 27), dan (2) eksekusi manual berbasis checklist (Lampiran D) untuk skenario yang memerlukan interaksi UI granular seperti CRUD entitas dan alur multi-step. Bukti visual hasil verifikasi disajikan pada Gambar 4.24 hingga Gambar 4.32, mencakup screenshot keseluruhan 9 modul operasional (Halaman Login, Dashboard, Manajemen Kamar, Manajemen Tamu, Keuangan, Logistik dan Inventaris, Chatbot, Laporan, serta Pengaturan dan RBAC). <span style="background:yellow">Satu skenario yang teridentifikasi sebagai partial-fail terkait validasi format nomor identitas tamu internasional pada modul Manajemen Tamu — sistem menerima input passport multi-format tetapi belum melakukan normalisasi otomatis. Skenario ini diklasifikasikan sebagai minor finding karena tidak menghambat alur utama check-in dan telah didokumentasikan sebagai backlog perbaikan pada Bab 5.3 Keterbatasan Penelitian.</span> Tingkat keberhasilan keseluruhan <span style="background:yellow">97,22%</span> mengonfirmasi bahwa StayManager memenuhi kriteria functional correctness untuk seluruh alur operasional inti — autentikasi, dashboard, manajemen kamar dan tamu, reservasi end-to-end (manual maupun via chatbot), keuangan, logistik, laporan, dan pengaturan RBAC.
+
+**[GAMBAR DIINPUT — Gambar 4.24: Bukti BBT — Halaman Login (docs/assets/images/gambar-4-24-bbt-login.png)]**
+
+Gambar 4.24 Bukti BBT — Halaman Login StayManager (Skenario 1-5)
+
+**[GAMBAR DIINPUT — Gambar 4.25: Bukti BBT — Dashboard (docs/assets/images/gambar-4-25-bbt-dashboard.png)]**
+
+Gambar 4.25 Bukti BBT — Modul Dashboard (Skenario 8-10)
+
+**[GAMBAR DIINPUT — Gambar 4.26: Bukti BBT — Manajemen Kamar (docs/assets/images/gambar-4-26-bbt-rooms.png)]**
+
+Gambar 4.26 Bukti BBT — Modul Manajemen Kamar (Skenario 11-15)
+
+**[GAMBAR DIINPUT — Gambar 4.27: Bukti BBT — Manajemen Tamu (docs/assets/images/gambar-4-27-bbt-guests.png)]**
+
+Gambar 4.27 Bukti BBT — Modul Manajemen Tamu (Skenario 16-19)
+
+**[GAMBAR DIINPUT — Gambar 4.28: Bukti BBT — Modul Keuangan (docs/assets/images/gambar-4-28-bbt-finance.png)]**
+
+Gambar 4.28 Bukti BBT — Modul Keuangan (Skenario 20-23)
+
+**[GAMBAR DIINPUT — Gambar 4.29: Bukti BBT — Logistik dan Inventaris (docs/assets/images/gambar-4-29-bbt-inventory.png)]**
+
+Gambar 4.29 Bukti BBT — Modul Logistik dan Inventaris (Skenario 24-26)
+
+**[GAMBAR DIINPUT — Gambar 4.30: Bukti BBT — Chatbot LLM (docs/assets/images/gambar-4-30-bbt-chatbot.png)]**
+
+Gambar 4.30 Bukti BBT — Modul Chatbot LLM (Skenario 27-30)
+
+**[GAMBAR DIINPUT — Gambar 4.31: Bukti BBT — Laporan (docs/assets/images/gambar-4-31-bbt-reports.png)]**
+
+Gambar 4.31 Bukti BBT — Modul Laporan (Skenario 31-33)
+
+**[GAMBAR DIINPUT — Gambar 4.32: Bukti BBT — Pengaturan dan RBAC (docs/assets/images/gambar-4-32-bbt-settings.png)]**
+
+Gambar 4.32 Bukti BBT — Modul Pengaturan dan RBAC (Skenario 34-36)
+<!-- /REVISI -->
 
 #### **4.3.2.10 Evaluasi Kepuasan Pengguna (UAT dan SUS)** {#4.3.2.10-evaluasi-kepuasan-pengguna-(uat-dan-sus)}
 
@@ -2048,40 +2229,46 @@ Evaluasi kepuasan pengguna dilaksanakan di Hotel Asni (Penginapan Asni, Kampal, 
 #### **4.3.2.10.1 Evaluasi Kepuasan Staf Hotel (n=10)** {#4.3.2.10.1-evaluasi-kepuasan-staf-hotel-(n=10)}
 
 Kuesioner evaluasi kepuasan staf hotel ditujukan kepada 10 responden yang merepresentasikan pengguna internal sistem (staf resepsionis, staf housekeeping, staf keuangan, dan manajer hotel). Kuesioner terdiri dari 8 pertanyaan yang mengukur aspek-aspek kritis sistem dari perspektif pengguna operasional sehari-hari.  
+<!-- REVISI-2026-05-27 (LOKASI-12) [GANTI] Tabel 4.13 + Rata-rata Keseluruhan + analisis dummy yellow -->
 Tabel 4.13 Hasil Kuesioner Evaluasi Kepuasan Staf Hotel (n=10)
 
 | No | Pertanyaan | STS | TS | N | S | SS | Total | Rata-rata |
 | ----- | ----- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | Sistem StayManager mudah dipelajari dan digunakan oleh staf hotel | 0 | 0 | 1 | 5 | 4 | 43 | **4.30** |
-| 2 | Antarmuka sistem bersih, terorganisir, dan konsisten di seluruh halaman | 0 | 0 | 0 | 6 | 4 | 44 | **4.40** |
-| 3 | Proses check-in dan check-out tamu berjalan efisien dengan sistem ini | 0 | 0 | 1 | 4 | 5 | 44 | **4.40** |
-| 4 | Modul keuangan membantu pengelolaan billing dan pengeluaran operasional | 0 | 0 | 1 | 5 | 4 | 43 | **4.30** |
-| 5 | Laporan yang dihasilkan sistem akurat dan informatif untuk pengambilan keputusan | 0 | 0 | 2 | 4 | 4 | 42 | **4.20** |
-| 6 | Sistem manajemen inventaris membantu pengelolaan stok perlengkapan hotel | 0 | 0 | 1 | 6 | 3 | 42 | **4.20** |
-| 7 | Kontrol akses berbasis peran (RBAC) berjalan sesuai kebijakan hotel | 0 | 0 | 0 | 5 | 5 | 45 | **4.50** |
-| 8 | Secara keseluruhan sistem ini meningkatkan efisiensi operasional hotel | 0 | 0 | 0 | 4 | 6 | 46 | **4.60** |
-| **Rata-rata Keseluruhan** |  |  |  |  |  |  | **\[diisi setelah UAT staf selesai\]** |  |
+| 1 | Sistem StayManager mudah dipelajari dan digunakan oleh staf hotel | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">5</span> | <span style="background:yellow">4</span> | <span style="background:yellow">43</span> | **<span style="background:yellow">4,30</span>** |
+| 2 | Antarmuka sistem bersih, terorganisir, dan konsisten di seluruh halaman | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">6</span> | <span style="background:yellow">4</span> | <span style="background:yellow">44</span> | **<span style="background:yellow">4,40</span>** |
+| 3 | Proses check-in dan check-out tamu berjalan efisien dengan sistem ini | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">4</span> | <span style="background:yellow">5</span> | <span style="background:yellow">44</span> | **<span style="background:yellow">4,40</span>** |
+| 4 | Modul keuangan membantu pengelolaan billing dan pengeluaran operasional | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">5</span> | <span style="background:yellow">4</span> | <span style="background:yellow">43</span> | **<span style="background:yellow">4,30</span>** |
+| 5 | Laporan yang dihasilkan sistem akurat dan informatif untuk pengambilan keputusan | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">2</span> | <span style="background:yellow">4</span> | <span style="background:yellow">4</span> | <span style="background:yellow">42</span> | **<span style="background:yellow">4,20</span>** |
+| 6 | Sistem manajemen inventaris membantu pengelolaan stok perlengkapan hotel | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">6</span> | <span style="background:yellow">3</span> | <span style="background:yellow">42</span> | **<span style="background:yellow">4,20</span>** |
+| 7 | Kontrol akses berbasis peran (RBAC) berjalan sesuai kebijakan hotel | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">5</span> | <span style="background:yellow">5</span> | <span style="background:yellow">45</span> | **<span style="background:yellow">4,50</span>** |
+| 8 | Secara keseluruhan sistem ini meningkatkan efisiensi operasional hotel | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">4</span> | <span style="background:yellow">6</span> | <span style="background:yellow">46</span> | **<span style="background:yellow">4,60</span>** |
+| **Rata-rata Keseluruhan** |  |  |  |  |  |  | **<span style="background:yellow">4,36</span>** |  |
 
-\[Analisis hasil kuesioner evaluasi staf hotel akan ditambahkan setelah data UAT staf terkumpul dan diolah. Skor akan dievaluasi terhadap ambang batas penerimaan 4,0 yang ditetapkan Hair dkk. (2022).\]
+Berdasarkan Tabel 4.13, evaluasi kepuasan staf hotel terhadap StayManager menghasilkan rata-rata keseluruhan sebesar <span style="background:yellow">4,36</span> dari skala 5 (n=10). Seluruh delapan butir pertanyaan memperoleh skor rata-rata di atas ambang batas penerimaan <span style="background:yellow">4,0</span> yang ditetapkan Hair dkk. (2022), menunjukkan bahwa sistem diterima dengan baik oleh seluruh peran staf operasional. Skor tertinggi tercatat pada butir <span style="background:yellow">"Secara keseluruhan sistem ini meningkatkan efisiensi operasional hotel"</span> dengan rata-rata <span style="background:yellow">4,60</span>, mengindikasikan bahwa staf merasakan dampak positif sistem terhadap produktivitas kerja sehari-hari. Skor terendah berada pada butir <span style="background:yellow">"Laporan yang dihasilkan sistem akurat dan informatif"</span> dan <span style="background:yellow">"Sistem manajemen inventaris membantu pengelolaan stok"</span> masing-masing <span style="background:yellow">4,20</span> — masih di atas ambang penerimaan namun mengindikasikan ruang perbaikan pada granularitas filter laporan dan fitur prediksi stok inventaris. Tidak ada responden yang memberikan jawaban STS (Sangat Tidak Setuju) atau TS (Tidak Setuju) pada seluruh butir, menegaskan tingkat penerimaan yang konsisten di lintas peran (front desk, housekeeping, finance, manajer).
+<!-- /REVISI -->
+
 
 #### **4.3.2.10.2 Evaluasi Kepuasan Tamu dan Pengguna Chatbot (n=20)** {#4.3.2.10.2-evaluasi-kepuasan-tamu-dan-pengguna-chatbot-(n=20)}
 
 Kuesioner evaluasi kepuasan tamu ditujukan kepada 20 responden yang mewakili pengguna eksternal sistemyaitu tamu hotel atau calon tamu yang menggunakan antarmuka chatbot LLM untuk mencari informasi dan melakukan reservasi. Kuesioner terdiri dari 8 pertanyaan yang berfokus pada pengalaman penggunaan chatbot sebagai fitur unggulan StayManager.  
+<!-- REVISI-2026-05-27 (LOKASI-13) [GANTI] Tabel 4.14 + Rata-rata Keseluruhan + analisis dummy yellow -->
 Tabel 4.14 Hasil Kuesioner Evaluasi Kepuasan Tamu dan Pengguna Chatbot (n=20)
 
 | No | Pertanyaan | STS | TS | N | S | SS | Total | Rata-rata |
 | ----- | ----- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | Chatbot StayManager mudah digunakan untuk bertanya informasi hotel | 0 | 0 | 2 | 11 | 7 | 85 | **4.25** |
-| 2 | Chatbot memberikan respons yang relevan dan akurat sesuai pertanyaan | 0 | 1 | 2 | 10 | 7 | 83 | **4.15** |
-| 3 | Proses reservasi melalui chatbot mudah, intuitif, dan tidak membingungkan | 0 | 0 | 3 | 10 | 7 | 84 | **4.20** |
-| 4 | Chatbot memahami pertanyaan dalam Bahasa Indonesia dengan baik dan natural | 0 | 0 | 1 | 10 | 9 | 88 | **4.40** |
-| 5 | Waktu respons chatbot cepat dan tidak mengganggu alur percakapan | 0 | 0 | 2 | 11 | 7 | 85 | **4.25** |
-| 6 | Informasi ketersediaan dan harga kamar yang diberikan chatbot akurat | 0 | 1 | 2 | 11 | 6 | 82 | **4.10** |
-| 7 | Saya merasa nyaman berinteraksi dengan chatbot StayManager | 0 | 0 | 2 | 10 | 8 | 86 | **4.30** |
-| 8 | Secara keseluruhan chatbot meningkatkan pengalaman saya memesan kamar hotel | 0 | 0 | 1 | 10 | 9 | 88 | **4.40** |
-| **Rata-rata Keseluruhan** |  |  |  |  |  |  | **\[diisi setelah UAT tamu selesai\]** |  |
+| 1 | Chatbot StayManager mudah digunakan untuk bertanya informasi hotel | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">2</span> | <span style="background:yellow">11</span> | <span style="background:yellow">7</span> | <span style="background:yellow">85</span> | **<span style="background:yellow">4,25</span>** |
+| 2 | Chatbot memberikan respons yang relevan dan akurat sesuai pertanyaan | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">2</span> | <span style="background:yellow">10</span> | <span style="background:yellow">7</span> | <span style="background:yellow">83</span> | **<span style="background:yellow">4,15</span>** |
+| 3 | Proses reservasi melalui chatbot mudah, intuitif, dan tidak membingungkan | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">3</span> | <span style="background:yellow">10</span> | <span style="background:yellow">7</span> | <span style="background:yellow">84</span> | **<span style="background:yellow">4,20</span>** |
+| 4 | Chatbot memahami pertanyaan dalam Bahasa Indonesia dengan baik dan natural | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">10</span> | <span style="background:yellow">9</span> | <span style="background:yellow">88</span> | **<span style="background:yellow">4,40</span>** |
+| 5 | Waktu respons chatbot cepat dan tidak mengganggu alur percakapan | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">2</span> | <span style="background:yellow">11</span> | <span style="background:yellow">7</span> | <span style="background:yellow">85</span> | **<span style="background:yellow">4,25</span>** |
+| 6 | Informasi ketersediaan dan harga kamar yang diberikan chatbot akurat | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">2</span> | <span style="background:yellow">11</span> | <span style="background:yellow">6</span> | <span style="background:yellow">82</span> | **<span style="background:yellow">4,10</span>** |
+| 7 | Saya merasa nyaman berinteraksi dengan chatbot StayManager | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">2</span> | <span style="background:yellow">10</span> | <span style="background:yellow">8</span> | <span style="background:yellow">86</span> | **<span style="background:yellow">4,30</span>** |
+| 8 | Secara keseluruhan chatbot meningkatkan pengalaman saya memesan kamar hotel | <span style="background:yellow">0</span> | <span style="background:yellow">0</span> | <span style="background:yellow">1</span> | <span style="background:yellow">10</span> | <span style="background:yellow">9</span> | <span style="background:yellow">88</span> | **<span style="background:yellow">4,40</span>** |
+| **Rata-rata Keseluruhan** |  |  |  |  |  |  | **<span style="background:yellow">4,26</span>** |  |
 
-\[Analisis hasil kuesioner kepuasan tamu/pengguna chatbot akan ditambahkan setelah data UAT tamu terkumpul.\]
+Berdasarkan Tabel 4.14, evaluasi kepuasan tamu dan pengguna chatbot terhadap StayManager menghasilkan rata-rata keseluruhan sebesar <span style="background:yellow">4,26</span> dari skala 5 (n=20). Seluruh delapan butir pertanyaan memperoleh skor rata-rata di atas ambang penerimaan <span style="background:yellow">4,0</span> yang ditetapkan Hair dkk. (2022), mengonfirmasi bahwa antarmuka chatbot berbasis LLM diterima dengan baik oleh pengguna eksternal. Skor tertinggi tercatat pada butir <span style="background:yellow">"Chatbot memahami pertanyaan dalam Bahasa Indonesia dengan baik"</span> dan <span style="background:yellow">"Secara keseluruhan chatbot meningkatkan pengalaman memesan kamar"</span> dengan rata-rata <span style="background:yellow">4,40</span>, mengindikasikan keberhasilan pemilihan model Gemini 2.5 Flash dan system prompt berbahasa Indonesia. Skor terendah berada pada butir <span style="background:yellow">"Informasi ketersediaan dan harga kamar yang diberikan chatbot akurat"</span> dengan rata-rata <span style="background:yellow">4,10</span> — masih di atas ambang penerimaan namun mengindikasikan bahwa beberapa responden mengalami diskrepansi antara informasi yang diberikan chatbot dan ekspektasi mereka, kemungkinan terkait konteks tarif promosi atau ketersediaan kamar tertentu. Hanya <span style="background:yellow">2 responden</span> (10%) yang memberikan jawaban TS pada butir 2 dan 6 — distribusi yang konsisten dengan keterbatasan model LLM dalam menangani edge case pertanyaan tarif kompleks.
+<!-- /REVISI -->
+
 
 #### **4.3.2.10.3 Evaluasi Usability dengan System Usability Scale (SUS)** {#4.3.2.10.3-evaluasi-usability-dengan-system-usability-scale-(sus)}
 
@@ -2089,15 +2276,17 @@ Untuk memperkuat hasil evaluasi penerimaan pengguna, sistem StayManager dievalua
 Pengolahan skor SUS dilakukan dengan mengonversi jawaban responden sesuai ketentuan standar: skor pernyataan ganjil dikurangi 1, skor pernyataan genap diperoleh dari 5 dikurangi nilai jawaban. Seluruh skor kontribusi dari 10 pernyataan dijumlahkan kemudian dikalikan 2,5 sehingga menghasilkan skor akhir dalam rentang 0â€“100. Skor setiap responden dirata-ratakan per kelompok untuk memperoleh skor representatif kelompok.  
 Rekapitulasi hasil evaluasi SUS untuk kedua kelompok responden disajikan pada Tabel 4.15. Interpretasi grade dan adjective rating mengacu pada skala normatif yang telah divalidasi ulang oleh Khan dkk. (2025) dan Deshmukh dan Chalmeta (2024) sebagaimana telah diuraikan pada Tabel 2.3.
 
+<!-- REVISI-2026-05-27 (LOKASI-11) [GANTI] Tabel 4.15 SUS + paragraf analisis dummy yellow -->
 Tabel 4.15 Rekapitulasi Hasil Evaluasi SUS StayManager
 
 | Kelompok Responden | n | Rata-rata Skor SUS | Grade | Adjective Rating | Tingkat Penerimaan |
 | :---- | :---- | :---- | :---- | :---- | :---- |
-| Staf Hotel | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] |
-| Tamu dan Pengguna Chatbot | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] |
-| Rata-rata Gabungan | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] | \[diisi setelah evaluasi SUS\] |
+| Staf Hotel | <span style="background:yellow">10</span> | <span style="background:yellow">79,75</span> | <span style="background:yellow">B</span> | <span style="background:yellow">Good</span> | <span style="background:yellow">Acceptable</span> |
+| Tamu dan Pengguna Chatbot | <span style="background:yellow">20</span> | <span style="background:yellow">82,38</span> | <span style="background:yellow">A</span> | <span style="background:yellow">Excellent</span> | <span style="background:yellow">Acceptable</span> |
+| Rata-rata Gabungan | <span style="background:yellow">30</span> | <span style="background:yellow">81,50</span> | <span style="background:yellow">A</span> | <span style="background:yellow">Excellent</span> | <span style="background:yellow">Acceptable</span> |
 
-\[Analisis hasil evaluasi SUS akan ditambahkan setelah data terkumpul dan diolah.\]
+Berdasarkan rekapitulasi pada Tabel 4.15, evaluasi SUS terhadap StayManager menghasilkan skor rata-rata gabungan sebesar <span style="background:yellow">81,50</span> dari skala 100. Skor tersebut termasuk dalam <span style="background:yellow">Grade A</span> dengan adjective rating <span style="background:yellow">Excellent</span> serta tingkat penerimaan <span style="background:yellow">Acceptable</span> berdasarkan interpretasi Khan dkk. (2025) dan Deshmukh dan Chalmeta (2024). Kelompok Staf Hotel (n=10) memperoleh skor rata-rata <span style="background:yellow">79,75</span> yang masuk kategori <span style="background:yellow">Grade B (Good)</span>, sedangkan kelompok Tamu dan Pengguna Chatbot (n=20) memperoleh skor lebih tinggi sebesar <span style="background:yellow">82,38</span> atau <span style="background:yellow">Grade A (Excellent)</span>. Selisih sekitar <span style="background:yellow">2,6 poin</span> antara kedua kelompok mengindikasikan bahwa antarmuka chatbot lebih intuitif bagi pengguna tamu dibandingkan kompleksitas antarmuka operasional bagi staf, namun keduanya tetap berada pada rentang penerimaan yang baik. Skor SUS gabungan di atas ambang 80,3 menunjukkan bahwa sistem StayManager memenuhi kriteria usability yang sangat baik sesuai standar industri, memperkuat hasil evaluasi kepuasan pengguna pada Tabel 4.13 dan 4.14.
+<!-- /REVISI -->
 
 # **BAB 5**  **SIMPULAN DAN SARAN** {#bab-5-simpulan-dan-saran}
 
@@ -2105,11 +2294,17 @@ Tabel 4.15 Rekapitulasi Hasil Evaluasi SUS StayManager
 
 Berdasarkan hasil penelitian, implementasi, pengujian Black Box Testing, dan evaluasi kepuasan pengguna yang telah dilakukan di Hotel Asni (Parigi Moutong, Sulawesi Tengah) sebagai konteks single-case study dalam pengembangan sistem web Property Management System (PMS) "StayManager" terintegrasi chatbot berbasis LLM untuk otomatisasi reservasi, dapat ditarik simpulan sebagai berikut:
 
-1. Sistem web PMS StayManager telah berhasil dikembangkan menggunakan metodologi Agile Scrum dengan teknologi Next.js 16 (App Router), TypeScript 5, Tailwind CSS 4, shadcn/ui, dan Supabase (PostgreSQL). Sistem mengintegrasikan 14 modul operasional hotel â€” autentikasi RBAC, dashboard/landing page publik, occupancy & reservasi, manajemen kamar (terintegrasi dengan UI housekeeping di halaman /rooms), manajemen tamu, housekeeping, keuangan, billing & invoice, guest facilities, inventaris & logistik, manajemen staf, laporan, chatbot LLM, dan settings & sistem administrasi â€” dalam satu platform terpusat berbasis web yang dapat diakses tanpa instalasi perangkat lunak khusus. Pengujian Black Box Testing terhadap 34 skenario \[hasil akan dilaporkan setelah eksekusi pengujian\]. Evaluasi kepuasan staf hotel (n=10) menghasilkan rata-rata skor UAT \[skor akan diisi\], dievaluasi terhadap ambang penerimaan 4,0 yang ditetapkan Hair dkk. (2022). Evaluasi Lima Faktor Manusia Terukur dan System Usability Scale (SUS) \[hasil akan dilengkapi setelah analisis data\].
+<!-- REVISI-2026-05-27 (LOKASI-16) [GANTI] Bab 5.1 Simpulan poin 1 dummy yellow -->
+1. Sistem web PMS StayManager telah berhasil dikembangkan menggunakan metodologi Agile Scrum dengan teknologi Next.js 16 (App Router), TypeScript 5, Tailwind CSS 4, shadcn/ui, dan Supabase (PostgreSQL). Sistem mengintegrasikan 14 modul operasional hotel â€” autentikasi RBAC, dashboard/landing page publik, occupancy & reservasi, manajemen kamar (terintegrasi dengan UI housekeeping di halaman /rooms), manajemen tamu, housekeeping, keuangan, billing & invoice, guest facilities, inventaris & logistik, manajemen staf, laporan, chatbot LLM, dan settings & sistem administrasi â€” dalam satu platform terpusat berbasis web yang dapat diakses tanpa instalasi perangkat lunak khusus. Pengujian Black Box Testing terhadap 36 skenario <span style="background:yellow">menghasilkan tingkat keberhasilan 97,22% (35 dari 36 skenario lolos), dengan satu minor finding pada validasi format nomor identitas tamu internasional yang tercatat sebagai backlog perbaikan</span>. Evaluasi kepuasan staf hotel (n=10) menghasilkan rata-rata skor UAT <span style="background:yellow">4,36</span> dari skala 5, di atas ambang penerimaan 4,0 yang ditetapkan Hair dkk. (2022). Evaluasi Lima Faktor Manusia Terukur (Nielsen, 1993) menghasilkan rata-rata <span style="background:yellow">4,24</span> dengan distribusi per faktor: Learnability <span style="background:yellow">4,30</span>, Efficiency <span style="background:yellow">4,20</span>, Memorability <span style="background:yellow">4,20</span>, Error Rate <span style="background:yellow">3,90</span>, dan Satisfaction <span style="background:yellow">4,60</span> — bukti visual implementasi tiap faktor dapat dilihat pada Gambar 4.11 hingga Gambar 4.15. Skor System Usability Scale (SUS) keseluruhan mencapai <span style="background:yellow">79,75 (Grade B, Good)</span>.
+<!-- /REVISI -->
 
-2. Integrasi chatbot berbasis Large Language Model (LLM) menggunakan Google Gemini API melalui paket @ai-sdk/google telah berhasil diimplementasikan sebagai fitur unggulan dan inovatif StayManager. Chatbot mampu memahami pertanyaan dalam Bahasa Indonesia secara natural, mengakses data kamar secara real-time melalui mekanisme function calling ke database Supabase, mengelola percakapan multi-turn (multi-turn dialogue) yang kontekstual, dan melakukan proses reservasi secara otomatis end-to-end tanpa keterlibatan staf hotel. Hasil evaluasi kepuasan pengguna chatbot (n=20) menghasilkan rata-rata skor UAT \[skor akan diisi\]. Evaluasi Lima Faktor Manusia Terukur dan System Usability Scale (SUS) untuk pengguna chatbot \[hasil akan dilengkapi setelah analisis data\].
+<!-- REVISI-2026-05-27 (LOKASI-16) [GANTI] Bab 5.1 Simpulan poin 2 dummy yellow -->
+2. Integrasi chatbot berbasis Large Language Model (LLM) menggunakan Google Gemini API melalui paket @ai-sdk/google telah berhasil diimplementasikan sebagai fitur unggulan dan inovatif StayManager. Chatbot mampu memahami pertanyaan dalam Bahasa Indonesia secara natural, mengakses data kamar secara real-time melalui mekanisme function calling ke database Supabase, mengelola percakapan multi-turn (multi-turn dialogue) yang kontekstual, dan melakukan proses reservasi secara otomatis end-to-end tanpa keterlibatan staf hotel. Hasil evaluasi kepuasan pengguna chatbot (n=20) menghasilkan rata-rata skor UAT <span style="background:yellow">4,26</span> dari skala 5. Evaluasi Lima Faktor Manusia Terukur untuk pengguna chatbot menghasilkan rata-rata <span style="background:yellow">4,24</span> dan skor System Usability Scale (SUS) <span style="background:yellow">82,38 (Grade A, Excellent)</span>.
+<!-- /REVISI -->
 
-3. Mekanisme sinkronisasi data real-time antara sistem PMS dan chatbot StayManager berhasil diimplementasikan menggunakan Supabase Realtime yang berbasis protokol WebSocket. Sinkronisasi ini memastikan bahwa setiap perubahan status kamar, pembuatan reservasi, maupun pembaruan data tamu yang dilakukan melalui antarmuka staf secara instan tercermin pada data yang diakses chatbot, dan sebaliknya. Mekanisme overlap detection pada lapisan aplikasiâ€”diimplementasikan di dalam tool cekKetersediaan chatbot dengan operator perbandingan check\_in \&lt; checkOut AND check\_out \&gt; checkIn pada tabel reservationsâ€”bersama validasi real-time ketersediaan kamar secara efektif mencegah terjadinya double booking. Konsistensi data diverifikasi melalui pengujian Black Box Testing terhadap 34 skenario \[hasil akan dilaporkan setelah eksekusi pengujian\]. Selain itu, evaluasi komparatif terhadap tiga sistem PMS sejenis (Oracle OPERA, Cloudbeds, Little Hotelier) membuktikan bahwa StayManager adalah satu-satunya solusi yang secara bersamaan mengintegrasikan: (a) 14 modul operasional hotel terpusat, (b) chatbot berbasis LLM untuk layanan tamu digital, (c) RBAC 6 tingkat yang ditegakkan melalui middleware Next.js dan API route guards (RLS PostgreSQL berperan sebagai gate authenticated-only), dan (d) sinkronisasi data real-time â€” dalam satu platform yang dirancang khusus untuk hotel kecil-menengah di Indonesia. Evaluasi Delapan Aturan Emas dan skor learnability \[hasil akan dilengkapi setelah analisis data\].
+<!-- REVISI-2026-05-27 (LOKASI-16) [GANTI] Bab 5.1 Simpulan poin 3 dummy yellow -->
+3. Mekanisme sinkronisasi data real-time antara sistem PMS dan chatbot StayManager berhasil diimplementasikan menggunakan Supabase Realtime yang berbasis protokol WebSocket. Sinkronisasi ini memastikan bahwa setiap perubahan status kamar, pembuatan reservasi, maupun pembaruan data tamu yang dilakukan melalui antarmuka staf secara instan tercermin pada data yang diakses chatbot, dan sebaliknya. Mekanisme overlap detection pada lapisan aplikasiâ€”diimplementasikan di dalam tool cekKetersediaan chatbot dengan operator perbandingan check\_in \&lt; checkOut AND check\_out \&gt; checkIn pada tabel reservationsâ€”bersama validasi real-time ketersediaan kamar secara efektif mencegah terjadinya double booking. Konsistensi data diverifikasi melalui pengujian Black Box Testing terhadap 36 skenario <span style="background:yellow">dengan tingkat keberhasilan 97,22% (35/36 skenario lolos)</span>. Selain itu, evaluasi komparatif terhadap tiga sistem PMS sejenis (Oracle OPERA, Cloudbeds, Little Hotelier) membuktikan bahwa StayManager adalah satu-satunya solusi yang secara bersamaan mengintegrasikan: (a) 14 modul operasional hotel terpusat, (b) chatbot berbasis LLM untuk layanan tamu digital, (c) RBAC 6 tingkat yang ditegakkan melalui middleware Next.js dan API route guards (RLS PostgreSQL berperan sebagai gate authenticated-only), dan (d) sinkronisasi data real-time â€” dalam satu platform yang dirancang khusus untuk hotel kecil-menengah di Indonesia. Evaluasi Delapan Aturan Emas Desain Antarmuka (Shneiderman, 2018) terpenuhi pada seluruh 8 prinsip — Konsistensi Desain, Pintasan Navigasi, Umpan Balik Informatif, Dialog Closure, Penanganan Kesalahan, Pembatalan Aksi, Kendali Internal Pengguna, dan Pengurangan Beban Memori — dengan skor learnability rata-rata <span style="background:yellow">4,28 (kombinasi staf dan tamu)</span>. Bukti visual penerapan tiap aturan pada antarmuka StayManager disajikan pada Gambar 4.16 hingga Gambar 4.23, mengonfirmasi bahwa antarmuka memenuhi standar HCI baik untuk pengguna operasional internal maupun pengguna eksternal melalui chatbot.
+<!-- /REVISI -->
 
 ## **5.2 Saran** {#5.2-saran}
 

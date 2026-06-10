@@ -1,0 +1,18 @@
+---
+title: Kerangka Berpikir Penelitian StayManager
+---
+flowchart TD
+    Problem["MASALAH<br/>Hotel kecil-menengah:<br/>operasional manual,<br/>layanan tamu 24/7 terbatas"]
+    Problem --> Lit["KAJIAN PUSTAKA<br/>PMS, LLM, RBAC,<br/>5 Faktor Nielsen,<br/>8 Aturan Shneiderman, SUS"]
+    Lit --> Solusi["SOLUSI<br/>Web PMS StayManager +<br/>Chatbot LLM Indonesia"]
+    Solusi --> Metode["METODE PENGEMBANGAN<br/>Scrum + Next.js 16 +<br/>Supabase + Gemini 2.5"]
+    Metode --> Implementasi["IMPLEMENTASI<br/>11 Modul PMS +<br/>4 Tool Chatbot"]
+    Implementasi --> Evaluasi["EVALUASI<br/>UAT Likert 1-5 +<br/>SUS Score +<br/>BBT 33 Skenario"]
+    Evaluasi --> Hasil["HASIL & KESIMPULAN<br/>Sistem siap pakai,<br/>nilai usability,<br/>rekomendasi"]
+
+    classDef problem fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef process fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    class Problem problem
+    class Lit,Solusi,Metode,Implementasi process
+    class Evaluasi,Hasil result
