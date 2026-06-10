@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +12,10 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const ctx = await getServerUserContext(request)
+        if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
         const { id } = await params
 
         const { data, error } = await supabase
@@ -44,6 +49,10 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const ctx = await getServerUserContext(request)
+        if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
         const { id } = await params
         const body = await request.json()
         const { status, items, ...updates } = body

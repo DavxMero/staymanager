@@ -71,7 +71,9 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react"
+import { toast } from 'sonner'
 import { Room } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
 import { transformRoomsQuery, formatCurrency as formatCurrencyCompat } from "@/lib/database-compatibility"
@@ -133,6 +135,9 @@ export default function RoomsPage() {
   const [customAmenityInput, setCustomAmenityInput] = useState("")
   const [roomBedConfig, setRoomBedConfig] = useState<string>("")
   const [imageUploading, setImageUploading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeletingRoom, setIsDeletingRoom] = useState(false)
+  const [isSavingTask, setIsSavingTask] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null)
 
@@ -388,12 +393,14 @@ export default function RoomsPage() {
       if (roomError) throw roomError
 
       console.log(`Room ${roomNumber} checked out successfully`)
+      toast.success(`Room ${roomNumber} checked out`)
       await fetchRooms()
       await fetchHousekeepingData()
       return true
     } catch (err) {
       console.error('Error during checkout:', err)
       setError('Failed to checkout: ' + (err as Error).message)
+      toast.error('Checkout failed', { description: (err as Error).message })
       return false
     }
   }
@@ -452,12 +459,14 @@ export default function RoomsPage() {
       if (roomError) throw roomError
 
       console.log(`Room ${roomNumber} checked in successfully`)
+      toast.success(`Room ${roomNumber} checked in`)
       await fetchRooms()
       await fetchHousekeepingData()
       return true
     } catch (err) {
       console.error('Error during checkin:', err)
       setError('Failed to checkin: ' + (err as Error).message)
+      toast.error('Check-in failed', { description: (err as Error).message })
       return false
     }
   }
@@ -579,12 +588,14 @@ export default function RoomsPage() {
       if (error) throw error
 
       console.log(`Room ${roomNumber} maintenance completed`)
+      toast.success(`Room ${roomNumber} marked as available`)
       await fetchRooms()
       await fetchHousekeepingData()
       return true
     } catch (err) {
       console.error('Error completing maintenance:', err)
       setError('Failed to complete maintenance: ' + (err as Error).message)
+      toast.error('Failed to complete maintenance', { description: (err as Error).message })
       return false
     }
   }
@@ -632,11 +643,11 @@ export default function RoomsPage() {
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Ukuran file harus < 5MB')
+      setError('File size must be < 5MB')
       return
     }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setError('Format file harus JPEG, PNG, atau WebP')
+      setError('File format must be JPEG, PNG, or WebP')
       return
     }
 
@@ -654,14 +665,16 @@ export default function RoomsPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Upload gagal')
+        throw new Error(data.error || 'Upload failed')
       }
 
       setRoomImages((prev) => [...prev, data.url])
       // Backward compat: kalau ini foto pertama, isi juga image_url biar tampilan lama tetap jalan
       setRoomImageUrl((prev) => prev || data.url)
+      toast.success('Image uploaded successfully')
     } catch (err) {
-      setError('Gagal upload gambar: ' + (err as Error).message)
+      setError('Failed to upload image: ' + (err as Error).message)
+      toast.error('Failed to upload image', { description: (err as Error).message })
     } finally {
       setImageUploading(false)
       // Reset input so user bisa pilih file yang sama lagi kalau perlu
@@ -670,6 +683,7 @@ export default function RoomsPage() {
   }
 
   const handleSaveRoom = async () => {
+    setIsSaving(true)
     try {
       if (currentRoom) {
         const { data, error } = await supabase
@@ -734,6 +748,7 @@ export default function RoomsPage() {
       await fetchRooms()
       await fetchTypeImages() // refresh typeMetaByName setelah save
       setIsDialogOpen(false)
+      toast.success(currentRoom ? 'Room updated successfully' : 'Room added successfully')
     } catch (err) {
       console.error('Error saving room:', err)
       console.error('Error details:', {
@@ -744,13 +759,18 @@ export default function RoomsPage() {
 
       if ((err as Error).message?.includes('row-level security')) {
         setError('Permission denied: You do not have permission to modify rooms. Please check your user role.')
+        toast.error('Permission denied', { description: 'You do not have permission to modify rooms.' })
       } else {
         setError('Failed to save room: ' + (err as Error).message)
+        toast.error('Failed to save room', { description: (err as Error).message })
       }
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleDeleteRoom = async (roomId: string) => {
+    setIsDeletingRoom(true)
     try {
       const { error } = await supabase
         .from('rooms')
@@ -765,6 +785,7 @@ export default function RoomsPage() {
         throw error
       }
 
+      toast.success('Room deleted successfully')
       await fetchRooms()
     } catch (err) {
       console.error('Error deleting room:', err)
@@ -776,9 +797,13 @@ export default function RoomsPage() {
 
       if ((err as Error).message?.includes('row-level security')) {
         setError('Permission denied: ' + (err as Error).message)
+        toast.error('Permission denied', { description: (err as Error).message })
       } else {
         setError('Failed to delete room: ' + (err as Error).message)
+        toast.error('Failed to delete room', { description: (err as Error).message })
       }
+    } finally {
+      setIsDeletingRoom(false)
     }
   }
 
@@ -951,14 +976,14 @@ export default function RoomsPage() {
       if (result.success) {
         console.log(`Daily tasks created: ${result.message}`)
         await fetchHousekeepingData()
-        const detailMessage = result.details ? `\n\nDetail: ${result.details}` : ''
-        alert(`Daily Tasks berhasil dibuat!\n${result.message}${detailMessage}`)
+        toast.success('Daily tasks created', { description: result.message })
       } else {
         throw new Error(result.error || 'Failed to create daily tasks')
       }
     } catch (err) {
       console.error('Error creating daily tasks:', err)
       setError(`Failed to create daily tasks: ${(err as Error).message}`)
+      toast.error('Failed to create daily tasks', { description: (err as Error).message })
     } finally {
       setLoading(false)
     }
@@ -982,13 +1007,14 @@ export default function RoomsPage() {
       if (result.success) {
         console.log(`Checkout cleaning task created: ${result.message}`)
         await fetchHousekeepingData()
-        alert(`Checkout Cleaning Task berhasil dibuat!\n${result.message}`)
+        toast.success('Checkout cleaning task created', { description: result.message })
       } else {
         throw new Error(result.error || 'Failed to create checkout cleaning task')
       }
     } catch (err) {
       console.error('Error creating checkout cleaning task:', err)
       setError(`Failed to create checkout cleaning task: ${(err as Error).message}`)
+      toast.error('Failed to create checkout cleaning task', { description: (err as Error).message })
     } finally {
       setLoading(false)
     }
@@ -1023,9 +1049,11 @@ export default function RoomsPage() {
   }
 
   const handleSaveTask = async () => {
+    setIsSavingTask(true)
     try {
       if (!taskRoomId) {
         setError('Please select a room')
+        setIsSavingTask(false)
         return
       }
 
@@ -1073,14 +1101,19 @@ export default function RoomsPage() {
       await fetchHousekeepingData()
       setIsTaskDialogOpen(false)
       resetTaskForm()
+      toast.success(editingTask ? 'Task updated successfully' : 'Task created successfully')
     } catch (err) {
       console.error('Error saving task:', err)
       const errorMessage = (err as Error)?.message || 'Unknown error'
       if (errorMessage.includes('relation "housekeeping_tasks" does not exist')) {
         setError('Housekeeping system not set up. Please set up the database first.')
+        toast.error('Housekeeping system not set up', { description: 'Please set up the database first.' })
       } else {
         setError(`Failed to save task: ${errorMessage}`)
+        toast.error('Failed to save task', { description: errorMessage })
       }
+    } finally {
+      setIsSavingTask(false)
     }
   }
 
@@ -1094,10 +1127,12 @@ export default function RoomsPage() {
         .eq('id', id)
 
       if (error) throw error
+      toast.success('Task deleted')
       await fetchHousekeepingData()
     } catch (err) {
       console.error('Error deleting task:', err)
       setError('Failed to delete task: ' + (err as Error).message)
+      toast.error('Failed to delete task', { description: (err as Error).message })
     }
   }
 
@@ -1132,10 +1167,12 @@ export default function RoomsPage() {
 
       await fetchHousekeepingData()
       await fetchRooms()
+      toast.success('Task marked as complete')
 
     } catch (err) {
       console.error('Error completing task:', err)
       setError('Failed to complete task: ' + (err as Error).message)
+      toast.error('Failed to complete task', { description: (err as Error).message })
     }
   }
 
@@ -1624,7 +1661,12 @@ export default function RoomsPage() {
                         onClick={() => handleMaintenanceComplete(String(room.id), room.number)}
                         disabled={loading}
                       >
-                        ✅ Done Maintenance
+                        {loading ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          '✅ '
+                        )}
+                        Done Maintenance
                       </Button>
                     </div>
                   )}
@@ -1663,7 +1705,11 @@ export default function RoomsPage() {
                 disabled={loading}
                 className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
               >
-                <Calendar className="h-4 w-4 mr-2" />
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Calendar className="h-4 w-4 mr-2" />
+                )}
                 Create Daily Tasks
               </Button>
               <Dialog open={isTaskDialogOpen} onOpenChange={(open) => {
@@ -1785,8 +1831,15 @@ export default function RoomsPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button onClick={handleSaveTask}>
-                      {editingTask ? 'Update Task' : 'Create Task'}
+                    <Button onClick={handleSaveTask} disabled={isSavingTask}>
+                      {isSavingTask ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        editingTask ? 'Update Task' : 'Create Task'
+                      )}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -2133,7 +2186,7 @@ export default function RoomsPage() {
 
             <div className="grid gap-3">
               <Label htmlFor="roomImage" className="text-sm font-medium">
-                Foto Kamar <span className="text-xs text-muted-foreground font-normal">(bisa upload banyak — slide di galeri)</span>
+                Room Photos <span className="text-xs text-muted-foreground font-normal">(upload multiple — swipe in gallery)</span>
               </Label>
 
               {roomImages.length > 0 && (
@@ -2144,10 +2197,10 @@ export default function RoomsPage() {
                       className="relative aspect-square rounded-lg overflow-hidden border bg-muted group"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
                       {idx === 0 && (
                         <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-medium">
-                          Utama
+                          Main
                         </span>
                       )}
                       <button
@@ -2157,7 +2210,7 @@ export default function RoomsPage() {
                           if (idx === 0) setRoomImageUrl(roomImages[1] || "")
                         }}
                         className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 hover:bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label={`Hapus foto ${idx + 1}`}
+                        aria-label={`Remove photo ${idx + 1}`}
                       >
                         ×
                       </button>
@@ -2171,12 +2224,12 @@ export default function RoomsPage() {
                 className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
               >
                 {imageUploading ? (
-                  <span className="text-sm text-muted-foreground">Mengupload...</span>
+                  <span className="text-sm text-muted-foreground">Uploading...</span>
                 ) : (
                   <>
                     <Plus className="h-5 w-5 text-muted-foreground mb-1" />
                     <span className="text-sm text-muted-foreground">
-                      {roomImages.length > 0 ? 'Tambah foto lagi' : 'Klik untuk pilih foto'}
+                      {roomImages.length > 0 ? 'Add more photos' : 'Click to select photo'}
                     </span>
                     <span className="text-xs text-muted-foreground/70 mt-0.5">JPEG / PNG / WebP, max 5MB</span>
                   </>
@@ -2190,7 +2243,7 @@ export default function RoomsPage() {
                 disabled={imageUploading}
                 className="hidden"
               />
-              {error && error.includes('gambar') && (
+              {error && error.includes('image') && (
                 <p className="text-sm text-red-600">{error}</p>
               )}
             </div>
@@ -2198,12 +2251,12 @@ export default function RoomsPage() {
             {/* Bed Configuration (per tipe) */}
             <div className="grid gap-2">
               <Label htmlFor="roomBed" className="text-sm font-medium">
-                Konfigurasi Tempat Tidur{' '}
-                <span className="text-xs text-muted-foreground font-normal">(per tipe — berlaku untuk semua kamar tipe ini)</span>
+                Bed Configuration{' '}
+                <span className="text-xs text-muted-foreground font-normal">(per type — applies to all rooms of this type)</span>
               </Label>
               <Select value={roomBedConfig} onValueChange={setRoomBedConfig}>
                 <SelectTrigger id="roomBed" className="h-10">
-                  <SelectValue placeholder="Pilih tipe tempat tidur" />
+                  <SelectValue placeholder="Select bed type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="King Bed">King Bed</SelectItem>
@@ -2211,7 +2264,7 @@ export default function RoomsPage() {
                   <SelectItem value="Twin Bed">Twin Bed (2 single)</SelectItem>
                   <SelectItem value="Double Bed">Double Bed</SelectItem>
                   <SelectItem value="Single Bed">Single Bed</SelectItem>
-                  <SelectItem value="Bunk Bed">Bunk Bed (susun)</SelectItem>
+                  <SelectItem value="Bunk Bed">Bunk Bed (stacked)</SelectItem>
                   <SelectItem value="Sofa Bed">Sofa Bed</SelectItem>
                 </SelectContent>
               </Select>
@@ -2220,15 +2273,15 @@ export default function RoomsPage() {
             {/* Amenities (per tipe) */}
             <div className="grid gap-2">
               <Label className="text-sm font-medium">
-                Fasilitas{' '}
-                <span className="text-xs text-muted-foreground font-normal">(per tipe — berlaku untuk semua kamar tipe ini)</span>
+                Amenities{' '}
+                <span className="text-xs text-muted-foreground font-normal">(per type — applies to all rooms of this type)</span>
               </Label>
               {(() => {
                 const COMMON_AMENITIES = [
-                  'WiFi', 'AC', 'TV', 'Mini Bar', 'Air Panas', 'Hairdryer',
-                  'Coffee Maker', 'Safety Box', 'Bathtub', 'Shower', 'Setrika',
-                  'Telepon', 'Kulkas', 'Balkon', 'City View', 'Sea View',
-                  'Mountain View', 'Sarapan', 'Akses Kolam Renang', 'Akses Gym',
+                  'WiFi', 'AC', 'TV', 'Mini Bar', 'Hot Water', 'Hairdryer',
+                  'Coffee Maker', 'Safety Box', 'Bathtub', 'Shower', 'Iron',
+                  'Telephone', 'Refrigerator', 'Balcony', 'City View', 'Sea View',
+                  'Mountain View', 'Breakfast', 'Pool Access', 'Gym Access',
                 ];
                 const toggle = (a: string) => {
                   setRoomAmenities((prev) =>
@@ -2276,7 +2329,7 @@ export default function RoomsPage() {
                               type="button"
                               onClick={() => toggle(a)}
                               className="ml-1 hover:text-red-600"
-                              aria-label={`Hapus ${a}`}
+                              aria-label={`Remove ${a}`}
                             >
                               ×
                             </button>
@@ -2295,11 +2348,11 @@ export default function RoomsPage() {
                             addCustom();
                           }
                         }}
-                        placeholder="Fasilitas custom (mis. Jacuzzi)"
+                        placeholder="Custom amenity (e.g. Jacuzzi)"
                         className="h-9 text-sm"
                       />
                       <Button type="button" variant="outline" size="sm" onClick={addCustom}>
-                        Tambah
+                        Add
                       </Button>
                     </div>
                   </>
@@ -2313,14 +2366,23 @@ export default function RoomsPage() {
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
               className="flex-1 sm:flex-none"
+              disabled={isSaving}
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveRoom}
               className="flex-1 sm:flex-none"
+              disabled={isSaving}
             >
-              {currentRoom ? "Update Room" : "Add Room"}
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                currentRoom ? "Update Room" : "Add Room"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2334,10 +2396,10 @@ export default function RoomsPage() {
               <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
             <DialogTitle className="text-center text-xl">
-              Hapus Kamar?
+              Delete Room?
             </DialogTitle>
             <DialogDescription className="text-center text-sm">
-              Apakah Anda yakin ingin menghapus kamar ini? Tindakan ini tidak dapat dibatalkan dan dapat mempengaruhi data reservasi yang terkait.
+              Are you sure you want to delete this room? This action cannot be undone and may affect related reservation data.
             </DialogDescription>
           </DialogHeader>
 
@@ -2345,17 +2407,17 @@ export default function RoomsPage() {
             <div className="my-2 rounded-lg border bg-muted/50 p-4">
               <div className="grid gap-1.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nomor Kamar:</span>
+                  <span className="text-muted-foreground">Room Number:</span>
                   <span className="font-semibold">{roomToDelete.number}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tipe:</span>
+                  <span className="text-muted-foreground">Type:</span>
                   <span className="font-semibold">{roomToDelete.type}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Harga:</span>
+                  <span className="text-muted-foreground">Price:</span>
                   <span className="font-semibold">
-                    {formatCurrencyCompat(Number(roomToDelete.price) || Number(roomToDelete.base_price) || 0)}/malam
+                    {formatCurrencyCompat(Number(roomToDelete.price) || Number(roomToDelete.base_price) || 0)}/night
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -2371,16 +2433,27 @@ export default function RoomsPage() {
               variant="outline"
               onClick={() => setRoomToDelete(null)}
               className="flex-1"
+              disabled={isDeletingRoom}
             >
-              Batal
+              Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDeleteRoom}
               className="flex-1"
+              disabled={isDeletingRoom}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Ya, Hapus Permanen
+              {isDeletingRoom ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Yes, Delete Permanently
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2391,7 +2464,7 @@ export default function RoomsPage() {
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="sr-only">
             <DialogTitle>{viewRoom ? `Room ${viewRoom.number} — ${viewRoom.type}` : ''}</DialogTitle>
-            <DialogDescription>Detail kamar lengkap dengan galeri foto dan fasilitas</DialogDescription>
+            <DialogDescription>Full room details with photo gallery and amenities</DialogDescription>
           </DialogHeader>
           {viewRoom && (() => {
             const meta = typeMetaByName[viewRoom.type] || { amenities: [], max_occupancy: null, room_size: null, bed_configuration: null, description: null, view_type: null }
@@ -2468,14 +2541,14 @@ export default function RoomsPage() {
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         Room {viewRoom.number}
-                        {viewRoom.floor != null && ` · Lantai ${viewRoom.floor}`}
+                        {viewRoom.floor != null && ` · Floor ${viewRoom.floor}`}
                       </p>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrencyCompat(Number(viewRoom.price) || Number(viewRoom.base_price) || 0)}
                       </div>
-                      <div className="text-xs text-muted-foreground">per malam</div>
+                      <div className="text-xs text-muted-foreground">per night</div>
                     </div>
                   </div>
 
@@ -2488,30 +2561,30 @@ export default function RoomsPage() {
                   {/* Specs */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-gray-200 dark:border-gray-700">
                     <div>
-                      <div className="text-xs text-muted-foreground">Tipe</div>
+                      <div className="text-xs text-muted-foreground">Type</div>
                       <div className="text-sm font-medium">{viewRoom.type}</div>
                     </div>
                     {meta.max_occupancy && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Kapasitas</div>
-                        <div className="text-sm font-medium">{meta.max_occupancy} tamu</div>
+                        <div className="text-xs text-muted-foreground">Capacity</div>
+                        <div className="text-sm font-medium">{meta.max_occupancy} guests</div>
                       </div>
                     )}
                     {meta.room_size && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Ukuran</div>
+                        <div className="text-xs text-muted-foreground">Size</div>
                         <div className="text-sm font-medium">{meta.room_size} m²</div>
                       </div>
                     )}
                     {meta.bed_configuration && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Tempat tidur</div>
+                        <div className="text-xs text-muted-foreground">Bed</div>
                         <div className="text-sm font-medium">{meta.bed_configuration}</div>
                       </div>
                     )}
                     {meta.view_type && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Pemandangan</div>
+                        <div className="text-xs text-muted-foreground">View</div>
                         <div className="text-sm font-medium">{meta.view_type}</div>
                       </div>
                     )}
@@ -2520,7 +2593,7 @@ export default function RoomsPage() {
                   {/* Amenities */}
                   <div>
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Fasilitas {amenities.length === 0 && <span className="text-xs font-normal text-muted-foreground">(belum dikonfigurasi di Room Type)</span>}
+                      Amenities {amenities.length === 0 && <span className="text-xs font-normal text-muted-foreground">(not configured in Room Type)</span>}
                     </h4>
                     {amenities.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
@@ -2535,7 +2608,7 @@ export default function RoomsPage() {
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">
-                        Atur amenities di Room Types admin untuk menampilkan air panas, hairdryer, WiFi, dll.
+                        Configure amenities in Room Types admin to display hot water, hairdryer, WiFi, etc.
                       </p>
                     )}
                   </div>
@@ -2546,7 +2619,7 @@ export default function RoomsPage() {
                       onClick={() => { setViewRoom(null); setViewCarouselIndex(0) }}
                       className="flex-1"
                     >
-                      Tutup
+                      Close
                     </Button>
                     <Button
                       onClick={() => {
@@ -2558,7 +2631,7 @@ export default function RoomsPage() {
                       className="flex-1"
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Edit Kamar
+                      Edit Room
                     </Button>
                   </div>
                 </div>

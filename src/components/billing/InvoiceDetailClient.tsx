@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dialog'
 import { supabase } from '@/lib/supabaseClient'
 import { Invoice, Reservation, BillingItem } from '@/types'
+import { toast } from 'sonner'
 
 interface InvoiceDetailClientProps {
   invoice: Invoice
@@ -88,9 +89,10 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
       setItems([...(insertedItems as BillingItem[]), ...items])
       setCurrentInvoice(updatedInvoice)
       setIsAddingItem(false)
+      toast.success('Items added to invoice')
     } catch (error) {
       console.error('Failed to add items:', error)
-      alert('Failed to add items to invoice. See console for details.')
+      toast.error('Failed to add items', { description: (error as Error).message })
     } finally {
       setIsProcessing(false)
     }
@@ -113,6 +115,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
         
         if (error) throw error
         setCurrentInvoice(updatedInvoice)
+        toast.success('Invoice marked as paid')
 
         // Also update reservation payment status
         if (reservation?.id) {
@@ -120,6 +123,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
         }
       } catch (error) {
         console.error('Failed to mark as paid:', error)
+        toast.error('Failed to mark as paid', { description: (error as Error).message })
       } finally {
         setIsProcessing(false)
       }
@@ -142,12 +146,20 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
             <Printer className="h-4 w-4" /> Print Invoice
           </Button>
           {currentInvoice.status !== 'paid' && (
-            <Button 
-              className="gap-2 bg-green-600 hover:bg-green-700" 
+            <Button
+              className="gap-2 bg-green-600 hover:bg-green-700"
               onClick={handleMarkAsPaid}
               disabled={isProcessing}
             >
-              <CreditCard className="h-4 w-4" /> Mark as Paid
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4" /> Mark as Paid
+                </>
+              )}
             </Button>
           )}
         </div>

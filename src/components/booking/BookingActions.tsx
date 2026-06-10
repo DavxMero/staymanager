@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Ban, RotateCcw } from 'lucide-react'
+import { Ban, RotateCcw, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -47,9 +47,9 @@ export function BookingActions({ bookingId, status, guestName, onStatusChange }:
     try {
       await postBookingAction(bookingId, 'restore')
       onStatusChange?.('confirmed')
-      toast.success('Reservasi dipulihkan')
+      toast.success('Booking restored')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Gagal memulihkan reservasi')
+      toast.error(err instanceof Error ? err.message : 'Failed to restore booking')
     } finally {
       setLoading(false)
     }
@@ -62,12 +62,12 @@ export function BookingActions({ bookingId, status, guestName, onStatusChange }:
       onStatusChange?.('cancelled')
       setConfirmOpen(false)
       setReason('')
-      toast.success('Reservasi dibatalkan', {
+      toast.success('Booking cancelled', {
         duration: 6000,
         action: { label: 'Undo', onClick: () => void handleRestore() },
       })
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Gagal membatalkan reservasi')
+      toast.error(err instanceof Error ? err.message : 'Failed to cancel booking')
     } finally {
       setLoading(false)
     }
@@ -89,7 +89,7 @@ export function BookingActions({ bookingId, status, guestName, onStatusChange }:
           }}
         >
           <Ban className="mr-1 h-4 w-4" />
-          Batalkan
+          Cancel Booking
         </Button>
       )}
       {canRestore && (
@@ -103,36 +103,41 @@ export function BookingActions({ bookingId, status, guestName, onStatusChange }:
             void handleRestore()
           }}
         >
-          <RotateCcw className="mr-1 h-4 w-4" />
-          {loading ? 'Memulihkan...' : 'Restore'}
+          {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-1 h-4 w-4" />}
+          {loading ? 'Restoring...' : 'Restore'}
         </Button>
       )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle>Batalkan Reservasi?</DialogTitle>
+            <DialogTitle>Cancel Booking?</DialogTitle>
             <DialogDescription>
-              {guestName ? `Reservasi atas nama ${guestName} ` : 'Reservasi ini '}
-              akan dibatalkan dan kamar tersedia kembali. Anda dapat memulihkannya
-              kembali selama kamar belum dipesan tamu lain.
+              {guestName ? `The booking for ${guestName} ` : 'This booking '}
+              will be cancelled and the room will become available again. You can restore it
+              as long as the room has not been booked by another guest.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
-            <Label htmlFor="cancel-reason">Alasan pembatalan (opsional)</Label>
+            <Label htmlFor="cancel-reason">Cancellation reason (optional)</Label>
             <Input
               id="cancel-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="cth: rencana berubah"
+              placeholder="e.g. plans changed"
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={loading}>
-              Kembali
+              Go Back
             </Button>
             <Button variant="destructive" onClick={() => void handleCancel()} disabled={loading}>
-              {loading ? 'Membatalkan...' : 'Ya, Batalkan'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : 'Yes, Cancel'}
             </Button>
           </DialogFooter>
         </DialogContent>

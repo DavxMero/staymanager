@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -21,6 +22,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 export async function GET(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'billing', 'financial')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const status = searchParams.get('status')
@@ -65,6 +70,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'billing', 'financial')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
     const {
       description,
@@ -133,12 +142,19 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'billing', 'financial')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 })
     }
+
+    const allowed = ['description', 'amount', 'category', 'subcategory', 'payment_method', 'receipt_url', 'supplier', 'expense_date', 'status', 'notes', 'recurring', 'recurring_period']
+    const updateData = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)))
 
     updateData.updated_at = new Date().toISOString()
 
@@ -170,6 +186,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'billing', 'financial')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

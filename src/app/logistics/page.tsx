@@ -27,7 +27,8 @@ import {
   Users,
   Calendar,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -56,7 +57,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { InventoryItem, InventorySupplier, PurchaseOrder } from "@/types"
 
 const supabase = createClient(
@@ -84,7 +85,6 @@ const STATUS_OPTIONS = [
 const UNITS = ['pcs', 'kg', 'liter', 'box', 'pack', 'bottle', 'can', 'set', 'meter', 'roll']
 
 export default function LogisticsPage() {
-  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("inventory")
   const [loading, setLoading] = useState(true)
 
@@ -102,6 +102,9 @@ export default function LogisticsPage() {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false)
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false)
   const [isCreatePOOpen, setIsCreatePOOpen] = useState(false)
+  const [savingItem, setSavingItem] = useState(false)
+  const [savingSupplier, setSavingSupplier] = useState(false)
+  const [creatingPO, setCreatingPO] = useState(false)
 
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
 
@@ -190,6 +193,7 @@ export default function LogisticsPage() {
   }, [])
 
   const handleSaveItem = async () => {
+    setSavingItem(true)
     try {
       const url = '/api/inventory'
       const method = editingItem ? 'PUT' : 'POST'
@@ -203,7 +207,7 @@ export default function LogisticsPage() {
 
       const result = await response.json()
       if (result.success) {
-        toast({ title: "Success", description: result.message })
+        toast.success(editingItem ? 'Item updated' : 'Item added to inventory')
         setIsAddItemOpen(false)
         setEditingItem(null)
         resetItemForm()
@@ -212,11 +216,14 @@ export default function LogisticsPage() {
         throw new Error(result.error)
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message })
+      toast.error('Failed to save item', { description: error.message })
+    } finally {
+      setSavingItem(false)
     }
   }
 
   const handleSaveSupplier = async () => {
+    setSavingSupplier(true)
     try {
       const response = await fetch('/api/suppliers', {
         method: 'POST',
@@ -225,7 +232,7 @@ export default function LogisticsPage() {
       })
       const result = await response.json()
       if (result.success) {
-        toast({ title: "Success", description: "Supplier added successfully" })
+        toast.success('Supplier added')
         setIsAddSupplierOpen(false)
         setSupplierFormData({ name: '', contact_person: '', email: '', phone: '', address: '' })
         fetchSuppliers()
@@ -233,7 +240,9 @@ export default function LogisticsPage() {
         throw new Error(result.error)
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message })
+      toast.error('Failed to add supplier', { description: error.message })
+    } finally {
+      setSavingSupplier(false)
     }
   }
 
@@ -254,6 +263,7 @@ export default function LogisticsPage() {
   }
 
   const handleCreatePO = async () => {
+    setCreatingPO(true)
     try {
       const response = await fetch('/api/purchase-orders', {
         method: 'POST',
@@ -266,7 +276,7 @@ export default function LogisticsPage() {
       })
       const result = await response.json()
       if (result.success) {
-        toast({ title: "Success", description: "Purchase Order created successfully" })
+        toast.success('Purchase order created')
         setIsCreatePOOpen(false)
         setPoFormData({ po_number: '', supplier_id: '', expected_delivery_date: '', notes: '' })
         setPoItems([])
@@ -275,7 +285,9 @@ export default function LogisticsPage() {
         throw new Error(result.error)
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message })
+      toast.error('Failed to create purchase order', { description: error.message })
+    } finally {
+      setCreatingPO(false)
     }
   }
 
@@ -288,14 +300,14 @@ export default function LogisticsPage() {
       })
       const result = await response.json()
       if (result.success) {
-        toast({ title: "Success", description: "Goods received successfully" })
+        toast.success('Goods received')
         fetchPurchaseOrders()
         fetchInventory()
       } else {
         throw new Error(result.error)
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message })
+      toast.error('Failed to receive PO', { description: error.message })
     }
   }
 
@@ -481,8 +493,10 @@ export default function LogisticsPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddItemOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSaveItem}>Save</Button>
+                  <Button variant="outline" onClick={() => setIsAddItemOpen(false)} disabled={savingItem}>Cancel</Button>
+                  <Button onClick={handleSaveItem} disabled={savingItem}>
+                    {savingItem ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : 'Save'}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -583,8 +597,10 @@ export default function LogisticsPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddSupplierOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSaveSupplier}>Save Supplier</Button>
+                  <Button variant="outline" onClick={() => setIsAddSupplierOpen(false)} disabled={savingSupplier}>Cancel</Button>
+                  <Button onClick={handleSaveSupplier} disabled={savingSupplier}>
+                    {savingSupplier ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : 'Save Supplier'}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -723,8 +739,10 @@ export default function LogisticsPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreatePOOpen(false)}>Cancel</Button>
-                  <Button onClick={handleCreatePO}>Create PO</Button>
+                  <Button variant="outline" onClick={() => setIsCreatePOOpen(false)} disabled={creatingPO}>Cancel</Button>
+                  <Button onClick={handleCreatePO} disabled={creatingPO}>
+                    {creatingPO ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</> : 'Create PO'}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

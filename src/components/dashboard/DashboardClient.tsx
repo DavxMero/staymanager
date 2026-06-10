@@ -383,7 +383,7 @@ export function DashboardClient({
                   >
                     <Link href="/occupancy?quickAction=checkin">
                       <Zap className="mr-2 h-4 w-4" />
-                      Check-in Cepat
+                      Quick Check-in
                     </Link>
                   </Button>
                   <Button
@@ -413,7 +413,7 @@ export function DashboardClient({
             <button
               type="button"
               onClick={dismissSurveyBanner}
-              aria-label="Tutup banner"
+              aria-label="Close banner"
               className="absolute top-3 right-3 p-1.5 rounded-lg text-[#1A468F] dark:text-[#afc6ff] hover:bg-[#d8e2ff] dark:hover:bg-[#1A468F]/30 transition-colors"
             >
               <X className="w-4 h-4" />
@@ -427,13 +427,13 @@ export function DashboardClient({
                   className="text-base md:text-lg font-bold text-[#002f6f] dark:text-white mb-1"
                   style={{ fontFamily: 'var(--font-manrope)' }}
                 >
-                  Bantu Penelitian Skripsi StayManager
+                  Help with the StayManager Thesis Research
                 </h3>
                 <p
                   className="text-sm text-[#1A468F] dark:text-[#afc6ff]/90"
                   style={{ fontFamily: 'var(--font-plus-jakarta)' }}
                 >
-                  Isi kuesioner singkat (5 menit) untuk evaluasi sistem. Feedback Anda sangat berarti untuk perbaikan StayManager.
+                  Fill out a short questionnaire (5 minutes) to evaluate the system. Your feedback means a lot for improving StayManager.
                 </p>
               </div>
               <Button
@@ -447,7 +447,7 @@ export function DashboardClient({
                   rel="noopener noreferrer"
                 >
                   <ClipboardCheck className="mr-2 h-4 w-4" />
-                  Isi Kuesioner
+                  Fill Out Questionnaire
                   <ExternalLink className="ml-2 h-3.5 w-3.5 opacity-70" />
                 </a>
               </Button>

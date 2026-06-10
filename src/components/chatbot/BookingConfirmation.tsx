@@ -150,14 +150,14 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
-                                Verifikasi Data Diri
+                                Verify Your Details
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                                Isi data tamu yang akan menginap. Reservasi bisa dibuat untuk orang lain.
+                                Enter the details of the staying guest. You can book on someone else's behalf.
                             </p>
                             <div className="space-y-3 text-sm">
                                 <div>
-                                    <label htmlFor="bc-guest-name" className="block text-gray-600 dark:text-gray-400 mb-1">Nama Lengkap</label>
+                                    <label htmlFor="bc-guest-name" className="block text-gray-600 dark:text-gray-400 mb-1">Full Name</label>
                                     <input
                                         id="bc-guest-name"
                                         type="text"
@@ -165,14 +165,14 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                                         onChange={(e) => setGuestName(e.target.value)}
                                         disabled={isSubmitting}
                                         className={`w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${showNameError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
-                                        placeholder="Nama sesuai identitas"
+                                        placeholder="Name as on ID"
                                     />
                                     {showNameError && (
-                                        <p className="mt-1 text-xs text-red-500">Nama minimal 3 karakter.</p>
+                                        <p className="mt-1 text-xs text-red-500">Name must be at least 3 characters.</p>
                                     )}
                                 </div>
                                 <div>
-                                    <label htmlFor="bc-guest-phone" className="block text-gray-600 dark:text-gray-400 mb-1">No. Telepon</label>
+                                    <label htmlFor="bc-guest-phone" className="block text-gray-600 dark:text-gray-400 mb-1">Phone No.</label>
                                     <input
                                         id="bc-guest-phone"
                                         type="tel"
@@ -183,7 +183,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                                         placeholder="+62 8xx xxxx xxxx"
                                     />
                                     {showPhoneError && (
-                                        <p className="mt-1 text-xs text-red-500">Nomor telepon minimal 8 digit.</p>
+                                        <p className="mt-1 text-xs text-red-500">Phone number must be at least 8 digits.</p>
                                     )}
                                 </div>
                                 <div>
@@ -195,10 +195,10 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                                         onChange={(e) => setGuestEmail(e.target.value)}
                                         disabled={isSubmitting}
                                         className={`w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${showEmailError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
-                                        placeholder="email@contoh.com"
+                                        placeholder="email@example.com"
                                     />
                                     {showEmailError && (
-                                        <p className="mt-1 text-xs text-red-500">Format email tidak valid.</p>
+                                        <p className="mt-1 text-xs text-red-500">Invalid email format.</p>
                                     )}
                                 </div>
                                 <button
@@ -207,7 +207,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                                     disabled={isSubmitting}
                                     className="w-full text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-500/50 rounded-lg py-2 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50"
                                 >
-                                    Samakan dengan data diri akun ini
+                                    Use my account details
                                 </button>
                             </div>
                         </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -11,14 +11,16 @@ import {
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
 import { BillingItem } from '@/types';
 import { formatCurrency, toLocalDateString } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface AddBillingItemDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   reservationId: string;
-  onAddItem: (item: Omit<BillingItem, 'id' | 'created_at'>) => void;
+  onAddItem: (item: Omit<BillingItem, 'id' | 'created_at'>) => void | Promise<void>;
   onCancel: () => void;
 }
 
@@ -57,6 +59,7 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState(0);
   const [customDescription, setCustomDescription] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCategoryChange = (value: 'food' | 'beverage' | 'service' | 'misc') => {
     setCategory(value);
@@ -78,29 +81,37 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const total = quantity * unitPrice;
-    
-    onAddItem({
-      reservation_id: reservationId,
-      item_name: description, // using description as item_name for now
-      description,
-      quantity,
-      unit_price: unitPrice,
-      total_price: total,
-      tax_amount: 0, // placeholder, can be calculated if tax_rate is provided
-      status: 'pending',
-      category,
-      service_date: toLocalDateString(new Date()),
-    });
-    
-    setCategory('food');
-    setDescription('');
-    setQuantity(1);
-    setUnitPrice(0);
-    setCustomDescription(false);
-    onOpenChange(false);
+    setIsSubmitting(true);
+    try {
+      const total = quantity * unitPrice;
+
+      await onAddItem({
+        reservation_id: reservationId,
+        item_name: description, // using description as item_name for now
+        description,
+        quantity,
+        unit_price: unitPrice,
+        total_price: total,
+        tax_amount: 0, // placeholder, can be calculated if tax_rate is provided
+        status: 'pending',
+        category,
+        service_date: toLocalDateString(new Date()),
+      });
+
+      toast.success('Billing item added');
+      setCategory('food');
+      setDescription('');
+      setQuantity(1);
+      setUnitPrice(0);
+      setCustomDescription(false);
+      onOpenChange(false);
+    } catch (err) {
+      toast.error('Failed to add billing item', { description: (err as Error).message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const total = quantity * unitPrice;
@@ -172,7 +183,7 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
             </div>
             
             <div className="space-y-2">
-              <Label>Unit Price (Rp)</Label>
+              <Label>Unit Price (IDR)</Label>
               <Input
                 type="number"
                 min="0"
@@ -196,14 +207,21 @@ export function AddBillingItemDialog({ isOpen, onOpenChange, reservationId, onAd
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={!description || total <= 0}
+            <Button
+              type="submit"
+              disabled={isSubmitting || !description || total <= 0}
             >
-              Add Item
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Add Item'
+              )}
             </Button>
           </DialogFooter>
         </form>

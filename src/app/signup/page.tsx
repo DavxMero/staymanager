@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Mail, Lock, User, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function SignUpPage() {
     const [email, setEmail] = useState('');
@@ -21,27 +21,18 @@ export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const router = useRouter();
-    const { toast } = useToast();
     const supabase = createClient();
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (password !== confirmPassword) {
-            toast({
-                title: 'Error',
-                description: 'Passwords do not match',
-                variant: 'destructive',
-            });
+            toast.error('Passwords do not match');
             return;
         }
 
         if (password.length < 6) {
-            toast({
-                title: 'Error',
-                description: 'Password must be at least 6 characters',
-                variant: 'destructive',
-            });
+            toast.error('Password must be at least 6 characters');
             return;
         }
 
@@ -97,20 +88,13 @@ export default function SignUpPage() {
             }
 
             setSuccess(true);
-            toast({
-                title: 'Success',
-                description: 'Account created successfully! Redirecting to chatbot...',
-            });
+            toast.success('Account created! Redirecting to chatbot...');
 
             setTimeout(() => {
                 window.location.href = '/chatbot';
             }, 2000);
         } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error.message || 'Failed to create account',
-                variant: 'destructive',
-            });
+            toast.error('Failed to create account', { description: error.message });
         } finally {
             setLoading(false);
         }
@@ -166,11 +150,7 @@ export default function SignUpPage() {
                                     });
                                     if (error) throw error;
                                 } catch (error: any) {
-                                    toast({
-                                        title: 'Error',
-                                        description: error.message || 'Failed to sign up with Google',
-                                        variant: 'destructive',
-                                    });
+                                    toast.error('Failed to sign up with Google', { description: error.message });
                                     setLoading(false);
                                 }
                             }}

@@ -19,7 +19,8 @@ import {
     FileText,
     PieChart,
     FileSpreadsheet,
-    Printer
+    Printer,
+    Loader2
 } from "lucide-react"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
@@ -100,6 +101,7 @@ export default function FinancialPage() {
     const [netProfit, setNetProfit] = useState(0)
 
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false)
+    const [isSavingExpense, setIsSavingExpense] = useState(false)
     const [newExpense, setNewExpense] = useState({
         date: format(new Date(), 'yyyy-MM-dd'),
         category: 'supplies',
@@ -156,6 +158,7 @@ export default function FinancialPage() {
     }
 
     const handleCreateExpense = async () => {
+        setIsSavingExpense(true)
         try {
             const { error } = await supabase
                 .from('expenses')
@@ -183,10 +186,13 @@ export default function FinancialPage() {
                 notes: ''
             })
 
+            toast.success('Expense recorded')
             fetchFinancialData()
 
         } catch (error: any) {
-            alert('Failed to create expense: ' + error.message)
+            toast.error('Failed to record expense', { description: (error as Error).message })
+        } finally {
+            setIsSavingExpense(false)
         }
     }
 
@@ -210,29 +216,29 @@ export default function FinancialPage() {
                                 onClick={() => {
                                     try {
                                         exportFinancialToCSV({ totalIncome, totalExpenses, netProfit, payments, expenses })
-                                        toast.success("File CSV berhasil diunduh. Buka dengan Excel/Google Sheets.")
+                                        toast.success("CSV file downloaded successfully. Open it with Excel/Google Sheets.")
                                     } catch (err) {
-                                        toast.error(err instanceof Error ? err.message : "Gagal ekspor CSV")
+                                        toast.error(err instanceof Error ? err.message : "Failed to export CSV")
                                     }
                                 }}
                                 className="cursor-pointer"
                             >
                                 <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                Export sebagai CSV (Excel)
+                                Export as CSV (Excel)
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => {
                                     try {
                                         exportFinancialToPDF({ totalIncome, totalExpenses, netProfit, payments, expenses })
-                                        toast.success("Jendela cetak terbuka. Pilih 'Save as PDF' di dialog cetak.")
+                                        toast.success("Print window opened. Choose 'Save as PDF' in the print dialog.")
                                     } catch (err) {
-                                        toast.error(err instanceof Error ? err.message : "Gagal ekspor PDF")
+                                        toast.error(err instanceof Error ? err.message : "Failed to export PDF")
                                     }
                                 }}
                                 className="cursor-pointer"
                             >
                                 <Printer className="mr-2 h-4 w-4" />
-                                Export sebagai PDF (Print)
+                                Export as PDF (Print)
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -546,7 +552,7 @@ export default function FinancialPage() {
                                 <SelectContent>
                                     <SelectItem value="supplies">Supplies & Amenities</SelectItem>
                                     <SelectItem value="maintenance">Maintenance & Repairs</SelectItem>
-                                    <SelectItem value="utilities">Utilities (Listrik/Air/Wifi)</SelectItem>
+                                    <SelectItem value="utilities">Utilities (Electricity/Water/Wifi)</SelectItem>
                                     <SelectItem value="food">Food & Beverage Cost</SelectItem>
                                     <SelectItem value="staff">Staff & Salary</SelectItem>
                                     <SelectItem value="marketing">Marketing</SelectItem>
@@ -559,7 +565,7 @@ export default function FinancialPage() {
                             <Label htmlFor="description">Description</Label>
                             <Input
                                 id="description"
-                                placeholder="e.g. Beli sabun mandi 1 karton"
+                                placeholder="e.g. Buy 1 carton of bath soap"
                                 value={newExpense.description}
                                 onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
                             />
@@ -567,10 +573,10 @@ export default function FinancialPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="vendor">Vendor / Toko (Optional)</Label>
+                                <Label htmlFor="vendor">Vendor / Store (Optional)</Label>
                                 <Input
                                     id="vendor"
-                                    placeholder="e.g. Toko Makmur"
+                                    placeholder="e.g. Makmur Store"
                                     value={newExpense.vendor}
                                     onChange={(e) => setNewExpense({ ...newExpense, vendor: e.target.value })}
                                 />
@@ -605,8 +611,15 @@ export default function FinancialPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsExpenseDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCreateExpense} disabled={!newExpense.amount || !newExpense.description}>
-                            Save Expense
+                        <Button onClick={handleCreateExpense} disabled={isSavingExpense || !newExpense.amount || !newExpense.description}>
+                            {isSavingExpense ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                'Save Expense'
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

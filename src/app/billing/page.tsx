@@ -18,11 +18,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Download, CreditCard } from "lucide-react"
+import { Plus, Download, CreditCard, Loader2 } from "lucide-react"
 import { Invoice } from "@/types"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency as formatCurrencyCompat } from "@/lib/database-compatibility"
 import { toLocalDateString } from "@/lib/utils"
+import { toast } from "sonner"
 
 export default function ModernBillingPage() {
   const router = useRouter()
@@ -30,6 +31,7 @@ export default function ModernBillingPage() {
   const [error, setError] = useState<string | null>(null)
   
   const [isAddInvoiceDialogOpen, setIsAddInvoiceDialogOpen] = useState(false)
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false)
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState(0)
   
@@ -77,6 +79,7 @@ export default function ModernBillingPage() {
   }
 
   const handleSaveInvoice = async () => {
+    setIsSavingInvoice(true)
     try {
       const { error } = await supabase
         .from('invoices')
@@ -86,14 +89,18 @@ export default function ModernBillingPage() {
           status: status,
           due_date: toLocalDateString(new Date())
         })
-      
+
       if (error) throw error
-      
+
       await fetchInvoices()
       setIsAddInvoiceDialogOpen(false)
+      toast.success('Invoice created')
     } catch (err) {
       console.error('Error saving invoice:', err)
+      toast.error('Failed to create invoice', { description: (err as Error).message })
       setError(err instanceof Error ? err.message : 'Failed to save invoice')
+    } finally {
+      setIsSavingInvoice(false)
     }
   }
 
@@ -257,11 +264,18 @@ export default function ModernBillingPage() {
             <Button variant="outline" onClick={() => setIsAddInvoiceDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSaveInvoice}
-              disabled={!reservationId || !amount || parseFloat(amount) <= 0}
+              disabled={isSavingInvoice || !reservationId || !amount || parseFloat(amount) <= 0}
             >
-              Create Invoice
+              {isSavingInvoice ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Create Invoice'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

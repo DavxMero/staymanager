@@ -80,6 +80,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [filters, setFilters] = useState({
     category: 'all',
@@ -192,6 +193,7 @@ export default function ExpensesPage() {
         return
       }
 
+      setIsSaving(true)
       const method = editingExpense ? 'PUT' : 'POST'
       const endpoint = '/api/expenses'
 
@@ -232,6 +234,8 @@ export default function ExpensesPage() {
         title: "Error",
         description: error instanceof Error ? error.message : 'Failed to save expense',
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -620,8 +624,15 @@ export default function ExpensesPage() {
                 }}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmit}>
-                  {editingExpense ? 'Update Expense' : 'Add Expense'}
+                <Button onClick={handleSubmit} disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    editingExpense ? 'Update Expense' : 'Add Expense'
+                  )}
                 </Button>
               </div>
             </DialogContent>

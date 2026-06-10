@@ -65,6 +65,12 @@ export async function getServerUserContext(request?: Request): Promise<ServerUse
     return { userId, email, permissions: Array.from(permissions), roles };
 }
 
+/** True when the user has any of the given permissions (super_admin '*' always passes). */
+export function hasPermission(ctx: ServerUserContext, ...perms: string[]): boolean {
+    if (ctx.permissions.includes('*')) return true;
+    return perms.some((p) => ctx.permissions.includes(p));
+}
+
 /** Staff who manage bookings: super_admin (*), occupancy, or guests permission. */
 export function canManageBookings(ctx: ServerUserContext): boolean {
     return (

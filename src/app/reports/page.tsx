@@ -79,8 +79,7 @@ import {
   Loader2
 } from "lucide-react"
 import { format, startOfMonth, endOfMonth } from "date-fns"
-import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
+import { toast } from "sonner"
 import { exportReportToCSV, exportReportToPDF } from "@/lib/report-export"
 import {
   formatReportCurrency,
@@ -120,7 +119,6 @@ export default function ReportsPage() {
     endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
   })
   const [roomTypeFilter, setRoomTypeFilter] = useState('all')
-  const { toast } = useToast()
 
   const fetchAnalyticsData = async () => {
     try {
@@ -149,11 +147,7 @@ export default function ReportsPage() {
     } catch (err) {
       console.error('Error fetching analytics:', err)
       setError(err instanceof Error ? err.message : 'Failed to load analytics data')
-      toast({
-        variant: "destructive",
-        title: "Error Loading Data",
-        description: "Failed to fetch analytics data. Please try again.",
-      })
+      toast.error('Failed to fetch analytics data. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -169,34 +163,20 @@ export default function ReportsPage() {
 
   const handleExport = async (type: 'pdf' | 'excel') => {
     if (!analyticsData) {
-      toast({
-        variant: "destructive",
-        title: "Tidak ada data",
-        description: "Data analitik belum dimuat. Mohon refresh halaman.",
-      })
+      toast.error('Analytics data has not loaded yet. Please refresh the page.')
       return
     }
 
     try {
       if (type === 'excel') {
         exportReportToCSV(analyticsData, dateRange)
-        toast({
-          title: "Ekspor Berhasil",
-          description: `File CSV telah diunduh. Buka dengan Excel/Google Sheets.`,
-        })
+        toast.success('CSV file downloaded. Open it with Excel/Google Sheets.')
       } else {
         exportReportToPDF(analyticsData, dateRange)
-        toast({
-          title: "Jendela cetak terbuka",
-          description: `Pilih "Save as PDF" pada dialog cetak browser untuk menyimpan sebagai PDF.`,
-        })
+        toast.success('Print window opened. Select "Save as PDF" to save as a PDF.')
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Ekspor Gagal",
-        description: error instanceof Error ? error.message : 'Gagal mengekspor laporan',
-      })
+      toast.error('Export failed', { description: error instanceof Error ? error.message : 'Failed to export report' })
     }
   }
 
@@ -1052,7 +1032,6 @@ export default function ReportsPage() {
         </TabsContent>
       </Tabs>
 
-      <Toaster />
     </motion.div>
   )
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,10 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
     try {
+        const ctx = await getServerUserContext(request)
+        if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
         const { data, error } = await supabase
             .from('inventory_purchase_orders')
             .select(`
@@ -33,6 +38,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const ctx = await getServerUserContext(request)
+        if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
         const body = await request.json()
         const { po_number, supplier_id, status, notes, expected_delivery_date, items } = body
 
@@ -72,11 +81,12 @@ export async function POST(request: NextRequest) {
 
             if (itemsError) {
                 console.error('Error creating PO items:', itemsError)
-                return NextResponse.json({
-                    success: true,
-                    data: po,
-                    message: 'PO created but failed to add items. Please edit to add items.'
-                })
+                // Hapus header PO yatim agar tidak ada PO tanpa item yang bisa di-receive
+                await supabase.from('inventory_purchase_orders').delete().eq('id', po.id)
+                return NextResponse.json(
+                    { success: false, error: 'Gagal menambahkan item ke Purchase Order. PO dibatalkan, silakan coba lagi.' },
+                    { status: 500 }
+                )
             }
         }
 

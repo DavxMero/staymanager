@@ -90,7 +90,7 @@ export function DateSelectionCard({
                                 >
                                     <CalendarIcon className="w-4 h-4 text-gray-500" />
                                     <span className={localCheckIn ? '' : 'text-gray-400'}>
-                                        {localCheckIn ? format(new Date(localCheckIn), 'EEE, dd MMM yyyy') : 'Pilih tanggal'}
+                                        {localCheckIn ? format(new Date(localCheckIn), 'EEE, dd MMM yyyy') : 'Select date'}
                                     </span>
                                 </button>
                             </PopoverTrigger>
@@ -128,7 +128,7 @@ export function DateSelectionCard({
                                 >
                                     <CalendarIcon className="w-4 h-4 text-gray-500" />
                                     <span className={localCheckOut ? '' : 'text-gray-400'}>
-                                        {localCheckOut ? format(new Date(localCheckOut), 'EEE, dd MMM yyyy') : 'Pilih tanggal'}
+                                        {localCheckOut ? format(new Date(localCheckOut), 'EEE, dd MMM yyyy') : 'Select date'}
                                     </span>
                                 </button>
                             </PopoverTrigger>

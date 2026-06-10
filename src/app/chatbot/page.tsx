@@ -49,47 +49,47 @@ function parseChatbotError(raw: string): ParsedChatbotError {
     msg.includes('unavailable')
   ) {
     return {
-      title: 'AI sedang sibuk (high demand)',
-      description: 'Server Gemini lagi rame. Tunggu 10-30 detik lalu klik kirim ulang. Kalau tetap, ganti model ke Gemini 2.5 Pro di dropdown atas.',
+      title: 'AI is busy (high demand)',
+      description: 'Gemini server is under heavy load. Wait 10–30 seconds and try sending again. If it persists, switch to Gemini 2.5 Pro in the model selector above.',
       isKnown: true,
     };
   }
 
   if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('rate_limit') || msg.includes('resource_exhausted') || msg.includes('429')) {
     return {
-      title: 'Batas penggunaan AI tercapai',
-      description: 'Server AI sedang sibuk atau kuota habis. Coba kirim ulang dalam beberapa detik.',
+      title: 'AI usage limit reached',
+      description: 'The AI server is busy or the quota is exhausted. Try sending again in a few seconds.',
       isKnown: true,
     };
   }
 
   if (msg.includes('api key') || msg.includes('llm api key missing') || msg.includes('konfigurasi server')) {
     return {
-      title: 'API key Gemini belum diset',
-      description: 'Server belum dikonfigurasi. Tambahkan env var GOOGLE_GENERATIVE_AI_API_KEY di .env.local atau Vercel Settings.',
+      title: 'Gemini API key not configured',
+      description: 'The server is not configured. Add the GOOGLE_GENERATIVE_AI_API_KEY env var in .env.local or Vercel Settings.',
       isKnown: true,
     };
   }
 
   if (msg.includes('failed to fetch') || msg.includes('network')) {
     return {
-      title: 'Koneksi terputus',
-      description: 'Periksa koneksi internet Anda lalu coba kirim ulang.',
+      title: 'Connection lost',
+      description: 'Check your internet connection and try sending again.',
       isKnown: true,
     };
   }
 
   if (msg.includes('timeout') || msg.includes('timed out')) {
     return {
-      title: 'Permintaan timeout',
-      description: 'AI butuh waktu lebih lama dari biasanya. Coba kirim pesan yang lebih singkat.',
+      title: 'Request timed out',
+      description: 'The AI is taking longer than usual. Try sending a shorter message.',
       isKnown: true,
     };
   }
 
   return {
-    title: 'Chatbot bermasalah',
-    description: raw.length > 140 ? raw.slice(0, 140) + '…' : raw || 'Tidak dapat menerima balasan dari server.',
+    title: 'Chatbot error',
+    description: raw.length > 140 ? raw.slice(0, 140) + '…' : raw || 'Could not receive a reply from the server.',
     isKnown: false,
   };
 }
@@ -104,8 +104,8 @@ interface BookingData {
 }
 
 const MODEL_OPTIONS = [
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Default · cepat & ekonomis · $0.30/$2.50 per 1M token', accent: 'text-blue-600 dark:text-blue-400' },
-  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', hint: 'Lebih pintar untuk reasoning kompleks · $1.25/$10 per 1M token', accent: 'text-indigo-600 dark:text-indigo-400' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', hint: 'Default · fast & economical · $0.30/$2.50 per 1M tokens', accent: 'text-blue-600 dark:text-blue-400' },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', hint: 'Smarter for complex reasoning · $1.25/$10 per 1M tokens', accent: 'text-indigo-600 dark:text-indigo-400' },
 ] as const;
 
 type ModelId = typeof MODEL_OPTIONS[number]['id'];
@@ -186,8 +186,8 @@ export default function ChatbotPage() {
       const hasTools = !!(message?.toolInvocations && message.toolInvocations.length > 0);
       if (!text && !hasTools) {
         console.warn('[useChat onFinish] empty assistant reply', message);
-        toast.warning('Balasan kosong', {
-          description: 'AI tidak mengirim balasan. Coba kirim ulang pesan atau periksa koneksi.',
+        toast.warning('Empty reply', {
+          description: 'The AI did not send a response. Try resending the message or check your connection.',
           duration: 6000,
         });
       }
@@ -359,7 +359,7 @@ export default function ChatbotPage() {
 
   const handleBookRoom = (room: Room) => {
     if (!user) {
-      if (confirm('Anda perlu login untuk membuat reservasi. Login sekarang?')) {
+      if (confirm('You need to be logged in to make a reservation. Log in now?')) {
         window.location.href = `/login?returnUrl=${encodeURIComponent('/chatbot')}`;
       }
       return;
@@ -399,6 +399,15 @@ export default function ChatbotPage() {
   const handleConfirmBooking = async (guest: { guestName: string; guestEmail: string; guestPhone: string }) => {
     if (!showBooking) return;
 
+    // Total = tarif per malam x jumlah malam (bukan tarif 1 malam saja)
+    const nights = Math.max(
+      1,
+      Math.round(
+        (new Date(showBooking.checkOut).getTime() - new Date(showBooking.checkIn).getTime()) / 86400000
+      )
+    );
+    const totalAmount = showBooking.room.base_price * nights;
+
     const bookingDetails = `I would like to confirm my booking:
 Room: ${showBooking.room.type} (${showBooking.room.number})
 Check-in: ${showBooking.checkIn}
@@ -406,7 +415,7 @@ Check-out: ${showBooking.checkOut}
 Guest: ${guest.guestName}
 Email: ${guest.guestEmail}
 Phone: ${guest.guestPhone}
-Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(showBooking.room.base_price)}`;
+Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalAmount)} (${nights} night${nights > 1 ? 's' : ''})`;
 
     setShowBooking(null);
 
@@ -657,7 +666,7 @@ Phone: ${info.guestPhone}`
             {/* Powered-by label (replaces model selector — default Gemini 2.5 Flash) */}
             <div
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground select-none"
-              title="Model AI yang digunakan"
+              title="AI model in use"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span className="hidden md:inline">
@@ -749,7 +758,7 @@ Phone: ${info.guestPhone}`
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <p className="text-sm font-medium">
-              <strong>Browsing sebagai Guest</strong> — Login untuk membuat reservasi dan menyimpan riwayat percakapan
+              <strong>Browsing as Guest</strong> — Log in to make reservations and save your conversation history
             </p>
           </div>
         </div>
@@ -822,7 +831,7 @@ Phone: ${info.guestPhone}`
                 className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#d8e2ff] dark:bg-[#1A468F]/30 border-2 border-[#1A468F]/20 dark:border-[#afc6ff]/20 rounded-xl text-sm font-medium text-[#002f6f] dark:text-[#afc6ff] hover:bg-[#c2d2ff] dark:hover:bg-[#1A468F]/40 hover:border-[#1A468F]/40 dark:hover:border-[#afc6ff]/40 transition-all max-w-md mx-auto"
               >
                 <span className="text-lg">📋</span>
-                <span>Bantu skripsi kami — isi kuesioner 5 menit</span>
+                <span>Help with our thesis — fill out a 5-minute questionnaire</span>
                 <svg className="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -891,15 +900,15 @@ Phone: ${info.guestPhone}`
               let fallbackContent = cleanedContent;
               if (m.role === 'assistant' && !cleanedContent) {
                 if (rooms && rooms.length > 0) {
-                  fallbackContent = 'Berikut kamar yang tersedia:';
+                  fallbackContent = 'Here are the available rooms:';
                 } else if (guestForm) {
-                  fallbackContent = 'Silakan lengkapi data berikut:';
+                  fallbackContent = 'Please fill in the following details:';
                 } else if (effectiveDateSelector) {
-                  fallbackContent = 'Mohon pilih tanggal di kalender berikut:';
+                  fallbackContent = 'Please select dates on the calendar below:';
                 } else if (paymentOptions) {
-                  fallbackContent = 'Pilih metode pembayaran:';
+                  fallbackContent = 'Choose a payment method:';
                 } else if (loginPrompt) {
-                  fallbackContent = 'Silakan login untuk melanjutkan:';
+                  fallbackContent = 'Please log in to continue:';
                 }
               }
 
@@ -943,7 +952,7 @@ Phone: ${info.guestPhone}`
                           />
                         ) : hasInteractiveComponent ? (
                           <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                            Silakan lengkapi form di bawah ini.
+                            Please complete the form below.
                           </div>
                         ) : null}
                       </div>
@@ -1032,7 +1041,7 @@ Phone: ${info.guestPhone}`
 
                     {loginPrompt && !user && (
                       <div className="mt-4 max-w-md">
-                        <LoginPromptCard reason={loginPrompt.reason || 'membuat reservasi'} />
+                        <LoginPromptCard reason={loginPrompt.reason || 'make a reservation'} />
                       </div>
                     )}
 
@@ -1066,7 +1075,7 @@ Phone: ${info.guestPhone}`
             >
               <div className="max-w-[85%] md:max-w-[70%]">
                 <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-tl-none inline-block">
-                  <div className="flex items-center gap-1.5" aria-label="AI sedang mengetik">
+                  <div className="flex items-center gap-1.5" aria-label="AI is typing">
                     <motion.span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
                     <motion.span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
                     <motion.span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
@@ -1107,7 +1116,7 @@ Phone: ${info.guestPhone}`
                 type="button"
                 onClick={() => stop()}
                 className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-semibold transition-colors shadow-sm flex items-center justify-center gap-2 h-14 shrink-0"
-                title="Hentikan respon AI"
+                title="Stop AI response"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <rect x="6" y="6" width="12" height="12" rx="2" />

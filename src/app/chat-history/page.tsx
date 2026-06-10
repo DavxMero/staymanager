@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface ChatMessage {
     id: string;
@@ -52,9 +53,10 @@ export default function ChatHistoryPage() {
             if (error) throw error;
             setChats(chats.filter(c => c.id !== id));
             if (selectedChat?.id === id) setSelectedChat(null);
+            toast.success('Chat deleted');
         } catch (error) {
             console.error('Error deleting chat:', error);
-            alert('Failed to delete chat');
+            toast.error('Failed to delete chat', { description: (error as Error).message });
         }
     };
 

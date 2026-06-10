@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +12,10 @@ export async function POST(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const ctx = await getServerUserContext(request)
+        if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!hasPermission(ctx, 'operations')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
         const { id: poId } = await params
 
         const { data: po, error: poError } = await supabase
@@ -26,8 +31,21 @@ export async function POST(
             return NextResponse.json({ error: 'Purchase Order not found' }, { status: 404 })
         }
 
-        if (po.status === 'received') {
-            return NextResponse.json({ error: 'PO is already received' }, { status: 400 })
+        // Atomic claim: flip status to 'received' only if not already received.
+        // Guarantees the stock-increment loop below runs at most once per PO.
+        const { data: claimed } = await supabase
+            .from('inventory_purchase_orders')
+            .update({
+                status: 'received',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', poId)
+            .neq('status', 'received')
+            .select('id')
+            .maybeSingle()
+
+        if (!claimed) {
+            return NextResponse.json({ error: 'PO already received' }, { status: 400 })
         }
 
         const items = po.items || []
@@ -73,18 +91,6 @@ export async function POST(
                 .from('inventory_purchase_order_items')
                 .update({ quantity_received: item.quantity_ordered })
                 .eq('id', item.id)
-        }
-
-        const { error: updateError } = await supabase
-            .from('inventory_purchase_orders')
-            .update({
-                status: 'received',
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', poId)
-
-        if (updateError) {
-            throw updateError
         }
 
         return NextResponse.json({

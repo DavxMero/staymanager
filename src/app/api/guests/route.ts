@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -69,8 +70,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'guests', 'occupancy')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
-    
+
     if (!body.name || !body.email) {
       return NextResponse.json(
         { success: false, error: 'Name and email are required' },
@@ -133,8 +138,12 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'guests', 'occupancy')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
-    
+
     if (!body.id) {
       return NextResponse.json(
         { success: false, error: 'Guest ID is required' },
@@ -191,6 +200,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'guests', 'occupancy')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -205,7 +218,7 @@ export async function DELETE(request: NextRequest) {
       .from('reservations')
       .select('id')
       .eq('guest_id', id)
-      .eq('status', 'confirmed')
+      .in('status', ['pending', 'confirmed', 'checked-in'])
 
     if (reservations && reservations.length > 0) {
       return NextResponse.json(
