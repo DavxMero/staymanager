@@ -463,16 +463,16 @@ export default function ChatbotPage() {
     })();
   };
 
-  const handleConfirmBooking = async () => {
+  const handleConfirmBooking = async (guest: { guestName: string; guestPhone: string }) => {
     if (!showBooking) return;
 
     const bookingDetails = `I would like to confirm my booking:
 Room: ${showBooking.room.type} (${showBooking.room.number})
 Check-in: ${showBooking.checkIn}
 Check-out: ${showBooking.checkOut}
-Guest: ${showBooking.guestName}
+Guest: ${guest.guestName}
 Email: ${showBooking.guestEmail}
-Phone: ${showBooking.guestPhone}
+Phone: ${guest.guestPhone}
 Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(showBooking.room.base_price)}`;
 
     setShowBooking(null);
@@ -1202,6 +1202,7 @@ Phone: ${info.guestPhone}`
       {/* Booking Confirmation Modal */}
       {showBooking && (
         <BookingConfirmation
+          key={`${showBooking.guestName}|${showBooking.guestPhone}`}
           booking={showBooking}
           onConfirm={handleConfirmBooking}
           onCancel={() => setShowBooking(null)}
