@@ -67,3 +67,5 @@ next-env.d.ts
 # Supabase
 supabase/tmp
 supabase/.temp
+# Playwright output
+/test-results/
