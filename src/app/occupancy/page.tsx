@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -1690,6 +1690,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                                     setReservations((prev) => prev.filter((r) => r.id !== selectedReservation.id))
                                     setSelectedReservation(null)
                                     setIsWalkIn(true)
+                                    onCheckinComplete()
                                   }
                                 }}
                               />
@@ -1917,6 +1918,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                           if (newStatus === 'confirmed') {
                             setCancelledReservations((prev) => prev.filter((r) => r.id !== res.id))
                             fetchReservations()
+                            onCheckinComplete()
                           }
                         }}
                       />
@@ -2732,8 +2734,24 @@ export default function OccupancyPage() {
     await fetchCalendarReservations(calendarStartDate)
   }
 
-  const fetchRoomsCallback = useCallback(fetchRooms, [])
-  const fetchCalendarReservationsCallback = useCallback(() => fetchCalendarReservations(calendarStartDate), [calendarStartDate])
+  // Ref agar channel realtime tidak perlu re-subscribe saat navigasi minggu kalender
+  const calendarStartDateRef = useRef(calendarStartDate)
+  useEffect(() => { calendarStartDateRef.current = calendarStartDate }, [calendarStartDate])
+
+  // Satu burst mutasi (checkout = update reservasi + insert payment + update kamar)
+  // menghasilkan beberapa event beruntun — debounce supaya hanya satu refetch
+  const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scheduleRefetch = useCallback(() => {
+    if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
+    refetchTimerRef.current = setTimeout(() => {
+      refetchTimerRef.current = null
+      fetchRooms()
+      fetchCalendarReservations(calendarStartDateRef.current)
+    }, 400)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const hadDisconnectRef = useRef(false)
 
   useEffect(() => {
     const channel = supabase
@@ -2742,28 +2760,45 @@ export default function OccupancyPage() {
         event: '*',
         schema: 'public',
         table: 'reservations',
-      }, () => {
-        fetchRoomsCallback()
-        fetchCalendarReservationsCallback()
-      })
+      }, scheduleRefetch)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'payments',
-      }, () => {
-        fetchRoomsCallback()
-      })
+      }, scheduleRefetch)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'rooms',
-      }, () => {
-        fetchRoomsCallback()
+      }, scheduleRefetch)
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && hadDisconnectRef.current) {
+          // Re-subscribe setelah koneksi putus: tarik ulang data yang terlewat
+          hadDisconnectRef.current = false
+          scheduleRefetch()
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          hadDisconnectRef.current = true
+        }
       })
-      .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
-  }, [calendarStartDate, fetchRoomsCallback, fetchCalendarReservationsCallback])
+    return () => {
+      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
+      supabase.removeChannel(channel)
+    }
+  }, [scheduleRefetch])
+
+  // Refetch saat tab kembali aktif atau koneksi internet pulih
+  useEffect(() => {
+    const refetchIfVisible = () => {
+      if (document.visibilityState === 'visible') scheduleRefetch()
+    }
+    document.addEventListener('visibilitychange', refetchIfVisible)
+    window.addEventListener('online', refetchIfVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', refetchIfVisible)
+      window.removeEventListener('online', refetchIfVisible)
+    }
+  }, [scheduleRefetch])
 
   useEffect(() => {
     fetchRooms()
@@ -2848,11 +2883,14 @@ export default function OccupancyPage() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={fetchRooms}
+            onClick={() => {
+              fetchRooms()
+              fetchCalendarReservations(calendarStartDate)
+            }}
             variant="outline"
             disabled={loading}
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
             Refresh
           </Button>
         </div>
