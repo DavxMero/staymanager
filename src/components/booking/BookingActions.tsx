@@ -109,7 +109,7 @@ export function BookingActions({ bookingId, status, guestName, onStatusChange }:
       )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md" onClick={(e) => e.stopPropagation()}>
+        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Batalkan Reservasi?</DialogTitle>
             <DialogDescription>

@@ -463,7 +463,7 @@ export default function ExpensesPage() {
                 Add Expense
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
                   {editingExpense ? 'Edit Expense' : 'Add New Expense'}

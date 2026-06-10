@@ -710,7 +710,7 @@ export default function GuestsPage() {
 
       {/* Guest Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={isViewMode ? "sm:max-w-2xl max-h-[90vh] overflow-y-auto" : "sm:max-w-lg max-h-[90vh] overflow-y-auto"}>
           <DialogHeader>
             <DialogTitle>
               {isViewMode ? "Detail Tamu" : currentGuest ? "Edit Tamu" : "Tambah Tamu Baru"}
@@ -721,7 +721,7 @@ export default function GuestsPage() {
           </DialogHeader>
 
           {isViewMode && currentGuest ? (
-            <Tabs defaultValue="guest" className="w-full">
+            <Tabs defaultValue="guest" className="w-full mt-4">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="guest">
                   <User className="mr-2 h-4 w-4" />
@@ -981,7 +981,7 @@ export default function GuestsPage() {
               </TabsContent>
             </Tabs>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5 mt-4 mb-2">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Nama Lengkap</Label>
                 <div className="relative">
@@ -1047,7 +1047,7 @@ export default function GuestsPage() {
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               {isViewMode ? "Tutup" : "Batal"}
             </Button>

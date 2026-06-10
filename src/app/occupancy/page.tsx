@@ -443,7 +443,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
   if (loading && !checkoutSuccess) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+        <DialogContent className="sm:max-w-2xl bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
           <DialogHeader>
             <DialogTitle>Loading Checkout Data...</DialogTitle>
           </DialogHeader>
@@ -465,7 +465,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
           onOpenChange(false)
         }
       }}>
-        <DialogContent className="max-w-3xl bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+        <DialogContent className="sm:max-w-3xl bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl text-blue-600 dark:text-blue-400">
               <CheckCircle className="h-6 w-6" />
@@ -558,7 +558,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 dark:text-white">
             <CheckCircle className="h-6 w-6 text-slate-600 dark:text-gray-300" />
@@ -1492,7 +1492,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
           onOpenChange(false)
         }
       }}>
-        <DialogContent className="max-w-2xl bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+        <DialogContent className="sm:max-w-2xl bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl text-green-600 dark:text-green-400">
               <CheckCircle className="h-6 w-6" />
@@ -1583,7 +1583,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 dark:text-white">
             <CheckCircle className="h-6 w-6 text-slate-600 dark:text-gray-300" />
@@ -2204,7 +2204,7 @@ function GuestHistoryDialog({ reservation, open, onOpenChange }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
         <DialogHeader>
           <DialogTitle>Guest History & Details</DialogTitle>
           <DialogDescription>
@@ -2441,7 +2441,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-slate-100 dark:bg-black border-slate-300 dark:border-gray-800">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 dark:text-white">
             <Calendar className="h-6 w-6 text-blue-600" />
