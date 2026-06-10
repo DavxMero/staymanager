@@ -588,10 +588,37 @@ Phone: ${info.guestPhone}`
     return cleanContent;
   };
 
+  // Cache hasil parsing per konten pesan. Konten pesan lama tidak berubah,
+  // jadi saat streaming hanya pesan terakhir yang di-parse ulang —
+  // bukan seluruh riwayat pada setiap render.
+  const messageParseCacheRef = useRef(new Map<string, {
+    cleaned: string;
+    roomsFromContent: Room[] | null;
+    guestForm: any;
+    dateSelector: any;
+    paymentOptions: any;
+    loginPrompt: any;
+  }>());
+
+  const getParsedMessage = (content: string) => {
+    const cache = messageParseCacheRef.current;
+    const hit = cache.get(content);
+    if (hit) return hit;
+    const parsed = {
+      cleaned: cleanMessageContent(content),
+      roomsFromContent: parseRoomsFromMessage(content),
+      guestForm: parseJSONFromMessage(content, 'SHOW_GUEST_FORM_JSON'),
+      dateSelector: parseJSONFromMessage(content, 'SHOW_DATE_SELECTOR_JSON'),
+      paymentOptions: parseJSONFromMessage(content, 'SHOW_PAYMENT_OPTIONS_JSON'),
+      loginPrompt: parseJSONFromMessage(content, 'SHOW_LOGIN_PROMPT_JSON'),
+    };
+    if (cache.size > 300) cache.clear();
+    cache.set(content, parsed);
+    return parsed;
+  };
+
   const loadChatHistory = async (userId: string) => {
     try {
-      console.log('Loading chat history for user:', userId);
-
       const { data, error } = await supabase
         .from('Chat')
         .select('*')
@@ -603,7 +630,6 @@ Phone: ${info.guestPhone}`
         throw error;
       }
 
-      console.log('Chat history loaded:', data);
       setChatHistory(data || []);
     } catch (error) {
       console.error('Error loading chat history:', error);
@@ -879,17 +905,18 @@ Phone: ${info.guestPhone}`
                 if (index > lastUserIdx) return null;
               }
               const prev = index > 0 ? messages[index - 1] : null;
+              const parsed = getParsedMessage(m.content);
               const rooms = m.role === 'assistant'
                 ? (
-                    parseRoomsFromMessage(m.content) ||
+                    parsed.roomsFromContent ||
                     extractRoomsFromToolInvocations(m) ||
                     (prev?.role === 'assistant' ? extractRoomsFromToolInvocations(prev) : null)
                   )
                 : null;
-              const rawGuestForm = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_GUEST_FORM_JSON') : null;
-              const dateSelector = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_DATE_SELECTOR_JSON') : null;
-              const paymentOptions = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_PAYMENT_OPTIONS_JSON') : null;
-              const loginPrompt = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_LOGIN_PROMPT_JSON') : null;
+              const rawGuestForm = m.role === 'assistant' ? parsed.guestForm : null;
+              const dateSelector = m.role === 'assistant' ? parsed.dateSelector : null;
+              const paymentOptions = m.role === 'assistant' ? parsed.paymentOptions : null;
+              const loginPrompt = m.role === 'assistant' ? parsed.loginPrompt : null;
 
               const guestForm = rawGuestForm
                 ? {
@@ -904,7 +931,7 @@ Phone: ${info.guestPhone}`
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
               const hasCompletedToolInvocations = m.toolInvocations && m.toolInvocations.length > 0;
               const hasInteractiveComponent = !!(rooms || guestForm || effectiveDateSelector || paymentOptions || loginPrompt);
-              const cleanedContent = cleanMessageContent(m.content);
+              const cleanedContent = parsed.cleaned;
 
               const isTrulyEmpty =
                 m.role === 'assistant' &&

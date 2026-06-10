@@ -120,12 +120,23 @@ export function DashboardClient({
   }, [])
 
   useEffect(() => {
-    // Realtime subscriptions
-    const roomChannel = supabase
-      .channel('dashboard-rooms')
+    // Burst event (mis. check-in = beberapa mutasi beruntun) di-debounce
+    // supaya hanya satu refetch per tabel, bukan satu per event
+    const timers: Record<string, ReturnType<typeof setTimeout> | null> = {
+      reservations: null,
+      facilities: null,
+    }
+    const debounced = (key: 'reservations' | 'facilities', fn: () => void) => {
+      const t = timers[key]
+      if (t) clearTimeout(t)
+      timers[key] = setTimeout(() => { timers[key] = null; fn() }, 400)
+    }
+
+    // Satu channel (satu websocket join) untuk ketiga tabel
+    const channel = supabase
+      .channel('dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, (payload) => {
         // More efficient update: do not refetch all rooms, just update the payload
-        // The payload gives us payload.new or payload.old
         if (payload.eventType === 'UPDATE') {
           setRooms(prev => prev.map(r => r.id === payload.new.id ? payload.new as Room : r))
         } else if (payload.eventType === 'INSERT') {
@@ -134,38 +145,39 @@ export function DashboardClient({
           setRooms(prev => prev.filter(r => r.id !== payload.old.id))
         }
       })
-      .subscribe()
-
-    const reservationChannel = supabase
-      .channel('dashboard-reservations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-        supabase.from('reservations').select('*, guests(full_name), rooms(number)').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
-          if (data) setReservations(data as Reservation[])
+        debounced('reservations', () => {
+          supabase.from('reservations').select('*, guests(full_name), rooms(number)').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
+            if (data) setReservations(data as Reservation[])
+          })
         })
       })
-      .subscribe()
-
-    const facilityChannel = supabase
-      .channel('dashboard-facility')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'guest_facility_requests' }, () => {
-        supabase.from('guest_facility_requests').select('*').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
-          if (data) setFacilityRequests(data as GuestFacilityRequest[])
+        debounced('facilities', () => {
+          supabase.from('guest_facility_requests').select('*').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
+            if (data) setFacilityRequests(data as GuestFacilityRequest[])
+          })
         })
       })
       .subscribe()
 
     return () => {
-      supabase.removeChannel(roomChannel)
-      supabase.removeChannel(reservationChannel)
-      supabase.removeChannel(facilityChannel)
+      Object.values(timers).forEach(t => { if (t) clearTimeout(t) })
+      supabase.removeChannel(channel)
     }
   }, [supabase])
 
-  const totalRooms = rooms.length
-  const occupiedRooms = rooms.filter(r => r.status === 'occupied' || r.status === 'reserved').length
+  const { totalRooms, occupiedRooms, availableRooms, maintenanceRooms, cleaningRooms } = useMemo(() => {
+    const counts = { totalRooms: rooms.length, occupiedRooms: 0, availableRooms: 0, maintenanceRooms: 0, cleaningRooms: 0 }
+    for (const r of rooms) {
+      if (r.status === 'occupied' || r.status === 'reserved') counts.occupiedRooms++
+      else if (r.status === 'available') counts.availableRooms++
+      else if (r.status === 'maintenance') counts.maintenanceRooms++
+      if (r.status === 'cleaning') counts.cleaningRooms++
+    }
+    return counts
+  }, [rooms])
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0
-  const availableRooms = rooms.filter(r => r.status === 'available').length
-  const maintenanceRooms = rooms.filter(r => r.status === 'maintenance').length
 
   const derivedRoomTypes = useMemo(() => {
     const typeMap = new Map<string, { name: string; rooms: any[]; totalPrice: number; image: string; description: string; amenities: string[]; maxOccupancy: number }>()
@@ -199,7 +211,6 @@ export function DashboardClient({
       maxOccupancy: entry.maxOccupancy
     }))
   }, [rooms])
-  const cleaningRooms = rooms.filter(r => r.status === 'cleaning').length
 
   const todayCheckins = reservations.filter(r => {
     const checkIn = new Date(r.check_in)
@@ -302,9 +313,9 @@ export function DashboardClient({
   ]
 
   const propertyHighlights = [
-    { title: "Spa & Wellness", description: "Spa treatments to rejuvenate and revive your senses with premium services.", image: "/images/dashboard/spa-wellness.png" },
-    { title: "Fine Dining", description: "Gourmet dishes are prepared with a great attention to detail and quality.", image: "/images/dashboard/fine-dining.png" },
-    { title: "Concierge Services", description: "Concierge Services include accompanying guests and personalized assistance.", image: "/images/dashboard/concierge-services.png" },
+    { title: "Spa & Wellness", description: "Spa treatments to rejuvenate and revive your senses with premium services.", image: "/images/dashboard/spa-wellness.webp" },
+    { title: "Fine Dining", description: "Gourmet dishes are prepared with a great attention to detail and quality.", image: "/images/dashboard/fine-dining.webp" },
+    { title: "Concierge Services", description: "Concierge Services include accompanying guests and personalized assistance.", image: "/images/dashboard/concierge-services.webp" },
   ]
 
   const containerVariants = {
@@ -335,7 +346,7 @@ export function DashboardClient({
         <motion.div variants={itemVariants}>
           <div className="relative overflow-hidden rounded-2xl" style={{ minHeight: '280px' }}>
             <Image
-              src="/images/dashboard/hero-banner.png"
+              src="/images/dashboard/hero-banner.webp"
               alt="Hotel Resort"
               fill
               sizes="(max-width: 768px) 100vw, 1400px"
@@ -683,7 +694,7 @@ export function DashboardClient({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {derivedRoomTypes.map((rt) => {
-                const roomImage = rt.image || '/images/dashboard/hero-banner.png'
+                const roomImage = rt.image || '/images/dashboard/hero-banner.webp'
                 return (
                   <div
                     key={rt.name}

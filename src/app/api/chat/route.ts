@@ -99,7 +99,6 @@ Anonymous (not logged in).`;
   const lastText = typeof lastUserMessage?.content === 'string' ? lastUserMessage.content.toLowerCase() : '';
   const availabilityKeywords = ['kamar', 'room', 'available', 'tersedia', 'booking', 'reservasi', 'reservation', 'check.?in', 'tanggal', 'besok', 'hari ini', 'tomorrow', 'today', 'tonight', 'malam ini', 'weekend'];
   const isAvailabilityIntent = availabilityKeywords.some((kw) => new RegExp(kw).test(lastText));
-  console.log(`[/api/chat] lastUserMessage="${lastText.slice(0, 100)}" isAvailabilityIntent=${isAvailabilityIntent} model=${modelId}`);
 
   const wrappedMessages = messages.map((m: any) => {
     if (m.role !== 'user') return m;
@@ -301,8 +300,6 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
           tipeKamar: z.string().optional().describe('Optional: Specific room type filter (e.g., "Standard", "Deluxe", "Suite")'),
         }),
         execute: async ({ checkIn, checkOut, tipeKamar }) => {
-          console.log(`[TOOL:cekKetersediaan] CALLED with checkIn=${checkIn} checkOut=${checkOut} tipeKamar=${tipeKamar ?? '(none)'}`);
-
           const { data: busyBookings, error: busyError } = await supabase
             .from('reservations')
             .select('room_id')
@@ -337,7 +334,6 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
           const { data: availableRooms } = await query;
 
           if (!availableRooms || availableRooms.length === 0) {
-            console.log(`[TOOL:cekKetersediaan] RETURNING status=unavailable (no rooms match filter for ${checkIn} → ${checkOut}${tipeKamar ? `, type=${tipeKamar}` : ''})`);
             return {
               status: 'unavailable',
               message: 'Tidak ada kamar tersedia untuk tanggal tersebut.'
@@ -376,7 +372,6 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
             };
           });
 
-          console.log(`[TOOL:cekKetersediaan] RETURNING ${enrichedRooms.length} rooms: ${enrichedRooms.map(r => `${r.number}/${r.type}`).join(', ')}`);
           return {
             status: 'available',
             rooms: enrichedRooms
