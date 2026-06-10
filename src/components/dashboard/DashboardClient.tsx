@@ -15,6 +15,10 @@ import {
   ConciergeBell,
   ClipboardList,
   Clock,
+  ClipboardCheck,
+  X,
+  ExternalLink,
+  Zap,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -93,6 +97,20 @@ export function DashboardClient({
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations)
   const [facilityRequests, setFacilityRequests] = useState<GuestFacilityRequest[]>(initialFacilityRequests)
   const [staffCount] = useState(initialStaffCount)
+
+  // Thesis survey banner state — REMOVE AFTER DATA COLLECTION COMPLETE
+  const [surveyBannerVisible, setSurveyBannerVisible] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const dismissed = window.localStorage.getItem('staymanager:thesis-survey-dismissed')
+    if (!dismissed) setSurveyBannerVisible(true)
+  }, [])
+  const dismissSurveyBanner = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('staymanager:thesis-survey-dismissed', '1')
+    }
+    setSurveyBannerVisible(false)
+  }
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
@@ -346,7 +364,17 @@ export function DashboardClient({
                 <strong>{todayCheckins}</strong> guests are scheduled for check-in today.
               </p>
               {!isGuest && (
-                <div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    asChild
+                    className="rounded-full px-6 py-5 text-sm font-semibold shadow-lg bg-[#FFB400] hover:bg-[#E5A200] text-[#002f6f]"
+                    style={{ fontFamily: 'var(--font-plus-jakarta)' }}
+                  >
+                    <Link href="/occupancy?quickAction=checkin">
+                      <Zap className="mr-2 h-4 w-4" />
+                      Check-in Cepat
+                    </Link>
+                  </Button>
                   <Button
                     asChild
                     className="rounded-full px-6 py-5 text-sm font-semibold shadow-lg bg-[#002f6f] hover:bg-[#001d47] text-white"
@@ -362,6 +390,59 @@ export function DashboardClient({
             </div>
           </div>
         </motion.div>
+
+        {/* Thesis Survey Banner — REMOVE AFTER DATA COLLECTION COMPLETE */}
+        {surveyBannerVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="relative rounded-2xl border border-[#1A468F]/15 dark:border-[#afc6ff]/15 bg-[#d8e2ff]/40 dark:bg-[#1A468F]/15 p-5 md:p-6"
+          >
+            <button
+              type="button"
+              onClick={dismissSurveyBanner}
+              aria-label="Tutup banner"
+              className="absolute top-3 right-3 p-1.5 rounded-lg text-[#1A468F] dark:text-[#afc6ff] hover:bg-[#d8e2ff] dark:hover:bg-[#1A468F]/30 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex flex-col md:flex-row md:items-center gap-4 pr-8">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#d8e2ff] dark:bg-[#1A468F]/30 flex items-center justify-center">
+                <ClipboardCheck className="w-6 h-6 text-[#1A468F] dark:text-[#afc6ff]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="text-base md:text-lg font-bold text-[#002f6f] dark:text-white mb-1"
+                  style={{ fontFamily: 'var(--font-manrope)' }}
+                >
+                  Bantu Penelitian Skripsi StayManager
+                </h3>
+                <p
+                  className="text-sm text-[#1A468F] dark:text-[#afc6ff]/90"
+                  style={{ fontFamily: 'var(--font-plus-jakarta)' }}
+                >
+                  Isi kuesioner singkat (5 menit) untuk evaluasi sistem. Feedback Anda sangat berarti untuk perbaikan StayManager.
+                </p>
+              </div>
+              <Button
+                asChild
+                className="flex-shrink-0 rounded-full px-5 py-5 text-sm font-semibold shadow-sm bg-[#002f6f] hover:bg-[#001d47] text-white"
+                style={{ fontFamily: 'var(--font-plus-jakarta)' }}
+              >
+                <a
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSezJ-8p5Xux47lfWOiifdcQTzIIuk6rs0-ZJVfpx7FLPnl54A/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Isi Kuesioner
+                  <ExternalLink className="ml-2 h-3.5 w-3.5 opacity-70" />
+                </a>
+              </Button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

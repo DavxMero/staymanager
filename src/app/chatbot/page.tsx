@@ -37,6 +37,24 @@ type ParsedChatbotError = {
 function parseChatbotError(raw: string): ParsedChatbotError {
   const msg = raw.toLowerCase();
 
+  // High demand di sisi Google Gemini (model-side overload). Bukan quota lokal —
+  // multi-key tidak membantu. Solusi: retry beberapa detik kemudian, atau ganti
+  // model di dropdown atas (Pro biasanya kapasitas terpisah).
+  if (
+    msg.includes('high demand') ||
+    msg.includes('experiencing high demand') ||
+    msg.includes('spikes in demand') ||
+    msg.includes('model is currently') ||
+    msg.includes('503') ||
+    msg.includes('unavailable')
+  ) {
+    return {
+      title: 'AI sedang sibuk (high demand)',
+      description: 'Server Gemini lagi rame. Tunggu 10-30 detik lalu klik kirim ulang. Kalau tetap, ganti model ke Gemini 2.5 Pro di dropdown atas.',
+      isKnown: true,
+    };
+  }
+
   if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('rate_limit') || msg.includes('resource_exhausted') || msg.includes('429')) {
     return {
       title: 'Batas penggunaan AI tercapai',
@@ -831,6 +849,25 @@ Phone: ${info.guestPhone}`
                   </motion.button>
                 ))}
               </div>
+
+              {/* Thesis Survey CTA — REMOVE AFTER DATA COLLECTION COMPLETE */}
+              <motion.a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSezJ-8p5Xux47lfWOiifdcQTzIIuk6rs0-ZJVfpx7FLPnl54A/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#d8e2ff] dark:bg-[#1A468F]/30 border-2 border-[#1A468F]/20 dark:border-[#afc6ff]/20 rounded-xl text-sm font-medium text-[#002f6f] dark:text-[#afc6ff] hover:bg-[#c2d2ff] dark:hover:bg-[#1A468F]/40 hover:border-[#1A468F]/40 dark:hover:border-[#afc6ff]/40 transition-all max-w-md mx-auto"
+              >
+                <span className="text-lg">📋</span>
+                <span>Bantu skripsi kami — isi kuesioner 5 menit</span>
+                <svg className="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </motion.a>
             </motion.div>
           )}
 
