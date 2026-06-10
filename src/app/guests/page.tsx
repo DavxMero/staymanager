@@ -315,7 +315,7 @@ export default function GuestsPage() {
           })
 
         if (error) throw error
-        toast.success('Tambah tamu berhasil')
+        toast.success('Guest added successfully')
       }
 
       await fetchGuests()
