@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useChat } from 'ai/react';
 import { useRef, useEffect, useState, useMemo } from 'react';
@@ -36,6 +36,24 @@ type ParsedChatbotError = {
 
 function parseChatbotError(raw: string): ParsedChatbotError {
   const msg = raw.toLowerCase();
+
+  // High demand di sisi Google Gemini (model-side overload). Bukan quota lokal —
+  // multi-key tidak membantu. Solusi: retry beberapa detik kemudian, atau ganti
+  // model di dropdown atas (Pro biasanya kapasitas terpisah).
+  if (
+    msg.includes('high demand') ||
+    msg.includes('experiencing high demand') ||
+    msg.includes('spikes in demand') ||
+    msg.includes('model is currently') ||
+    msg.includes('503') ||
+    msg.includes('unavailable')
+  ) {
+    return {
+      title: 'AI sedang sibuk (high demand)',
+      description: 'Server Gemini lagi rame. Tunggu 10-30 detik lalu klik kirim ulang. Kalau tetap, ganti model ke Gemini 2.5 Pro di dropdown atas.',
+      isKnown: true,
+    };
+  }
 
   if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('rate-limit') || msg.includes('rate_limit') || msg.includes('resource_exhausted') || msg.includes('429')) {
     return {
@@ -339,74 +357,6 @@ export default function ChatbotPage() {
     }
   }, [input]);
 
-  const extractGuestInfo = () => {
-    let name = '';
-    let email = '';
-    let phone = '';
-
-    const userMessages = messages.filter(m => m.role === 'user').map(m => m.content);
-    const conversationText = userMessages.join(' ');
-
-    const emailMatch = conversationText.match(/[\w\.-]+@[\w\.-]+\.\w+/);
-    if (emailMatch) email = emailMatch[0];
-
-    const phoneMatch = conversationText.match(/[\+]?[\d\s\-\(\)]{10,}/);
-    if (phoneMatch) phone = phoneMatch[0].trim();
-
-
-    const reversedMessages = [...userMessages].reverse();
-    for (const msg of reversedMessages) {
-      const explicitNameMatch = msg.match(/Name:\s*([^\n]+)/i);
-      if (explicitNameMatch && explicitNameMatch[1]) {
-        name = explicitNameMatch[1].trim();
-        break;
-      }
-    }
-
-    if (!name) {
-      const nameKeywordPatterns = [
-        /(?:nama\s+(?:saya\s+)?(?:adalah\s+)?)([a-z]+(?:\s+[a-z]+)*)/i,
-        /(?:name\s+(?:is\s+)?(?:i'?m\s+)?)([a-z]+(?:\s+[a-z]+)*)/i,
-        /(?:saya\s+)([a-z]+(?:\s+[a-z]+)+)/i,
-        /(?:i'?m\s+)([a-z]+(?:\s+[a-z]+)+)/i,
-      ];
-
-      for (const pattern of nameKeywordPatterns) {
-        const match = conversationText.match(pattern);
-        if (match && match[1] && match[1].trim().length > 1) {
-          name = match[1]
-            .trim()
-            .split(/\s+/)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-          break;
-        }
-      }
-    }
-
-    if (!name) {
-      const nameOnlyMessages = userMessages.filter(msg =>
-        !msg.match(/[\w\.-]+@[\w\.-]+\.\w+/) &&
-        !msg.match(/[\+]?[\d\s\-\(\)]{10,}/)
-      );
-
-      for (const msg of nameOnlyMessages) {
-        const words = msg.trim().split(/\s+/);
-        if (words.length >= 2 && words.length <= 4) {
-          const allWordsValid = words.every(w => w.length >= 2 && w.length <= 15 && /^[a-zA-Z]+$/.test(w));
-          if (allWordsValid) {
-            name = words
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-            break;
-          }
-        }
-      }
-    }
-
-    return { name, email, phone };
-  };
-
   const handleBookRoom = (room: Room) => {
     if (!user) {
       if (confirm('Anda perlu login untuk membuat reservasi. Login sekarang?')) {
@@ -415,14 +365,15 @@ export default function ChatbotPage() {
       return;
     }
 
-    const extracted = extractGuestInfo();
+    // Data akun login — dipakai sebagai prefill nama/email dan
+    // sumber tombol "Samakan dengan data diri akun ini" di modal
     setShowBooking({
       room,
       checkIn: selectedDates.checkIn || toLocalDateString(new Date()),
       checkOut: selectedDates.checkOut || toLocalDateString(new Date(Date.now() + 86400000)),
-      guestName: extracted.name || (user.user_metadata?.full_name as string) || '',
-      guestEmail: user.email || extracted.email,
-      guestPhone: extracted.phone || (user.user_metadata?.phone as string) || '',
+      guestName: (user.user_metadata?.full_name as string) || '',
+      guestEmail: user.email || '',
+      guestPhone: (user.user_metadata?.phone as string) || '',
     });
 
     (async () => {
@@ -445,16 +396,16 @@ export default function ChatbotPage() {
     })();
   };
 
-  const handleConfirmBooking = async () => {
+  const handleConfirmBooking = async (guest: { guestName: string; guestEmail: string; guestPhone: string }) => {
     if (!showBooking) return;
 
     const bookingDetails = `I would like to confirm my booking:
 Room: ${showBooking.room.type} (${showBooking.room.number})
 Check-in: ${showBooking.checkIn}
 Check-out: ${showBooking.checkOut}
-Guest: ${showBooking.guestName}
-Email: ${showBooking.guestEmail}
-Phone: ${showBooking.guestPhone}
+Guest: ${guest.guestName}
+Email: ${guest.guestEmail}
+Phone: ${guest.guestPhone}
 Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(showBooking.room.base_price)}`;
 
     setShowBooking(null);
@@ -570,10 +521,37 @@ Phone: ${info.guestPhone}`
     return cleanContent;
   };
 
+  // Cache hasil parsing per konten pesan. Konten pesan lama tidak berubah,
+  // jadi saat streaming hanya pesan terakhir yang di-parse ulang —
+  // bukan seluruh riwayat pada setiap render.
+  const messageParseCacheRef = useRef(new Map<string, {
+    cleaned: string;
+    roomsFromContent: Room[] | null;
+    guestForm: any;
+    dateSelector: any;
+    paymentOptions: any;
+    loginPrompt: any;
+  }>());
+
+  const getParsedMessage = (content: string) => {
+    const cache = messageParseCacheRef.current;
+    const hit = cache.get(content);
+    if (hit) return hit;
+    const parsed = {
+      cleaned: cleanMessageContent(content),
+      roomsFromContent: parseRoomsFromMessage(content),
+      guestForm: parseJSONFromMessage(content, 'SHOW_GUEST_FORM_JSON'),
+      dateSelector: parseJSONFromMessage(content, 'SHOW_DATE_SELECTOR_JSON'),
+      paymentOptions: parseJSONFromMessage(content, 'SHOW_PAYMENT_OPTIONS_JSON'),
+      loginPrompt: parseJSONFromMessage(content, 'SHOW_LOGIN_PROMPT_JSON'),
+    };
+    if (cache.size > 300) cache.clear();
+    cache.set(content, parsed);
+    return parsed;
+  };
+
   const loadChatHistory = async (userId: string) => {
     try {
-      console.log('Loading chat history for user:', userId);
-
       const { data, error } = await supabase
         .from('Chat')
         .select('*')
@@ -585,7 +563,6 @@ Phone: ${info.guestPhone}`
         throw error;
       }
 
-      console.log('Chat history loaded:', data);
       setChatHistory(data || []);
     } catch (error) {
       console.error('Error loading chat history:', error);
@@ -831,6 +808,25 @@ Phone: ${info.guestPhone}`
                   </motion.button>
                 ))}
               </div>
+
+              {/* Thesis Survey CTA — REMOVE AFTER DATA COLLECTION COMPLETE */}
+              <motion.a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSezJ-8p5Xux47lfWOiifdcQTzIIuk6rs0-ZJVfpx7FLPnl54A/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#d8e2ff] dark:bg-[#1A468F]/30 border-2 border-[#1A468F]/20 dark:border-[#afc6ff]/20 rounded-xl text-sm font-medium text-[#002f6f] dark:text-[#afc6ff] hover:bg-[#c2d2ff] dark:hover:bg-[#1A468F]/40 hover:border-[#1A468F]/40 dark:hover:border-[#afc6ff]/40 transition-all max-w-md mx-auto"
+              >
+                <span className="text-lg">📋</span>
+                <span>Bantu skripsi kami — isi kuesioner 5 menit</span>
+                <svg className="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </motion.a>
             </motion.div>
           )}
 
@@ -842,17 +838,18 @@ Phone: ${info.guestPhone}`
                 if (index > lastUserIdx) return null;
               }
               const prev = index > 0 ? messages[index - 1] : null;
+              const parsed = getParsedMessage(m.content);
               const rooms = m.role === 'assistant'
                 ? (
-                    parseRoomsFromMessage(m.content) ||
+                    parsed.roomsFromContent ||
                     extractRoomsFromToolInvocations(m) ||
                     (prev?.role === 'assistant' ? extractRoomsFromToolInvocations(prev) : null)
                   )
                 : null;
-              const rawGuestForm = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_GUEST_FORM_JSON') : null;
-              const dateSelector = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_DATE_SELECTOR_JSON') : null;
-              const paymentOptions = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_PAYMENT_OPTIONS_JSON') : null;
-              const loginPrompt = m.role === 'assistant' ? parseJSONFromMessage(m.content, 'SHOW_LOGIN_PROMPT_JSON') : null;
+              const rawGuestForm = m.role === 'assistant' ? parsed.guestForm : null;
+              const dateSelector = m.role === 'assistant' ? parsed.dateSelector : null;
+              const paymentOptions = m.role === 'assistant' ? parsed.paymentOptions : null;
+              const loginPrompt = m.role === 'assistant' ? parsed.loginPrompt : null;
 
               const guestForm = rawGuestForm
                 ? {
@@ -867,7 +864,7 @@ Phone: ${info.guestPhone}`
               const hasActiveToolInvocations = m.toolInvocations?.some(tool => !('result' in tool));
               const hasCompletedToolInvocations = m.toolInvocations && m.toolInvocations.length > 0;
               const hasInteractiveComponent = !!(rooms || guestForm || effectiveDateSelector || paymentOptions || loginPrompt);
-              const cleanedContent = cleanMessageContent(m.content);
+              const cleanedContent = parsed.cleaned;
 
               const isTrulyEmpty =
                 m.role === 'assistant' &&

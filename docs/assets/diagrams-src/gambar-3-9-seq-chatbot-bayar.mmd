@@ -1,0 +1,30 @@
+---
+title: Sequence Diagram - Chatbot Konfirmasi Pembayaran
+---
+sequenceDiagram
+    autonumber
+    actor Tamu
+    participant UI as Halaman /chatbot
+    participant API as /api/chat
+    participant LLM as Gemini 2.5
+    participant Tool as Tool confirmPayment
+    participant DB as Supabase
+
+    Tamu->>UI: "Saya sudah transfer kode BK123456"
+    UI->>API: POST messages
+    API->>LLM: stream + tools
+    LLM->>Tool: confirmPayment(bookingReference, amount, method)
+    Tool->>DB: SELECT id, total FROM reservations WHERE booking_reference = ?
+    DB-->>Tool: { reservationId, expectedTotal }
+    alt Booking tidak ditemukan
+        Tool-->>LLM: { success: false, error: "Kode tidak valid" }
+    else Booking ditemukan
+        Tool->>DB: INSERT INTO payments (reservation_id, amount, method, status='confirmed')
+        DB-->>Tool: { paymentId }
+        Tool->>DB: UPDATE reservations SET status='paid' WHERE id = ?
+        DB-->>Tool: ok
+        Tool-->>LLM: { success: true, message: "Pembayaran tercatat" }
+    end
+    LLM->>API: Stream balasan
+    API-->>UI: Konfirmasi sukses + e-receipt
+    UI-->>Tamu: Tampilkan pesan + ringkasan

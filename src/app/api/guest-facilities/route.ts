@@ -95,9 +95,9 @@ export async function POST(request: NextRequest) {
     const total_cost = items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0)
 
     const requestData = {
-      guest_id: parseInt(guest_id),
-      reservation_id: reservation_id ? parseInt(reservation_id) : null,
-      room_id: parseInt(room_id),
+      guest_id,
+      reservation_id: reservation_id || null,
+      room_id,
       service_type,
       description,
       priority,

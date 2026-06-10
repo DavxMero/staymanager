@@ -36,10 +36,22 @@ const args = process.argv.slice(2);
 const quoted = args.map((a) => (/\s/.test(a) ? `"${a}"` : a)).join(' ');
 const command = `next dev${quoted ? ' ' + quoted : ''}`;
 
+// Force IPv4 DNS resolution.
+// Jaringan lokal route ke Supabase via NAT64 IPv6 (prefix 64:ff9b::/96) yang
+// menyebabkan ECONNRESET berulang pada fetch dari middleware (proxy.ts) + server
+// components yang panggil supabase.auth.getUser(). Retry tiap call = 10-30 detik
+// per request. Memaksa IPv4 mencegah masalah ini.
+//
+// Catatan: flag ini hanya berdampak ke Node dev process. Production (Vercel)
+// tidak terpengaruh — Vercel edge resolve langsung ke IPv4 Supabase tanpa NAT64.
+const NODE_OPTIONS_PARTS = [process.env.NODE_OPTIONS || '', '--dns-result-order=ipv4first']
+    .filter(Boolean)
+    .join(' ');
+
 const child = spawn(command, {
     stdio: ['inherit', 'pipe', 'pipe'],
     shell: true,
-    env: process.env,
+    env: { ...process.env, NODE_OPTIONS: NODE_OPTIONS_PARTS },
 });
 
 let stdoutBuffer = '';

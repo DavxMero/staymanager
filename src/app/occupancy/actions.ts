@@ -128,6 +128,22 @@ export async function adminFetchCheckinReservations(roomId: string | number) {
     }
 }
 
+export async function adminFetchCancelledReservations(roomId: string | number) {
+    const { data, error } = await supabaseAdmin
+        .from('reservations')
+        .select('*')
+        .eq('room_id', roomId)
+        .eq('status', 'cancelled')
+        .order('check_in', { ascending: true })
+        .limit(5)
+
+    if (error) {
+        console.error("Admin fetch cancelled reservations error:", error)
+        return []
+    }
+    return data || []
+}
+
 export async function adminFetchHousekeepingStaff() {
     try {
         const { data, error } = await supabaseAdmin

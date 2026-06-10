@@ -9,7 +9,19 @@
 | **Form 2** Tamu / Chatbot Umum | Mahasiswa / guru / karyawan / umum | 20+ | Tabel 4.14 UAT Tamu |
 | **Form 3** SUS Universal | Semua responden Form 1A+1B+2 | 28-32 | Bab 4 evaluasi standar industri |
 
-Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hotel mitra, n=3-5) untuk validasi domain hotel, dan evaluator usability (mahasiswa/karyawan, n=5-7) untuk validasi prinsip Nielsen + Schneiderman. Pemisahan ini karena keterbatasan jaringan industri perhotelan peneliti."
+Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hotel mitra, n=3-5) untuk validasi domain hotel, dan evaluator usability (mahasiswa/karyawan, n=5-7) untuk validasi prinsip Nielsen + Shneiderman. Pemisahan ini karena keterbatasan jaringan industri perhotelan peneliti."
+
+---
+
+## 🔄 Urutan Administrasi (WAJIB — first impression untuk SUS)
+
+SUS dirancang menangkap kesan spontan (Brooke, 1996). Urutan ini wajib diikuti untuk menjaga validitas skor:
+
+1. **Eksplorasi sistem** (10–15 menit) — responden diberi URL demo + akun, mencoba modul utama tanpa diskusi.
+2. **Form 3 SUS** (3 menit) — diisi SEGERA setelah eksplorasi, sebelum form lain. Spontan, jangan dianalisis lama.
+3. **Form 1A / 1B / 2** (~20 menit) — Likert detail (Lima Faktor, 8 Aturan Emas, evaluasi modul) + kritik & saran setelah SUS selesai.
+
+Urutan 2 → 3 mencegah priming-bias: jika responden mengisi Likert detail dulu, mereka sudah ter-prime oleh refleksi mendalam dan skor SUS tidak lagi mencerminkan kesan spontan. Pelanggaran urutan ini (mis. data wave-1 sebelum revisi) harus diakui eksplisit di BAB 5.3 Keterbatasan.
 
 ---
 
@@ -107,7 +119,7 @@ Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hot
 3. Fitur tambahan yang Anda butuhkan tapi belum ada:  ___
 4. Apakah Anda akan merekomendasikan sistem ini ke hotel lain? Mengapa?  ___
 
-> **Setelah ini lanjut ke Form 3 — SUS** (10 pertanyaan tambahan, ~3 menit)
+> **Pastikan Form 3 — SUS sudah Anda isi SEBELUM form ini** (untuk first impression sebelum refleksi mendalam). Jika belum, hentikan, isi Form 3 dulu (~3 menit), lalu kembali ke sini.
 
 ---
 
@@ -164,9 +176,9 @@ Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hot
 | 4 | Error Rate | Sistem jarang membiarkan saya membuat kesalahan; kalau salah, mudah dikoreksi | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 5 | Satisfaction | Secara keseluruhan saya nyaman menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
 
-## SECTION 4 — Delapan Aturan Emas (Schneiderman)
+## SECTION 4 — Delapan Aturan Emas (Shneiderman)
 
-> *Delapan prinsip desain antarmuka menurut Schneiderman (2018). Tetap skala 1-5.*
+> *Delapan prinsip desain antarmuka menurut Shneiderman (2018). Tetap skala 1-5.*
 
 | No | Aturan | Pernyataan | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|---|
@@ -198,7 +210,7 @@ Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hot
 2. 3 hal yang perlu diperbaiki:  ___
 3. Sebagai pengguna umum (non-staf hotel), apakah Anda merasa sistem ini approachable atau intimidating?  ___
 
-> **Setelah ini lanjut ke Form 3 — SUS** (10 pertanyaan tambahan, ~3 menit)
+> **Pastikan Form 3 — SUS sudah Anda isi SEBELUM form ini** (untuk first impression sebelum refleksi mendalam). Jika belum, hentikan, isi Form 3 dulu (~3 menit), lalu kembali ke sini.
 
 ---
 
@@ -300,7 +312,7 @@ Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hot
 2. Hal yang masih bingung atau kurang menurut Anda:  ___
 3. Saran perbaikan:  ___
 
-> **Setelah ini lanjut ke Form 3 — SUS** (10 pertanyaan tambahan, ~3 menit)
+> **Pastikan Form 3 — SUS sudah Anda isi SEBELUM form ini** (untuk first impression sebelum refleksi mendalam). Jika belum, hentikan, isi Form 3 dulu (~3 menit), lalu kembali ke sini.
 
 ---
 
@@ -312,9 +324,9 @@ Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hot
 
 ## SECTION 1 — Pengantar SUS
 
-> *System Usability Scale (SUS) adalah instrument standar industri untuk mengukur kemudahan penggunaan sistem. 10 pertanyaan, skala 1-5 (1=Sangat Tidak Setuju, 5=Sangat Setuju). Jawab berdasarkan kesan keseluruhan Anda terhadap StayManager yang baru saja Anda evaluasi.*
+> *System Usability Scale (SUS) adalah instrumen evaluasi usability standar industri (Brooke, 1996; tervalidasi ulang oleh Vlachogianni & Tselios, 2022). 10 pernyataan, skala 1–5 (1=Sangat Tidak Setuju, 5=Sangat Setuju).*
 >
-> *Catatan: pertanyaan ganjil bersifat positif, pertanyaan genap bersifat negatif. Jawab apa adanya — sistem skoring sudah memperhitungkan polaritas.*
+> *Jawab spontan berdasarkan kesan keseluruhan Anda terhadap StayManager. Tidak perlu menganalisis terlalu lama — kesan pertama justru yang paling akurat. Jika ragu antara dua nilai, pilih nilai tengah (3). Jangan kosongkan satu pun pernyataan.*
 
 ## SECTION 2 — Identitas Singkat
 
@@ -330,14 +342,14 @@ Akui di **Bab Limitasi**: "UAT staf terbagi dua segmen — operasional (staf hot
 | No | Pernyataan | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|
 | 1 | Saya pikir saya akan ingin sering menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
-| 2 | Saya merasa sistem ini terlalu kompleks/rumit | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 2 | Saya merasa sistem ini terlalu rumit padahal seharusnya tidak | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 3 | Saya pikir sistem ini mudah digunakan | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 4 | Saya pikir saya akan butuh bantuan teknisi untuk menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 5 | Saya merasa berbagai fungsi di sistem ini terintegrasi dengan baik | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 6 | Saya merasa terlalu banyak inkonsistensi dalam sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 7 | Saya pikir kebanyakan orang akan belajar sistem ini dengan cepat | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 8 | Saya merasa sistem ini sangat merepotkan untuk digunakan | ☐ | ☐ | ☐ | ☐ | ☐ |
-| 9 | Saya merasa percaya diri saat menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
+| 9 | Saya merasa sangat percaya diri menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 10 | Saya perlu belajar banyak hal sebelum bisa menggunakan sistem ini | ☐ | ☐ | ☐ | ☐ | ☐ |
 
 ## SECTION 4 — Penutup
@@ -363,14 +375,17 @@ Untuk **setiap responden**:
 Untuk **agregat penelitian**:
 
 - Hitung rata-rata SUS score dari seluruh responden
-- Interpretasi:
-  - ≥ 80 = "Excellent" (top 10% sistem industri)
-  - 68-80 = "Good" (di atas rata-rata)
-  - = 68 = rata-rata industri
-  - 51-68 = "OK / Marginal" (perlu perbaikan)
-  - < 51 = "Poor"
+- Interpretasi (skala normatif Bangor dkk., 2008 — sebagaimana divalidasi ulang oleh Khan dkk., 2025 dan Deshmukh & Chalmeta, 2024; konsisten dengan Tabel 2.3 skripsi):
 
-**Target StayManager**: skor SUS ≥ 70 (di atas rata-rata industri).
+| Rentang Skor | Grade | Adjective Rating | Tingkat Penerimaan |
+|---|---|---|---|
+| > 80,3 | A | Excellent | Acceptable |
+| 68,0 – 80,3 | B | Good | Acceptable |
+| 51,7 – 67,9 | C | OK | Marginal |
+| 25,0 – 51,6 | D | Poor | Not Acceptable |
+| < 25,0 | F | Awful | Not Acceptable |
+
+**Target StayManager**: skor SUS ≥ 68,0 (Grade B, Acceptable). Target stretch: ≥ 80,3 (Grade A, Excellent).
 
 ---
 
@@ -379,9 +394,9 @@ Untuk **agregat penelitian**:
 | Minggu | Aktivitas |
 |---|---|
 | 1 | Setup 4 Google Form (Form 1A, 1B, 2, 3 SUS). Test internal dengan 2-3 teman dulu. |
-| 1-2 | Hubungi 1-2 hotel teman → schedule wawancara (lihat `Interview_Script_dan_Recruitment.md`) + isi Form 1A |
-| 1-2 | Broadcast Form 1B ke 5-7 mahasiswa IT/karyawan (target dosen/teman jurusan SI) |
-| 2-3 | Broadcast Form 2 luas via WA Group teman kuliah/kantor/alumni |
+| 1-2 | Hubungi 1-2 hotel teman → schedule wawancara (lihat `Interview_Script_dan_Recruitment.md`) → responden eksplorasi sistem → **Form 3 SUS dulu (3 menit)** → lalu Form 1A |
+| 1-2 | Broadcast Form 1B ke 5-7 mahasiswa IT/karyawan: brief eksplorasi 10–15 menit → **Form 3 SUS dulu** → Form 1B |
+| 2-3 | Broadcast Form 2 luas via WA Group teman kuliah/kantor/alumni: link eksplorasi+chatbot → **Form 3 SUS dulu** → Form 2 |
 | 3 | Tutup form, export Google Form ke Spreadsheet |
 | 3-4 | Analisis: rata-rata Likert per item, hitung SUS, kompilasi kritik & saran |
 | 4 | Isi Tabel 4.13 (Staf), 4.14 (Tamu), 4.15 (SUS) di Bab 4 skripsi |

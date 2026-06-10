@@ -1,0 +1,31 @@
+---
+title: Activity Diagram - Pengelolaan Housekeeping
+---
+flowchart TD
+    Start([Pagi Hari / Setelah Check-out]) --> Trigger{Trigger<br/>Pembuatan Task}
+    Trigger -->|Check-out| TaskCO[INSERT task type='checkout-cleaning']
+    Trigger -->|Cron Daily 06:00| TaskDaily[INSERT task type='daily' untuk semua occupied]
+    TaskCO --> Listed
+    TaskDaily --> Listed[Task Muncul di /rooms HK Filter]
+    Listed --> HKBuka[Petugas Buka Aplikasi]
+    HKBuka --> AsignedTask{Task<br/>Ter-assign?}
+    AsignedTask -->|Tidak| Assign[Manager Assign ke Petugas]
+    Assign --> HKBuka
+    AsignedTask -->|Ya| Start1[Klik 'Mulai']
+    Start1 --> UpdateProgress[UPDATE status='in_progress']
+    UpdateProgress --> DoCleaning[Lakukan Pembersihan]
+    DoCleaning --> Check{Cek<br/>Standar?}
+    Check -->|Belum OK| DoCleaning
+    Check -->|OK| Photo[Foto Bukti]
+    Photo --> Submit[Klik 'Selesai']
+    Submit --> UpdateDone[UPDATE status='completed']
+    UpdateDone --> UpdateRoom[UPDATE rooms status='available']
+    UpdateRoom --> Notif[Toast 'Kamar Siap']
+    Notif --> End([Kamar Siap Dijual Kembali])
+
+    classDef startEnd fill:#c8e6c9,stroke:#2e7d32,color:#000
+    classDef decision fill:#fff9c4,stroke:#f57f17,color:#000
+    classDef action fill:#bbdefb,stroke:#1565c0,color:#000
+    class Start,End startEnd
+    class Trigger,AsignedTask,Check decision
+    class TaskCO,TaskDaily,Listed,HKBuka,Assign,Start1,UpdateProgress,DoCleaning,Photo,Submit,UpdateDone,UpdateRoom,Notif action
