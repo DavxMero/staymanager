@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useChat } from 'ai/react';
 import { useRef, useEffect, useState, useMemo } from 'react';
@@ -357,74 +357,6 @@ export default function ChatbotPage() {
     }
   }, [input]);
 
-  const extractGuestInfo = () => {
-    let name = '';
-    let email = '';
-    let phone = '';
-
-    const userMessages = messages.filter(m => m.role === 'user').map(m => m.content);
-    const conversationText = userMessages.join(' ');
-
-    const emailMatch = conversationText.match(/[\w\.-]+@[\w\.-]+\.\w+/);
-    if (emailMatch) email = emailMatch[0];
-
-    const phoneMatch = conversationText.match(/[\+]?[\d\s\-\(\)]{10,}/);
-    if (phoneMatch) phone = phoneMatch[0].trim();
-
-
-    const reversedMessages = [...userMessages].reverse();
-    for (const msg of reversedMessages) {
-      const explicitNameMatch = msg.match(/Name:\s*([^\n]+)/i);
-      if (explicitNameMatch && explicitNameMatch[1]) {
-        name = explicitNameMatch[1].trim();
-        break;
-      }
-    }
-
-    if (!name) {
-      const nameKeywordPatterns = [
-        /(?:nama\s+(?:saya\s+)?(?:adalah\s+)?)([a-z]+(?:\s+[a-z]+)*)/i,
-        /(?:name\s+(?:is\s+)?(?:i'?m\s+)?)([a-z]+(?:\s+[a-z]+)*)/i,
-        /(?:saya\s+)([a-z]+(?:\s+[a-z]+)+)/i,
-        /(?:i'?m\s+)([a-z]+(?:\s+[a-z]+)+)/i,
-      ];
-
-      for (const pattern of nameKeywordPatterns) {
-        const match = conversationText.match(pattern);
-        if (match && match[1] && match[1].trim().length > 1) {
-          name = match[1]
-            .trim()
-            .split(/\s+/)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-          break;
-        }
-      }
-    }
-
-    if (!name) {
-      const nameOnlyMessages = userMessages.filter(msg =>
-        !msg.match(/[\w\.-]+@[\w\.-]+\.\w+/) &&
-        !msg.match(/[\+]?[\d\s\-\(\)]{10,}/)
-      );
-
-      for (const msg of nameOnlyMessages) {
-        const words = msg.trim().split(/\s+/);
-        if (words.length >= 2 && words.length <= 4) {
-          const allWordsValid = words.every(w => w.length >= 2 && w.length <= 15 && /^[a-zA-Z]+$/.test(w));
-          if (allWordsValid) {
-            name = words
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-            break;
-          }
-        }
-      }
-    }
-
-    return { name, email, phone };
-  };
-
   const handleBookRoom = (room: Room) => {
     if (!user) {
       if (confirm('Anda perlu login untuk membuat reservasi. Login sekarang?')) {
@@ -433,14 +365,15 @@ export default function ChatbotPage() {
       return;
     }
 
-    const extracted = extractGuestInfo();
+    // Data akun login — dipakai sebagai prefill nama/email dan
+    // sumber tombol "Samakan dengan data diri akun ini" di modal
     setShowBooking({
       room,
       checkIn: selectedDates.checkIn || toLocalDateString(new Date()),
       checkOut: selectedDates.checkOut || toLocalDateString(new Date(Date.now() + 86400000)),
-      guestName: extracted.name || (user.user_metadata?.full_name as string) || '',
-      guestEmail: user.email || extracted.email,
-      guestPhone: extracted.phone || (user.user_metadata?.phone as string) || '',
+      guestName: (user.user_metadata?.full_name as string) || '',
+      guestEmail: user.email || '',
+      guestPhone: (user.user_metadata?.phone as string) || '',
     });
 
     (async () => {
@@ -463,7 +396,7 @@ export default function ChatbotPage() {
     })();
   };
 
-  const handleConfirmBooking = async (guest: { guestName: string; guestPhone: string }) => {
+  const handleConfirmBooking = async (guest: { guestName: string; guestEmail: string; guestPhone: string }) => {
     if (!showBooking) return;
 
     const bookingDetails = `I would like to confirm my booking:
@@ -471,7 +404,7 @@ Room: ${showBooking.room.type} (${showBooking.room.number})
 Check-in: ${showBooking.checkIn}
 Check-out: ${showBooking.checkOut}
 Guest: ${guest.guestName}
-Email: ${showBooking.guestEmail}
+Email: ${guest.guestEmail}
 Phone: ${guest.guestPhone}
 Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(showBooking.room.base_price)}`;
 
@@ -1202,7 +1135,6 @@ Phone: ${info.guestPhone}`
       {/* Booking Confirmation Modal */}
       {showBooking && (
         <BookingConfirmation
-          key={`${showBooking.guestName}|${showBooking.guestPhone}`}
           booking={showBooking}
           onConfirm={handleConfirmBooking}
           onCancel={() => setShowBooking(null)}
