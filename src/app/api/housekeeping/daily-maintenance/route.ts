@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 export async function POST(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'rooms', 'occupancy')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { data, error } = await supabase.rpc('run_daily_housekeeping_tasks')
     
     if (error) {
@@ -40,6 +45,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'rooms', 'occupancy')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { data, error } = await supabase.rpc('get_housekeeping_task_summary')
     
     if (error) {

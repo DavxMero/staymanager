@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerUserContext, hasPermission } from '@/lib/auth/server-permissions'
 
 export async function POST(request: NextRequest) {
   try {
+    const ctx = await getServerUserContext(request)
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!hasPermission(ctx, 'reports')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { format, data, dateRange, filters } = await request.json()
-    
-    console.log('Export request:', { format, dateRange, filters })
-    
+
     if (!format || !data) {
       return NextResponse.json(
         { success: false, error: 'Missing required parameters' },

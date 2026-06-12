@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './docs/verification',
-  testMatch: ['bbt-playwright.spec.ts', 'bbt-screenshot-capture.spec.ts', 'bab4-screenshot-capture.spec.ts'],
+  testMatch: ['bbt-playwright.spec.ts', 'thesis-screenshot-capture.spec.ts'],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
