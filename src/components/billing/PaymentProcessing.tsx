@@ -110,7 +110,7 @@ export function PaymentProcessing({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Payment Method Selection */}
+        
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Payment Method</CardTitle>
@@ -152,7 +152,7 @@ export function PaymentProcessing({
           </CardContent>
         </Card>
 
-        {/* Payment Details */}
+        
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Payment Details</CardTitle>
@@ -160,7 +160,7 @@ export function PaymentProcessing({
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Amount Summary */}
+              
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Amount to Pay</span>
@@ -168,7 +168,7 @@ export function PaymentProcessing({
                 </div>
               </div>
 
-              {/* Payment Form */}
+              
               {selectedMethod === 'credit-card' && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,7 +281,7 @@ export function PaymentProcessing({
                 </div>
               )}
 
-              {/* Action Buttons */}
+              
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button 
                   onClick={handleProcessPayment} 

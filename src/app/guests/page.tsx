@@ -207,9 +207,9 @@ export default function GuestsPage() {
                 }
               }
 
-              // Fallback: if FK lookup failed or room_id was null, use denormalized
-              // fields stored on the reservation row itself (handles legacy rows
-              // with missing room_id, plus rooms that were later deleted).
+              
+              
+              
               if (!mappedRoomData && (currentBooking.room_number || currentBooking.room_type)) {
                 mappedRoomData = {
                   room_number: currentBooking.room_number || '-',
@@ -495,7 +495,7 @@ export default function GuestsPage() {
         </Button>
       </div>
 
-      {/* Guests Table */}
+      
       <Card>
         <CardHeader>
           <CardTitle>Guest Management</CardTitle>
@@ -559,12 +559,12 @@ export default function GuestsPage() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
-                        {/* Avatar */}
+                        
                         <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0">
                           <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
 
-                        {/* Guest Info */}
+                        
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{guest.full_name}</h3>
@@ -582,7 +582,7 @@ export default function GuestsPage() {
                             ) : null}
                           </div>
 
-                          {/* Contact Info */}
+                          
                           <div className="space-y-1 mb-3">
                             <div className="flex items-center text-sm text-muted-foreground">
                               <Phone className="mr-2 h-4 w-4" />
@@ -594,10 +594,10 @@ export default function GuestsPage() {
                             </div>
                           </div>
 
-                          {/* Booking & Payment Info */}
+                          
                           {booking && (
                             <div className="grid grid-cols-3 gap-6 mt-4">
-                              {/* Dates */}
+                              
                               <div>
                                 <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Dates</p>
                                 <div className="flex items-center text-sm text-muted-foreground mb-1">
@@ -610,7 +610,7 @@ export default function GuestsPage() {
                                 </div>
                               </div>
 
-                              {/* Payment */}
+                              
                               <div>
                                 <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Payment</p>
                                 <div className="text-sm text-muted-foreground">
@@ -627,7 +627,7 @@ export default function GuestsPage() {
                                 </div>
                               </div>
 
-                              {/* Total */}
+                              
                               <div>
                                 <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Total Cost</p>
                                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -642,7 +642,7 @@ export default function GuestsPage() {
                         </div>
                       </div>
 
-                      {/* Status & Actions */}
+                      
                       <div className="flex flex-col items-end gap-2 ml-4">
                         <div className="flex gap-2">
                           {booking?.status === 'cancelled' ? (
@@ -722,7 +722,7 @@ export default function GuestsPage() {
         </CardContent>
       </Card>
 
-      {/* Guest Dialog */}
+      
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className={isViewMode ? "sm:max-w-2xl max-h-[90vh] overflow-y-auto" : "sm:max-w-lg max-h-[90vh] overflow-y-auto"}>
           <DialogHeader>
@@ -751,7 +751,7 @@ export default function GuestsPage() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Tab 1: Guest Info */}
+              
               <TabsContent value="guest" className="space-y-4 mt-4">
                 <div className="bg-muted/50 p-6 rounded-lg space-y-4">
                   <div>
@@ -796,7 +796,7 @@ export default function GuestsPage() {
                 </div>
               </TabsContent>
 
-              {/* Tab 2: Booking Details */}
+              
               <TabsContent value="booking" className="space-y-4 mt-4">
                 {currentGuest.currentBooking ? (
                   <div className="bg-muted/50 p-6 rounded-lg space-y-4">
@@ -908,11 +908,11 @@ export default function GuestsPage() {
                 )}
               </TabsContent>
 
-              {/* Tab 3: Payment */}
+              
               <TabsContent value="payment" className="space-y-4 mt-4">
                 {currentGuest.payments && currentGuest.payments.length > 0 ? (
                   <div className="space-y-4">
-                    {/* Payment Summary */}
+                    
                     <div className="bg-muted/50 p-6 rounded-lg">
                       <div className="flex items-center justify-between mb-4">
                         <div>
@@ -956,7 +956,7 @@ export default function GuestsPage() {
                       )}
                     </div>
 
-                    {/* Payment History */}
+                    
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Payment History</Label>
                       {currentGuest.payments.map((payment, index) => (
@@ -1087,7 +1087,7 @@ export default function GuestsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Payment & Action Dialog */}
+      
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -1232,7 +1232,7 @@ export default function GuestsPage() {
       </Dialog>
 
 
-      {/* New Modular Reservation Dialog */}
+      
       <GuestReservationDialog
         open={isReservationDialogOpen}
         onOpenChange={setIsReservationDialogOpen}

@@ -56,7 +56,7 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
             </div>
 
             <div className="space-y-3">
-                {/* Guest Information Section */}
+
                 <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2 mb-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isComplete(['guestName', 'guestEmail', 'guestPhone'])
@@ -98,7 +98,6 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
                     />
                 </div>
 
-                {/* Dates Section */}
                 {(stage === 'dates' || stage === 'preferences' || stage === 'confirm') && (
                     <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 space-y-3">
                         <div className="flex items-center gap-2 mb-2">
@@ -136,7 +135,6 @@ export function InteractiveBookingCard({ bookingInfo, onUpdate, stage = 'info' }
                     </div>
                 )}
 
-                {/* Guest Count Section */}
                 {(stage === 'preferences' || stage === 'confirm') && (
                     <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 space-y-3">
                         <div className="flex items-center gap-2 mb-2">

@@ -43,7 +43,7 @@ interface InvoicesTableProps {
   onDownloadInvoice: (invoice: Invoice) => void
 }
 
-// @ts-nocheck
+
 export function InvoicesTable({ 
   invoices, 
   onEditInvoice, 
@@ -127,7 +127,7 @@ export function InvoicesTable({
         </CardHeader>
         
         <CardContent>
-          {/* Filters and Search */}
+          
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">
@@ -168,7 +168,7 @@ export function InvoicesTable({
             </div>
           </div>
 
-          {/* Table */}
+          
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
@@ -318,7 +318,7 @@ export function InvoicesTable({
             </Table>
           </div>
 
-          {/* Summary */}
+          
           <div className="mt-4 flex justify-between items-center text-sm text-muted-foreground">
             <span>
               Showing {filteredAndSortedInvoices.length} of {invoices.length} invoices

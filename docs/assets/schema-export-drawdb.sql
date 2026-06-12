@@ -1,16 +1,10 @@
--- StayManager Schema Export (Pasca Cleanup)
--- 26 tables + 26 PK + 39 FK
--- Generated 2026-06-05 dari Supabase project ncjneagfadrmivgicszm
--- USAGE: paste ke https://drawdb.vercel.app → Import → From SQL → PostgreSQL
 
--- Stub auth.users untuk satisfy cross-schema FK reference (drawDB butuh table ada)
 CREATE TABLE auth_users (
   id uuid NOT NULL PRIMARY KEY,
   email text,
   created_at timestamp with time zone NOT NULL
 );
 
--- ============= CREATE TABLES =============
 
 CREATE TABLE chat (
   id uuid NOT NULL,
@@ -425,7 +419,6 @@ CREATE TABLE users (
   updated_at timestamp with time zone NOT NULL
 );
 
--- ============= PRIMARY KEYS =============
 
 ALTER TABLE chat ADD CONSTRAINT chat_pkey PRIMARY KEY (id);
 ALTER TABLE billing_items ADD CONSTRAINT billing_items_pkey PRIMARY KEY (id);
@@ -454,7 +447,6 @@ ALTER TABLE staff_members ADD CONSTRAINT staff_members_pkey PRIMARY KEY (id);
 ALTER TABLE user_roles ADD CONSTRAINT user_roles_pkey PRIMARY KEY (id);
 ALTER TABLE users ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
--- ============= FOREIGN KEYS =============
 
 ALTER TABLE chat ADD CONSTRAINT chat_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth_users(id);
 ALTER TABLE billing_items ADD CONSTRAINT billing_items_guest_id_fkey FOREIGN KEY (guest_id) REFERENCES guests(id);

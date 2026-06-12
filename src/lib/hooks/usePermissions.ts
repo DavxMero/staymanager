@@ -9,9 +9,7 @@ interface UserPermissions {
     loading: boolean;
 }
 
-/**
- * Hook to get current user's permissions
- */
+
 export function usePermissions(): UserPermissions {
     const [state, setState] = useState<UserPermissions>({
         permissions: [],
@@ -66,24 +64,18 @@ export function usePermissions(): UserPermissions {
     return state;
 }
 
-/**
- * Check if user has a specific permission
- */
+
 export function hasPermission(permissions: string[], permission: string): boolean {
     return permissions.includes('*') || permissions.includes(permission);
 }
 
-/**
- * Check if user has any of the specified permissions
- */
+
 export function hasAnyPermission(permissions: string[], requiredPermissions: string[]): boolean {
     if (permissions.includes('*')) return true;
     return requiredPermissions.some(p => permissions.includes(p));
 }
 
-/**
- * Check if user has all of the specified permissions
- */
+
 export function hasAllPermissions(permissions: string[], requiredPermissions: string[]): boolean {
     if (permissions.includes('*')) return true;
     return requiredPermissions.every(p => permissions.includes(p));

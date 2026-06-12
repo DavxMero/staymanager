@@ -159,7 +159,7 @@ export default function HealthPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">System Health</h2>
@@ -182,7 +182,7 @@ export default function HealthPage() {
         </Button>
       </div>
 
-      {/* Health Overview */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {healthMetrics.map((metric) => (
           <Card key={metric.title}>
@@ -201,7 +201,7 @@ export default function HealthPage() {
         ))}
       </div>
 
-      {/* Testing Tools */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -244,7 +244,7 @@ export default function HealthPage() {
         </CardContent>
       </Card>
 
-      {/* Service Status */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -278,7 +278,7 @@ export default function HealthPage() {
         </CardContent>
       </Card>
 
-      {/* Performance Metrics */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -355,7 +355,7 @@ export default function HealthPage() {
         </Card>
       </div>
 
-      {/* Health Summary */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">

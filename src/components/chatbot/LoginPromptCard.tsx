@@ -5,7 +5,7 @@ import { LogIn, UserPlus, ShieldCheck, Save, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 interface LoginPromptCardProps {
-    reason?: string; // e.g., "membuat reservasi", "menyimpan riwayat chat"
+    reason?: string;
 }
 
 export function LoginPromptCard({ reason = 'make a reservation' }: LoginPromptCardProps) {

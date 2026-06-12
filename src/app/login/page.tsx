@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Building, Mail, Lock, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Map Supabase auth error → user-friendly English message
+
 function friendlyAuthError(error: any): string {
     const msg = String(error?.message || '').toLowerCase();
     if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
@@ -33,7 +33,7 @@ function friendlyAuthError(error: any): string {
     return error?.message || 'An error occurred while signing in. Please try again.';
 }
 
-// Map URL error code (?error=...) from OAuth callback → user-friendly English message
+
 function friendlyUrlError(code: string | null): string | null {
     if (!code) return null;
     switch (code) {
@@ -59,7 +59,7 @@ export default function LoginPage() {
     const router = useRouter();
     const supabase = createClient();
 
-    // Surface ?error=... dari OAuth callback redirect
+    
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const params = new URLSearchParams(window.location.search);
@@ -68,7 +68,7 @@ export default function LoginPage() {
         if (msg) {
             setErrorMessage(msg);
             toast.error(msg, { duration: 7000 });
-            // bersihkan query param supaya tidak muncul lagi saat refresh
+            
             const url = new URL(window.location.href);
             url.searchParams.delete('error');
             window.history.replaceState({}, '', url.pathname + (url.search || ''));
@@ -129,7 +129,7 @@ export default function LoginPage() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleLogin} className="space-y-4">
-                        {/* Inline Error Alert — persisten sampai user retry */}
+                        
                         {errorMessage && (
                             <Alert variant="destructive" className="py-2">
                                 <AlertCircle className="h-4 w-4" />
@@ -139,7 +139,7 @@ export default function LoginPage() {
                             </Alert>
                         )}
 
-                        {/* Google OAuth Button */}
+                        
                         <Button
                             type="button"
                             variant="outline"

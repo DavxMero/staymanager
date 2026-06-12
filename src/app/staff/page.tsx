@@ -370,7 +370,7 @@ export default function StaffPage() {
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto py-8 space-y-8"
     >
-      {/* Header */}
+      
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -387,7 +387,7 @@ export default function StaffPage() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="flex items-center justify-between p-6">
@@ -433,7 +433,7 @@ export default function StaffPage() {
         </Card>
       </div>
 
-      {/* Filters */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -486,7 +486,7 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      {/* Staff Table */}
+      
       <Card>
         <CardHeader>
           <CardTitle>Staff Members ({filteredStaff.length})</CardTitle>
@@ -605,7 +605,7 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto invisible-scrollbar">
           <DialogHeader>
@@ -621,7 +621,7 @@ export default function StaffPage() {
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
-            {/* Basic Information */}
+            
             <div className="space-y-4">
               <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Basic Information
@@ -669,7 +669,7 @@ export default function StaffPage() {
               </div>
             </div>
 
-            {/* Job Information */}
+            
             <div className="space-y-4">
               <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Job Information
@@ -748,7 +748,7 @@ export default function StaffPage() {
               </div>
             </div>
 
-            {/* Schedule */}
+            
             <div className="space-y-4">
               <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Work Schedule
@@ -775,7 +775,7 @@ export default function StaffPage() {
               </div>
             </div>
 
-            {/* Contact Information */}
+            
             <div className="space-y-4">
               <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Additional Information

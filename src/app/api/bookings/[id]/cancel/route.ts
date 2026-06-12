@@ -53,10 +53,9 @@ export async function POST(
                 reason = body.reason.trim();
             }
         } catch {
-            // empty body is fine
         }
 
-        // .in() guards against a concurrent status change between read and write
+        
         const { data: updated, error } = await supabase
             .from('reservations')
             .update({

@@ -19,7 +19,7 @@ interface BookingActionsProps {
   bookingId: string
   status: string
   guestName?: string
-  /** Optimistic local update — called with the new status after a successful API call. */
+  
   onStatusChange?: (newStatus: string) => void
 }
 

@@ -186,7 +186,7 @@ export default function RolesManagementPage() {
                 </div>
             </div>
 
-            {/* Roles Legend */}
+            
             <Card>
                 <CardHeader>
                     <CardTitle>Available Roles</CardTitle>
@@ -210,7 +210,7 @@ export default function RolesManagementPage() {
                 </CardContent>
             </Card>
 
-            {/* Users Table */}
+            
             <Card>
                 <CardHeader>
                     <CardTitle>User Roles</CardTitle>

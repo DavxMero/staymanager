@@ -9,7 +9,7 @@ export interface Room {
   updated_at?: string;
   image_url?: string;
   
-  // Custom properties from legacy or joins
+  
   max_occupancy?: number;
   amenities?: string[];
   description?: string;
@@ -60,7 +60,7 @@ export interface Guest {
   updated_at?: string;
   user_id?: string;
   
-  // Legacy
+  
   date_of_birth?: string;
   status?: 'active' | 'inactive' | 'blocked' | string;
   notes?: string;
@@ -110,7 +110,7 @@ export interface Invoice {
   service_charge?: number;
   discount_amount: number;
   total_amount: number;
-  amount: number; // Alias for UI
+  amount: number; 
   status: string;
   payment_method?: string;
   payment_reference?: string;

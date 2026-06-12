@@ -31,8 +31,8 @@ export async function POST(
             return NextResponse.json({ error: 'Purchase Order not found' }, { status: 404 })
         }
 
-        // Atomic claim: flip status to 'received' only if not already received.
-        // Guarantees the stock-increment loop below runs at most once per PO.
+        
+        
         const { data: claimed } = await supabase
             .from('inventory_purchase_orders')
             .update({

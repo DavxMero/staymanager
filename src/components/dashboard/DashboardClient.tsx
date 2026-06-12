@@ -98,7 +98,7 @@ export function DashboardClient({
   const [facilityRequests, setFacilityRequests] = useState<GuestFacilityRequest[]>(initialFacilityRequests)
   const [staffCount] = useState(initialStaffCount)
 
-  // Thesis survey banner state — REMOVE AFTER DATA COLLECTION COMPLETE
+  
   const [surveyBannerVisible, setSurveyBannerVisible] = useState(false)
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -120,8 +120,8 @@ export function DashboardClient({
   }, [])
 
   useEffect(() => {
-    // Burst event (mis. check-in = beberapa mutasi beruntun) di-debounce
-    // supaya hanya satu refetch per tabel, bukan satu per event
+    
+    
     const timers: Record<string, ReturnType<typeof setTimeout> | null> = {
       reservations: null,
       facilities: null,
@@ -132,11 +132,11 @@ export function DashboardClient({
       timers[key] = setTimeout(() => { timers[key] = null; fn() }, 400)
     }
 
-    // Satu channel (satu websocket join) untuk ketiga tabel
+    
     const channel = supabase
       .channel('dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, (payload) => {
-        // More efficient update: do not refetch all rooms, just update the payload
+        
         if (payload.eventType === 'UPDATE') {
           setRooms(prev => prev.map(r => r.id === payload.new.id ? payload.new as Room : r))
         } else if (payload.eventType === 'INSERT') {
@@ -342,7 +342,7 @@ export function DashboardClient({
         animate="visible"
         className="max-w-[1400px] mx-auto space-y-6"
       >
-        {/* Hero Banner */}
+        
         <motion.div variants={itemVariants}>
           <div className="relative overflow-hidden rounded-2xl" style={{ minHeight: '280px' }}>
             <Image
@@ -402,7 +402,7 @@ export function DashboardClient({
           </div>
         </motion.div>
 
-        {/* Thesis Survey Banner — REMOVE AFTER DATA COLLECTION COMPLETE */}
+        
         {surveyBannerVisible && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -455,13 +455,13 @@ export function DashboardClient({
           </motion.div>
         )}
 
-        {/* Main Grid */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
+          
           <div className="lg:col-span-2 space-y-6">
-            {/* Quick Action Cards */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Check Availability */}
+              
               <motion.div variants={itemVariants} className="h-full">
                 <Link href={isGuest ? "/chatbot" : "/rooms"} className="block h-full">
                   <div className="p-6 h-full rounded-2xl bg-white dark:bg-[#1c1f26] shadow-[0_2px_12px_rgba(0,47,111,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] hover:shadow-lg transition-all duration-300 cursor-pointer group" style={{ minHeight: '160px' }}>
@@ -492,7 +492,7 @@ export function DashboardClient({
                 </Link>
               </motion.div>
 
-              {/* View Occupancy */}
+              
               <motion.div variants={itemVariants} className="h-full">
                 <Link href={isGuest ? "/chatbot" : "/occupancy"} className="block h-full">
                   <div
@@ -527,7 +527,7 @@ export function DashboardClient({
               </motion.div>
             </div>
 
-            {/* Daily Property Highlights */}
+            
             <motion.div variants={itemVariants}>
               <h2
                 className="text-xl font-bold mb-4 text-foreground"
@@ -573,9 +573,9 @@ export function DashboardClient({
             </motion.div>
           </div>
 
-          {/* Right Sidebar */}
+          
           <div className="flex flex-col gap-6">
-            {/* Recent Guest Activities */}
+            
             <motion.div variants={itemVariants}>
               <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1f26] shadow-[0_2px_12px_rgba(0,47,111,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
                 <div className="flex items-center justify-between mb-5">
@@ -620,7 +620,7 @@ export function DashboardClient({
               </div>
             </motion.div>
 
-            {/* Operational Status */}
+            
             <motion.div variants={itemVariants} className="flex-1 flex">
               <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1f26] shadow-[0_2px_12px_rgba(0,47,111,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] flex-1 flex flex-col justify-center">
                 <h3
@@ -650,7 +650,7 @@ export function DashboardClient({
                   ))}
                 </div>
 
-                {/* Staff Shifts */}
+                
                 <div className="mt-5 pt-5 flex items-center justify-between border-t border-[#f2f4f7] dark:border-[#2a2d35]">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#f2f4f7] dark:bg-[#2a2d35]">
@@ -672,7 +672,7 @@ export function DashboardClient({
           </div>
         </div>
 
-        {/* Featured Room Types */}
+        
         {derivedRoomTypes.length > 0 && (
           <motion.div variants={itemVariants}>
             <div className="flex items-center justify-between mb-5">
@@ -701,7 +701,7 @@ export function DashboardClient({
                     className="group h-full"
                   >
                     <div className="flex flex-col w-full h-full rounded-[20px] overflow-hidden bg-white dark:bg-[#15171c] border border-gray-200/80 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgb(0,47,111,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.15)] transition-all duration-500 ease-out relative">
-                      {/* Image Area */}
+                      
                       <div className="relative h-[220px] overflow-hidden bg-gray-100 dark:bg-gray-800">
                         {rt.image ? (
                           <Image
@@ -719,7 +719,7 @@ export function DashboardClient({
                         <div className="absolute inset-0 ring-1 ring-inset ring-black/5 dark:ring-white/5 rounded-t-[20px] z-10 pointer-events-none" />
                       </div>
 
-                      {/* Content Area */}
+                      
                       <div className="p-6 flex flex-col flex-grow">
                         <h3
                           className="font-bold text-[1.15rem] leading-tight text-foreground mb-1"

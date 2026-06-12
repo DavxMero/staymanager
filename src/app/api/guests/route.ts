@@ -9,7 +9,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase credentials for guests API:', { 
     url: !!supabaseUrl, 
     serviceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    /* anonKey removed for security */ 
   })
 }
 

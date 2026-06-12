@@ -122,7 +122,7 @@ export default function DatabasePage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Database Tools</h2>
@@ -145,7 +145,7 @@ export default function DatabasePage() {
         </Button>
       </div>
 
-      {/* Database Setup Tools */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -188,7 +188,7 @@ export default function DatabasePage() {
         </CardContent>
       </Card>
 
-      {/* Data Management */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -235,7 +235,7 @@ export default function DatabasePage() {
         </CardContent>
       </Card>
 
-      {/* Quick Stats */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

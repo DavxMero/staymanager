@@ -211,7 +211,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-3 py-3 text-2xl font-bold">
           {branding.brandLogoUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
+
             <img
               src={branding.brandLogoUrl}
               alt={branding.brandName}
@@ -338,7 +338,6 @@ export function AppSidebar() {
             </Link>
           )}
 
-          {/* App Version & Theme Toggle */}
           <div className="flex items-center justify-between px-2 text-xs text-muted-foreground">
             <span>{branding.brandName} v0.1.0</span>
             <ModeToggle />

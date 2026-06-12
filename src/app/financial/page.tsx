@@ -249,7 +249,7 @@ export default function FinancialPage() {
                 </div>
             </div>
 
-            {/* Summary Cards */}
+            
             <div className="grid gap-4 md:grid-cols-3">
                 <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -304,7 +304,7 @@ export default function FinancialPage() {
                     <TabsTrigger value="expenses">Expenses</TabsTrigger>
                 </TabsList>
 
-                {/* Overview Tab */}
+                
                 <TabsContent value="overview" className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                         <Card className="col-span-4">
@@ -325,7 +325,7 @@ export default function FinancialPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {/* Combine and sort latest 5 items */}
+                                        
                                         {[
                                             ...payments.map(p => ({
                                                 id: p.id,
@@ -372,7 +372,7 @@ export default function FinancialPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {/* Simple category grouping */}
+                                    
                                     {Object.entries(expenses.reduce((acc, curr) => {
                                         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount)
                                         return acc
@@ -403,7 +403,7 @@ export default function FinancialPage() {
                     </div>
                 </TabsContent>
 
-                {/* Income Tab */}
+                
                 <TabsContent value="income" className="space-y-4">
                     <Card>
                         <CardHeader>
@@ -446,7 +446,7 @@ export default function FinancialPage() {
                     </Card>
                 </TabsContent>
 
-                {/* Expenses Tab */}
+                
                 <TabsContent value="expenses" className="space-y-4">
                     <div className="flex justify-end">
                         <Button onClick={() => setIsExpenseDialogOpen(true)} className="bg-red-600 hover:bg-red-700">
@@ -504,7 +504,7 @@ export default function FinancialPage() {
                 </TabsContent>
             </Tabs>
 
-            {/* Add Expense Dialog */}
+            
             <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>

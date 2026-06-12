@@ -58,7 +58,7 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
             </div>
 
             <div className="space-y-3">
-                {/* Pay Now Section */}
+
                 <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600">
                     <div className="flex items-center gap-2 mb-3">
                         <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -69,7 +69,7 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                     </div>
 
                     <div className="grid grid-cols-1 gap-2">
-                        {/* Bank Transfer */}
+
                         <PaymentMethodButton
                             icon={<Building2 className="w-5 h-5" />}
                             title="Bank Transfer"
@@ -79,7 +79,6 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                             color="blue"
                         />
 
-                        {/* Credit Card */}
                         <PaymentMethodButton
                             icon={<CreditCard className="w-5 h-5" />}
                             title="Credit Card"
@@ -89,7 +88,6 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                             color="purple"
                         />
 
-                        {/* E-Wallet */}
                         <PaymentMethodButton
                             icon={<Wallet className="w-5 h-5" />}
                             title="E-Wallet"
@@ -101,7 +99,6 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                     </div>
                 </div>
 
-                {/* Pay Later Section */}
                 <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600">
                     <div className="flex items-center gap-2 mb-3">
                         <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -135,7 +132,6 @@ export function PaymentOptionsCard({ totalAmount, onPaymentSelect }: PaymentOpti
                     )}
                 </div>
 
-                {/* Selected Summary */}
                 {selectedMethod === 'now' && selectedPaymentType && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}

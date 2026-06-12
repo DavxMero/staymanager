@@ -1,9 +1,6 @@
 import { Room, Guest, Reservation } from '@/types'
 
-/**
- * Maps database room data to application Room interface
- * Handles field name changes from old to new schema
- */
+
 export function mapDatabaseRoom(dbRoom: any): Room {
   return {
     ...dbRoom,
@@ -16,9 +13,7 @@ export function mapDatabaseRoom(dbRoom: any): Room {
   }
 }
 
-/**
- * Maps database guest data to application Guest interface
- */
+
 export function mapDatabaseGuest(dbGuest: any): Guest {
   return {
     ...dbGuest,
@@ -29,10 +24,7 @@ export function mapDatabaseGuest(dbGuest: any): Guest {
   }
 }
 
-/**
- * Maps database reservation data to application Reservation interface
- * Handles field name changes (check_in_date -> check_in, etc.)
- */
+
 export function mapDatabaseReservation(dbReservation: any): Reservation {
   return {
     ...dbReservation,
@@ -44,9 +36,7 @@ export function mapDatabaseReservation(dbReservation: any): Reservation {
   }
 }
 
-/**
- * Maps new reservation status values to old interface
- */
+
 function mapReservationStatus(status: string): 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' {
   switch (status) {
     case 'completed':
@@ -58,30 +48,22 @@ function mapReservationStatus(status: string): 'pending' | 'confirmed' | 'checke
   }
 }
 
-/**
- * Helper to transform database results for rooms query
- */
+
 export function transformRoomsQuery(rooms: any[]): Room[] {
   return rooms.map(mapDatabaseRoom)
 }
 
-/**
- * Helper to transform database results for guests query
- */
+
 export function transformGuestsQuery(guests: any[]): Guest[] {
   return guests.map(mapDatabaseGuest)
 }
 
-/**
- * Helper to transform database results for reservations query
- */
+
 export function transformReservationsQuery(reservations: any[]): Reservation[] {
   return reservations.map(mapDatabaseReservation)
 }
 
-/**
- * Format currency for Indonesian Rupiah
- */
+
 export function formatCurrency(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || isNaN(amount)) {
     return 'Rp 0'
@@ -95,18 +77,13 @@ export function formatCurrency(amount: number | null | undefined): string {
   }).format(amount)
 }
 
-/**
- * Safe number conversion - prevents NaN
- */
+
 export function safeNumber(value: any, defaultValue: number = 0): number {
   const num = Number(value)
   return isNaN(num) ? defaultValue : num
 }
 
-/**
- * Get room price based on date and room type
- * Implements pricing logic for base_price, weekend_price, holiday_price
- */
+
 export function getRoomPrice(room: any, date?: Date): number {
   if (!room) return 0
 

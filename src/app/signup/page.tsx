@@ -68,7 +68,7 @@ export default function SignUpPage() {
                     console.log('✅ Assigned guest role to new user');
                 }
 
-                // Auto-create guest profile if not already linked
+                
                 const { data: existingGuest } = await supabase
                     .from('guests')
                     .select('id')
@@ -133,7 +133,7 @@ export default function SignUpPage() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSignUp} className="space-y-4">
-                        {/* Google OAuth Button */}
+                        
                         <Button
                             type="button"
                             variant="outline"
@@ -176,7 +176,7 @@ export default function SignUpPage() {
                             Continue with Google
                         </Button>
 
-                        {/* Divider */}
+                        
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t" />

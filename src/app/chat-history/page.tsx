@@ -101,7 +101,7 @@ export default function ChatHistoryPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Chat List */}
+                    
                     <div className="lg:col-span-1 space-y-3">
                         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                             All Conversations ({chats.length})
@@ -156,7 +156,7 @@ export default function ChatHistoryPage() {
                         </div>
                     </div>
 
-                    {/* Chat Detail */}
+                    
                     <div className="lg:col-span-2">
                         {selectedChat ? (
                             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">

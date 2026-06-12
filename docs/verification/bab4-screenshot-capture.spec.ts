@@ -1,15 +1,4 @@
-/**
- * Bab 4 Screenshot Capture — 23 Gambar untuk Skripsi (4.1 - 4.23)
- *
- * Output: docs/assets/bab4/gambar-4-N.png (1-23)
- *
- * Mapping:
- *   4.1-4.10  → 10 modul UI utama
- *   4.11-4.15 → Bukti 5 Faktor Nielsen (reuse module shots with focus)
- *   4.16-4.23 → Bukti 8 Aturan Shneiderman
- *
- * Jalan: pnpm exec playwright test docs/verification/bab4-screenshot-capture.spec.ts --config=playwright.config.ts
- */
+
 
 import { test, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
@@ -32,12 +21,12 @@ async function loginSuperAdmin(page: Page) {
 async function capture(page: Page, n: number) {
   await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
   await page.waitForTimeout(2000);
-  await page.screenshot({ path: `${OUT}/gambar-4-${n}.png`, fullPage: true });
+  await page.screenshot({ path: `${OUT}/gambar-4-${n}.png`, fullPage: false });
 }
 
 test.describe.configure({ mode: 'serial' });
 
-// === 4.1-4.10: 10 Modul UI ===
+
 
 test('4.1 Login', async ({ page }) => {
   await page.goto(`${BASE_URL}/login`);
@@ -99,7 +88,7 @@ test('4.10 Chatbot LLM', async ({ page }) => {
   await page.getByPlaceholder(/type your message|tulis pesan/i)
     .fill('Tolong cek kamar yang tersedia untuk check-in 2026-06-20 dan check-out 2026-06-22');
   await page.keyboard.press('Enter');
-  // Tunggu kartu kamar muncul (bukti tool cekKetersediaan + render kartu berhasil)
+  
   await page.waitForFunction(() => {
     const t = document.body.innerText;
     const done = !t.includes('Typing...') && !t.includes('Typing…') && !t.includes('Checking our database');
@@ -107,10 +96,10 @@ test('4.10 Chatbot LLM', async ({ page }) => {
     return done && hasRooms;
   }, { timeout: 120_000 }).catch(() => {});
   await page.waitForTimeout(3500);
-  await page.screenshot({ path: `${OUT}/gambar-4-10.png`, fullPage: true });
+  await page.screenshot({ path: `${OUT}/gambar-4-10.png`, fullPage: false });
 });
 
-// === 4.11-4.15: Nielsen Bukti ===
+
 
 test('4.11 Learnability (Login Intuitif)', async ({ page }) => {
   await page.goto(`${BASE_URL}/login`);
@@ -152,7 +141,7 @@ async function sendMessage(page: Page, text: string, waitMs = 4000) {
   await box.click();
   await box.fill(text);
   await page.keyboard.press('Enter');
-  // tunggu sampai indikator mengetik / tool selesai
+  
   await page.waitForFunction(() => {
     const t = document.body.innerText;
     return !t.includes('Typing...') && !t.includes('Typing…') && !t.includes('Checking our database');
@@ -166,25 +155,25 @@ test('4.15 Satisfaction (Reservasi Sukses + E-Receipt)', async ({ page }) => {
   await page.goto(`${BASE_URL}/chatbot`);
   await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 
-  // 1) Cek ketersediaan
+  
   await sendMessage(page, 'Saya mau memesan kamar. Tolong cek kamar Deluxe yang tersedia untuk check-in 2026-06-20 dan check-out 2026-06-22.', 5000);
 
-  // 2) Buat reservasi (user sudah login -> createBooking lolos auth)
+  
   await sendMessage(page, 'Tolong buatkan reservasinya untuk kamar Deluxe tersebut. Data tamu: nama David, email david@gmail.com, telepon 081234567890, 2 dewasa, 0 anak, tanpa sarapan.', 6000);
 
-  // 3) Konfirmasi pembayaran -> confirmPayment mengungkap kode booking + e-receipt
+  
   await sendMessage(page, 'Saya mau bayar sekarang via transfer bank BCA dan saya SUDAH melakukan transfer penuh. Tolong konfirmasi pembayaran saya sekarang.', 6000);
 
-  // tunggu kode booking / bukti lunas muncul
+  
   await page.waitForFunction(() => {
     const t = document.body.innerText;
     return /BK\d|kode booking|booking reference|lunas|paid|berhasil|e-?receipt|terkonfirmasi/i.test(t);
   }, { timeout: 60_000 }).catch(() => {});
   await page.waitForTimeout(3000);
-  await page.screenshot({ path: `${OUT}/gambar-4-15.png`, fullPage: true });
+  await page.screenshot({ path: `${OUT}/gambar-4-15.png`, fullPage: false });
 });
 
-// === 4.16-4.23: Shneiderman 8 Aturan Bukti ===
+
 
 test('4.16 Aturan 1 Konsistensi Desain (Rooms)', async ({ page }) => {
   await loginSuperAdmin(page);
@@ -216,7 +205,7 @@ test('4.20 Aturan 5 Penanganan Kesalahan (Login error state)', async ({ page }) 
   await page.locator('#password').fill('wrongpass');
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await page.waitForTimeout(3000);
-  await page.screenshot({ path: `${OUT}/gambar-4-20.png`, fullPage: true });
+  await page.screenshot({ path: `${OUT}/gambar-4-20.png`, fullPage: false });
 });
 
 test('4.21 Aturan 6 Pembatalan Aksi (Logistics)', async ({ page }) => {

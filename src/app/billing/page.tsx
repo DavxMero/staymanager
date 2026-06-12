@@ -7,7 +7,7 @@ import { ModernBillingDashboard } from "@/components/billing/ModernBillingDashbo
 import { PaymentProcessing } from "@/components/billing/PaymentProcessing"
 import { EnhancedInvoicesTable } from "@/components/billing/EnhancedInvoicesTable"
 import { Button } from "@/components/ui/button"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,16 +29,16 @@ export default function ModernBillingPage() {
   const router = useRouter()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [error, setError] = useState<string | null>(null)
-  
+
   const [isAddInvoiceDialogOpen, setIsAddInvoiceDialogOpen] = useState(false)
   const [isSavingInvoice, setIsSavingInvoice] = useState(false)
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState(0)
-  
+
   const [reservationId, setReservationId] = useState("")
   const [amount, setAmount] = useState("")
   const [status, setStatus] = useState<"paid" | "pending" | "overdue">("pending")
-  
+
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [pendingPayments, setPendingPayments] = useState(0)
   const [overdueAmount, setOverdueAmount] = useState(0)
@@ -53,15 +53,15 @@ export default function ModernBillingPage() {
         .from('invoices')
         .select('*')
         .order('created_at', { ascending: false })
-      
+
       if (error) throw error
-      
+
       setInvoices(data)
-      
+
       const totalRev = data.reduce((sum, invoice) => sum + (invoice.status === 'paid' ? invoice.amount : 0), 0)
       const pendingPay = data.reduce((sum, invoice) => sum + (invoice.status === 'pending' ? invoice.amount : 0), 0)
       const overdueAmt = data.reduce((sum, invoice) => sum + (invoice.status === 'overdue' ? invoice.amount : 0), 0)
-      
+
       setTotalRevenue(totalRev)
       setPendingPayments(pendingPay)
       setOverdueAmount(overdueAmt)
@@ -137,7 +137,7 @@ export default function ModernBillingPage() {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error! </strong>
           <span className="block sm:inline">{error}</span>
-          <button 
+          <button
             className="mt-2 bg-red-700 text-white px-4 py-2 rounded"
             onClick={fetchInvoices}
           >
@@ -156,8 +156,8 @@ export default function ModernBillingPage() {
         exit={{ opacity: 0, x: -20 }}
         transition={{ duration: 0.3 }}
       >
-        <PaymentProcessing 
-          amount={paymentAmount} 
+        <PaymentProcessing
+          amount={paymentAmount}
           onPaymentComplete={handlePaymentComplete}
           onBack={() => setIsPaymentProcessing(false)}
         />
@@ -172,14 +172,13 @@ export default function ModernBillingPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <ModernBillingDashboard 
+      <ModernBillingDashboard
         totalRevenue={totalRevenue}
         pendingPayments={pendingPayments}
         overdueAmount={overdueAmount}
         invoices={invoices.slice(0, 5)}
       />
-      
-      {/* Action Buttons */}
+
       <div className="flex flex-wrap gap-3">
         <Button onClick={handleAddInvoice} className="gap-2">
           <Plus className="h-4 w-4" />
@@ -189,8 +188,8 @@ export default function ModernBillingPage() {
           <Download className="h-4 w-4" />
           Export Reports
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="gap-2"
           onClick={() => handleProcessPayment(1500000)}
         >
@@ -198,16 +197,14 @@ export default function ModernBillingPage() {
           Process Payment
         </Button>
       </div>
-      
-      {/* Enhanced Invoices Table */}
-      <EnhancedInvoicesTable 
+
+      <EnhancedInvoicesTable
         invoices={invoices}
         onViewInvoice={handleViewInvoice}
         onDownloadInvoice={handleDownloadInvoice}
         onEditInvoice={handleEditInvoice}
       />
-      
-      {/* Add Invoice Dialog */}
+
       <Dialog open={isAddInvoiceDialogOpen} onOpenChange={setIsAddInvoiceDialogOpen}>
         <DialogContent>
           <DialogHeader>

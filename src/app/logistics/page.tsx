@@ -342,7 +342,7 @@ export default function LogisticsPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      {/* Header */}
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-bold flex items-center gap-3">
@@ -362,7 +362,7 @@ export default function LogisticsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -415,7 +415,7 @@ export default function LogisticsPage() {
           <TabsTrigger value="procurement">Procurement (PO)</TabsTrigger>
         </TabsList>
 
-        {/* Inventory Tab */}
+        
         <TabsContent value="inventory" className="space-y-4">
           <div className="flex justify-between items-center">
             <div className="flex gap-2 items-center">
@@ -563,7 +563,7 @@ export default function LogisticsPage() {
           </Card>
         </TabsContent>
 
-        {/* Suppliers Tab */}
+        
         <TabsContent value="suppliers" className="space-y-4">
           <div className="flex justify-end">
             <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
@@ -638,7 +638,7 @@ export default function LogisticsPage() {
           </Card>
         </TabsContent>
 
-        {/* Procurement Tab */}
+        
         <TabsContent value="procurement" className="space-y-4">
           <div className="flex justify-end">
             <Dialog open={isCreatePOOpen} onOpenChange={setIsCreatePOOpen}>
@@ -678,7 +678,7 @@ export default function LogisticsPage() {
                     </div>
                   </div>
 
-                  {/* Order Items Section */}
+                  
                   <div className="border rounded-lg p-4 space-y-4">
                     <h4 className="font-medium text-sm">Order Items</h4>
                     <div className="flex gap-2 items-end">

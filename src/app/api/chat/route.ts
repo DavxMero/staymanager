@@ -110,9 +110,9 @@ Anonymous (not logged in).`;
   try {
     result = await streamText({
     model: resolved.model,
-    // Retry transient Gemini errors (429 rate-limit / 503 overloaded) with the
-    // AI SDK's built-in exponential backoff. With maxRetries:0 a single transient
-    // blip surfaced immediately to the user as a hard error in the chat UI.
+    
+    
+    
     maxRetries: 2,
     toolChoice: 'auto',
 
@@ -328,7 +328,7 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
           }
 
           if (tipeKamar) {
-            // Escape wildcard ILIKE agar input tamu tidak bisa mem-bypass filter
+            
             const escaped = tipeKamar.replace(/[%_]/g, '\\$&');
             query = query.ilike('type', `%${escaped}%`);
           }
@@ -410,7 +410,7 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
             const checkInDate = new Date(bookingData.checkIn);
             const checkOutDate = new Date(bookingData.checkOut);
 
-            // Validasi tanggal: format benar, check-in < check-out, tidak di masa lalu
+            
             if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
               return { success: false, error: 'INVALID_DATE: Format tanggal tidak valid. Gunakan YYYY-MM-DD.' };
             }
@@ -422,8 +422,8 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
               return { success: false, error: 'INVALID_DATE: Tanggal check-in sudah lewat. Minta tamu memilih tanggal mulai hari ini.' };
             }
 
-            // Re-check ketersediaan tepat sebelum insert — jeda percakapan bisa
-            // membuat hasil cekKetersediaan sebelumnya basi
+            
+            
             const { count: overlapCount } = await supabase
               .from('reservations')
               .select('id', { count: 'exact', head: true })
@@ -510,7 +510,7 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
 
             if (error) {
               console.error('Booking creation error:', error);
-              // 23P01 = pelanggaran EXCLUDE constraint anti-double-booking di DB
+              
               if (error.code === '23P01') {
                 return {
                   success: false,
@@ -634,8 +634,8 @@ SHOW_LOGIN_PROMPT_JSON:{\"reason\":\"membuat reservasi\"}"
               };
             }
 
-            // Kepemilikan harus terbukti positif — email kosong di salah satu
-            // sisi berarti TOLAK, bukan lolos
+            
+            
             const ownsReservationByEmail =
               !!verifiedUser.email &&
               !!reservation.guest_email &&

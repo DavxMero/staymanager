@@ -1,10 +1,4 @@
-/**
- * Client-side report export helpers.
- * - CSV: generates UTF-8 BOM CSV (opens cleanly in Excel) and triggers download.
- * - PDF: opens a print-ready HTML window; user picks "Save as PDF" in browser print dialog.
- *
- * No external libraries required.
- */
+
 
 interface DateRange {
     startDate: string
@@ -16,7 +10,6 @@ const fmtRupiah = (n: number) =>
 
 const fmtPct = (n: number) => `${(n || 0).toFixed(2)}%`
 
-// CSV-safe escape: wrap in quotes if contains comma/quote/newline, double-up internal quotes
 const csvCell = (val: unknown): string => {
     if (val === null || val === undefined) return ''
     const str = String(val)
@@ -27,7 +20,7 @@ const csvCell = (val: unknown): string => {
 const csvRow = (cells: unknown[]) => cells.map(csvCell).join(',')
 
 const triggerDownload = (content: string, filename: string, mime: string) => {
-    const BOM = '﻿' // UTF-8 BOM so Excel renders Bahasa Indonesia & rupiah correctly
+    const BOM = '﻿'
     const blob = new Blob([BOM + content], { type: `${mime};charset=utf-8;` })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -39,8 +32,6 @@ const triggerDownload = (content: string, filename: string, mime: string) => {
     URL.revokeObjectURL(url)
 }
 
-// ─── REPORTS PAGE ──────────────────────────────────────────────────────────
-
 export function exportReportToCSV(data: any, range: DateRange) {
     const lines: string[] = []
 
@@ -49,7 +40,6 @@ export function exportReportToCSV(data: any, range: DateRange) {
     lines.push(`Tanggal Cetak,${new Date().toLocaleString('id-ID')}`)
     lines.push('')
 
-    // Summary section
     lines.push('=== RINGKASAN KEUANGAN ===')
     lines.push(csvRow(['Metrik', 'Nilai']))
     lines.push(csvRow(['Total Revenue', fmtRupiah(data.summary?.totalRevenue)]))
@@ -61,7 +51,6 @@ export function exportReportToCSV(data: any, range: DateRange) {
     lines.push(csvRow(['Occupied Rooms', data.summary?.occupiedRooms ?? 0]))
     lines.push('')
 
-    // Revenue trend
     if (Array.isArray(data.revenueData) && data.revenueData.length > 0) {
         lines.push('=== TREN REVENUE & BOOKING ===')
         lines.push(csvRow(['Periode', 'Bookings', 'Revenue (Rp)']))
@@ -71,7 +60,6 @@ export function exportReportToCSV(data: any, range: DateRange) {
         lines.push('')
     }
 
-    // Room type revenue
     if (Array.isArray(data.roomTypeRevenue) && data.roomTypeRevenue.length > 0) {
         lines.push('=== REVENUE PER TIPE KAMAR ===')
         lines.push(csvRow(['Tipe', 'Revenue (Rp)']))
@@ -81,7 +69,6 @@ export function exportReportToCSV(data: any, range: DateRange) {
         lines.push('')
     }
 
-    // Room service stats
     if (data.roomServiceStats) {
         lines.push('=== ROOM SERVICE REQUESTS ===')
         lines.push(csvRow(['Total', data.roomServiceStats.total ?? 0]))
@@ -91,7 +78,6 @@ export function exportReportToCSV(data: any, range: DateRange) {
         lines.push('')
     }
 
-    // Housekeeping stats
     if (data.housekeepingStats) {
         lines.push('=== HOUSEKEEPING TASKS ===')
         lines.push(csvRow(['Total', data.housekeepingStats.total ?? 0]))
@@ -234,13 +220,11 @@ ${data.housekeepingStats
 
     win.document.write(html)
     win.document.close()
-    // Beri waktu render sebelum print dialog dibuka otomatis
+
     setTimeout(() => {
         try { win.focus() } catch { }
     }, 200)
 }
-
-// ─── FINANCIAL PAGE ────────────────────────────────────────────────────────
 
 interface FinancialExportPayload {
     totalIncome: number

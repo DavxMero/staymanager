@@ -1,7 +1,7 @@
 import { createClient as createServerSupabase } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Service-role client: reads user_roles/roles regardless of RLS.
+
 const serviceClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -15,12 +15,7 @@ export interface ServerUserContext {
     roles: string[];
 }
 
-/**
- * Resolve the calling user server-side. Accepts either:
- * - Authorization: Bearer <supabase access token> (API tests, programmatic clients)
- * - Supabase SSR auth cookies (browser)
- * Returns null when unauthenticated.
- */
+
 export async function getServerUserContext(request?: Request): Promise<ServerUserContext | null> {
     let userId: string | null = null;
     let email: string | null = null;
@@ -43,7 +38,6 @@ export async function getServerUserContext(request?: Request): Promise<ServerUse
                 email = user.email ?? null;
             }
         } catch {
-            // outside a request scope (no cookies) — fall through to null
         }
     }
 
@@ -65,13 +59,13 @@ export async function getServerUserContext(request?: Request): Promise<ServerUse
     return { userId, email, permissions: Array.from(permissions), roles };
 }
 
-/** True when the user has any of the given permissions (super_admin '*' always passes). */
+
 export function hasPermission(ctx: ServerUserContext, ...perms: string[]): boolean {
     if (ctx.permissions.includes('*')) return true;
     return perms.some((p) => ctx.permissions.includes(p));
 }
 
-/** Staff who manage bookings: super_admin (*), occupancy, or guests permission. */
+
 export function canManageBookings(ctx: ServerUserContext): boolean {
     return (
         ctx.permissions.includes('*') ||
@@ -80,7 +74,7 @@ export function canManageBookings(ctx: ServerUserContext): boolean {
     );
 }
 
-/** Guests may only touch their own booking — matched by email, case-insensitive. */
+
 export function ownsReservation(ctx: ServerUserContext, guestEmail: string | null): boolean {
     return Boolean(ctx.email && guestEmail && guestEmail.toLowerCase() === ctx.email.toLowerCase());
 }

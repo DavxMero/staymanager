@@ -142,7 +142,7 @@ export default function SecurityPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Security & RLS</h2>
@@ -165,7 +165,7 @@ export default function SecurityPage() {
         </Button>
       </div>
 
-      {/* RLS Management Tools */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -211,7 +211,7 @@ export default function SecurityPage() {
         </CardContent>
       </Card>
 
-      {/* Security Status */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -244,7 +244,7 @@ export default function SecurityPage() {
         </CardContent>
       </Card>
 
-      {/* Security Metrics */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -295,7 +295,7 @@ export default function SecurityPage() {
         </Card>
       </div>
 
-      {/* Security Guidelines */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">

@@ -1,24 +1,4 @@
-/**
- * Black Box Testing — 36 Skenario StayManager
- *
- * Setup:
- *   pnpm add -D @playwright/test
- *   npx playwright install
- *   BASE_URL=https://staymanager.vercel.app pnpm exec playwright test bbt-playwright.spec.ts
- *
- * Required env vars:
- *   BASE_URL                   — deployed app URL (default: http://localhost:3000)
- *   SUPER_ADMIN_EMAIL/PASSWORD — super_admin role login
- *   MANAGER_EMAIL/PASSWORD     — manager role login
- *   FRONT_DESK_EMAIL/PASSWORD  — front_desk role login
- *   STAFF_EMAIL/PASSWORD       — generic Staff role login (for RBAC tests)
- *
- * Output: docs/verification/bbt-results-YYYY-MM-DD.json (via reporter)
- *
- * Note: Skenario yang melibatkan Google OAuth (6, 7) di-skip karena butuh interaksi
- *       popup OAuth Google yang tidak bisa di-automate tanpa service account.
- *       Jalankan manual untuk skenario tersebut (lihat bbt-manual-checklist.md).
- */
+
 
 import { test, expect, Page } from '@playwright/test';
 
@@ -38,7 +18,7 @@ const creds = {
     email: process.env.FRONT_DESK_EMAIL || 'e2e.frontdesk@staymanager.test',
     password: process.env.FRONT_DESK_PASSWORD || E2E_PASSWORD,
   },
-  // Staff = front_desk (role non-admin untuk RBAC skenario 35)
+  
   staff: {
     email: process.env.STAFF_EMAIL || 'e2e.frontdesk@staymanager.test',
     password: process.env.STAFF_PASSWORD || E2E_PASSWORD,
@@ -50,7 +30,7 @@ async function loginAs(page: Page, role: keyof typeof creds) {
   await page.goto(`${BASE_URL}/login`);
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
-  // Exact name 'Sign In' untuk hindari clash dengan tombol Google OAuth "Continue with Google"
+  
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await page.waitForURL(/\/dashboard|\/occupancy|\/rooms|\/chatbot/, { timeout: 15_000 });
 }
@@ -81,16 +61,16 @@ test.describe('Modul Autentikasi (Tabel 4.4) — skenario 1-7', () => {
     await page.locator('#email').fill('nonexistent.user@e2e.test');
     await page.locator('#password').fill('SomePassword123!');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-    // Supabase merge "user not found" + "wrong password" → "Email atau kata sandi salah"
+    
     await expect(page.getByText(/email atau kata sandi yang Anda masukkan salah|tidak ditemukan|invalid/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('Skenario 4: Login dengan field kosong', async ({ page }) => {
     await page.goto(`${BASE_URL}/login`);
-    // HTML5 required attribute prevents submit + browser validation
+    
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     const emailField = page.locator('#email');
-    // Check :invalid pseudo-class atau validationMessage non-empty
+    
     const isInvalid = await emailField.evaluate((el: HTMLInputElement) => !el.validity.valid);
     expect(isInvalid).toBe(true);
   });
@@ -187,10 +167,10 @@ test.describe('Modul Manajemen Kamar (Tabel 4.6) — skenario 11-15', () => {
   });
 
   test('Skenario tambahan: PostgreSQL exclusion constraint (no_overlap_active_reservations)', async ({ request }) => {
-    // Verifikasi defense-in-depth lapisan database (Bab 4.3.2.3 paragraf REVISI LOKASI-10)
-    // Skenario: 2 INSERT reservasi confirmed dengan rentang tanggal overlap pada kamar yang sama
-    // Hasil yang diharapkan: INSERT kedua ditolak dengan kode error 23P01 (exclusion_violation)
-    // Catatan: butuh service role atau RPC endpoint khusus untuk test ini — tandai manual
+    
+    
+    
+    
     test.skip(true, 'Butuh service role atau RPC test endpoint; jalankan via supabase SQL manual');
   });
 });
@@ -228,7 +208,7 @@ test.describe('Modul Manajemen Tamu (Tabel 4.7) — skenario 16-19', () => {
     await page.getByRole('button', { name: /check.?out/i }).click();
     await page.getByRole('button', { name: /konfirmasi|confirm/i }).click();
     await expect(page.getByText(/check.?out|checked out/i)).toBeVisible();
-    // Verify kamar berubah ke cleaning
+    
     await page.goto(`${BASE_URL}/rooms`);
     await expect(page.getByText(/cleaning|dibersihkan/i).first()).toBeVisible();
   });
@@ -312,7 +292,7 @@ test.describe('Modul Logistik dan Inventori (Tabel 4.9) — skenario 24-26', () 
 });
 
 test.describe('Modul Chatbot LLM (Tabel 4.10) — skenario 27-30', () => {
-  // Chatbot tidak butuh login — endpoint publik /chatbot
+  
   test('Skenario 27: Pertanyaan informasi hotel', async ({ page }) => {
     await page.goto(`${BASE_URL}/chatbot`);
     await page.getByPlaceholder(/type your message/i).fill('Apa fasilitas yang tersedia di hotel ini?');
@@ -372,7 +352,7 @@ test.describe('Modul Laporan (Tabel 4.11) — skenario 31-33', () => {
       page.waitForEvent('dialog').catch(() => null),
       page.getByRole('button', { name: /cetak|print/i }).click(),
     ]);
-    // Verify print stylesheet aktif atau dialog terbuka
+    
     expect(printDialog !== null || true).toBe(true);
   });
 });

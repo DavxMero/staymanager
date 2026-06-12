@@ -311,7 +311,6 @@ export function GuestReservationDialog({
 
         <div className="p-6 pt-2 space-y-8">
 
-          {/* Guest Information */}
           <div className="space-y-4">
             <h4 className="font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
               <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -351,7 +350,6 @@ export function GuestReservationDialog({
 
           <Separator />
 
-          {/* Booking Details */}
           <div className="space-y-4">
             <h4 className="font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
               <CalendarIconLucide className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -462,7 +460,6 @@ export function GuestReservationDialog({
 
           <Separator />
 
-          {/* Breakfast Options */}
           <div className="space-y-4">
             <h4 className="font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
               <Utensils className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -519,7 +516,6 @@ export function GuestReservationDialog({
 
           <Separator />
 
-          {/* Payment & Summary */}
           <div className="space-y-4">
             <h4 className="font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
               <DollarSign className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -587,7 +583,6 @@ export function GuestReservationDialog({
             </Card>
           </div>
 
-          {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes">Special Requests / Notes</Label>
             <Textarea

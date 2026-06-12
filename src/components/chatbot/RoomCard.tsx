@@ -63,7 +63,7 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
     const amenities =
         room.amenities && room.amenities.length > 0
             ? room.amenities
-            : ['WiFi', 'AC', 'TV', 'Breakfast']; // fallback default
+            : ['WiFi', 'AC', 'TV', 'Breakfast'];
 
     return (
         <>
@@ -73,7 +73,7 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                 transition={{ duration: 0.3 }}
                 className="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
             >
-                {/* Compact Header: thumbnail + name */}
+
                 <div className="p-3 bg-gray-50 dark:bg-gray-900/40 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
@@ -108,7 +108,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                     </div>
                 </div>
 
-                {/* Body: price + dates + actions */}
                 <div className="p-4 space-y-3">
                     <div className="flex items-baseline gap-2">
                         <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
@@ -150,7 +149,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                 </div>
             </motion.div>
 
-            {/* Details Modal with carousel */}
             <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
                     <DialogHeader className="sr-only">
@@ -160,7 +158,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                         </DialogDescription>
                     </DialogHeader>
 
-                    {/* Carousel */}
                     <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
                         <AnimatePresence mode="wait">
                             {gallery.length > 0 ? (
@@ -181,7 +178,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                             )}
                         </AnimatePresence>
 
-                        {/* Carousel controls — always rendered; disabled visually when only 1 image */}
                         {(() => {
                             const multi = gallery.length > 1;
                             return (
@@ -229,7 +225,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                         })()}
                     </div>
 
-                    {/* Details body */}
                     <div className="p-6 space-y-5">
                         <div className="flex items-start justify-between gap-4">
                             <div>
@@ -254,7 +249,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                             </p>
                         )}
 
-                        {/* Specs grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 border-y border-gray-200 dark:border-gray-700">
                             <SpecItem
                                 label="Type"
@@ -280,7 +274,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                             )}
                         </div>
 
-                        {/* Check-in/out */}
                         <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                             <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -288,7 +281,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                             <span>Check-in {checkIn} → Check-out {checkOut}</span>
                         </div>
 
-                        {/* Amenities */}
                         <div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                                 Amenities
@@ -305,7 +297,6 @@ export function RoomCard({ room, checkIn, checkOut, onBook, count }: RoomCardPro
                             </div>
                         </div>
 
-                        {/* CTA */}
                         <motion.button
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}

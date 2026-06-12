@@ -82,7 +82,7 @@ export async function adminFetchCheckoutData(roomId: string | number) {
 
         if (reservationError) throw reservationError
         
-        // Prioritize active reservations: checked-in > overdue > checked-out
+        
         const statusPriority: Record<string, number> = { 'checked-in': 0, 'overdue': 1, 'checked-out': 2 }
         const sorted = (data || []).sort((a: any, b: any) => (statusPriority[a.status] ?? 99) - (statusPriority[b.status] ?? 99))
         const reservationData = sorted[0];

@@ -21,7 +21,7 @@ let api: APIRequestContext;
 let ownerToken: string;
 let otherToken: string;
 let room: { id: string; number: string; type: string };
-// far-future, run-unique window to dodge the GiST exclusion constraint across runs
+
 const dayBase = 1500 + (Math.floor(Date.now() / 86_400_000) % 3000);
 
 function isoDate(offsetDays: number): string {
@@ -147,7 +147,7 @@ test('restore after room rebooked → 409', async () => {
     data: {},
   });
   expect(cancelResp.status()).toBe(200);
-  // same room, same window, different guest — takes the slot
+  
   await seedReservation({ status: 'confirmed', email: OTHER_EMAIL, offset: 50 });
   const resp = await api.post(`/api/bookings/${resA.id}/restore`, { headers: authHeaders(ownerToken) });
   expect(resp.status()).toBe(409);

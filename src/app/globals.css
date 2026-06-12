@@ -121,13 +121,8 @@
     @apply bg-background text-foreground;
   }
 
-  /* Breathing room between a field label and the control right below it
-     inside dialogs. Existing space-y-2 (8px) gets visually eaten by the
-     global html zoom (0.8–1.0) plus the input focus ring, so labels look
-     glued to their inputs. This adds a consistent extra gap everywhere
-     without touching each form. */
-  /* :not(.items-center) skips horizontal label+control rows and
-     checkbox rows, which must stay vertically centered */
+  
+  
   [data-slot="dialog-content"] div:not(.items-center) > label + input,
   [data-slot="dialog-content"] div:not(.items-center) > label + textarea,
   [data-slot="dialog-content"] div:not(.items-center) > label + select,
@@ -139,7 +134,7 @@
     margin-top: 0.375rem;
   }
 
-  /* Same pattern for helper text directly under a control */
+  
   [data-slot="dialog-content"] input + p,
   [data-slot="dialog-content"] textarea + p,
   [data-slot="dialog-content"] div:has(> input) + p {
@@ -147,87 +142,87 @@
   }
 }
 
-/* Custom scrollbar styles for dialog boxes */
+
 @layer components {
 
-  /* Hide scrollbar for dialog content */
+  
   .dialog-content-scrollable {
 
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    
     &::-webkit-scrollbar {
       display: none;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
+    
     -ms-overflow-style: none;
-    /* IE and Edge */
+    
     scrollbar-width: none;
-    /* Firefox */
+    
   }
 
-  /* Apply to all dialog content */
+  
   [data-radix-dialog-content] {
 
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    
     &::-webkit-scrollbar {
       display: none;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
+    
     -ms-overflow-style: none;
-    /* IE and Edge */
+    
     scrollbar-width: none;
-    /* Firefox */
+    
   }
 
-  /* Apply to dialog content inner elements that might scroll */
+  
   [data-radix-dialog-content] * {
 
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    
     &::-webkit-scrollbar {
       display: none;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
+    
     -ms-overflow-style: none;
-    /* IE and Edge */
+    
     scrollbar-width: none;
-    /* Firefox */
+    
   }
 
-  /* Custom class for manually applied scrollable areas */
+  
   .invisible-scrollbar {
 
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    
     &::-webkit-scrollbar {
       display: none;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
+    
     -ms-overflow-style: none;
-    /* IE and Edge */
+    
     scrollbar-width: none;
-    /* Firefox */
+    
   }
 
-  /* Apply invisible scrollbar to common overflow patterns in dialogs */
+  
   .overflow-y-auto:has(.invisible-scrollbar),
   .dialog-content-scrollable,
   [role="dialog"] .overflow-y-auto {
 
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    
     &::-webkit-scrollbar {
       display: none;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
+    
     -ms-overflow-style: none;
-    /* IE and Edge */
+    
     scrollbar-width: none;
-    /* Firefox */
+    
   }
 
-  /* Minimal custom scrollbar for textarea */
+  
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgb(209 213 219) transparent;
@@ -262,15 +257,10 @@
     }
   }
 
-  /* UI fit-to-screen: zoom otomatis berdasarkan lebar viewport.
-     - >=1600px: scale 1.0 (normal)
-     - 1280–1600px: scale antara 0.8 dan 1.0 proporsional (1366→0.85, 1440→0.9, dst)
-     - <1280px tablet/desktop: clamp ke 0.8 minimum
-     - <768px (mobile): zoom dibiarkan 1.0 supaya tetap responsive native
-     Pakai zoom (bukan transform: scale) supaya layout/click events tidak break. */
+  
   @media (min-width: 768px) {
     html {
-      zoom: clamp(0.8, calc(100vw / 1600), 1);
+      zoom: clamp(0.8, calc(100vw / 1700), 0.9);
     }
   }
 }

@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
             if (itemsError) {
                 console.error('Error creating PO items:', itemsError)
-                // Hapus header PO yatim agar tidak ada PO tanpa item yang bisa di-receive
+                
                 await supabase.from('inventory_purchase_orders').delete().eq('id', po.id)
                 return NextResponse.json(
                     { success: false, error: 'Gagal menambahkan item ke Purchase Order. PO dibatalkan, silakan coba lagi.' },

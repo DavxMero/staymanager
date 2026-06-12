@@ -29,7 +29,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [guestName, setGuestName] = useState(booking.guestName);
     const [guestEmail, setGuestEmail] = useState(booking.guestEmail);
-    // Telepon sengaja selalu kosong saat modal muncul — wajib diisi manual
+    
     const [guestPhone, setGuestPhone] = useState('');
 
     const nameValid = guestName.trim().length >= 3;
@@ -37,14 +37,14 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
     const phoneValid = guestPhone.replace(/\D/g, '').length >= 8;
     const formValid = nameValid && emailValid && phoneValid;
 
-    // Error hanya ditampilkan untuk field yang sudah diisi tapi tidak valid —
-    // field kosong tampil netral (Confirm tetap disabled lewat formValid)
+    
+    
     const showNameError = guestName !== '' && !nameValid;
     const showEmailError = guestEmail !== '' && !emailValid;
     const showPhoneError = guestPhone !== '' && !phoneValid;
 
-    // booking.* berisi data akun login (prop terbaru, termasuk hasil
-    // fetch tabel guests) — dipakai tombol "Samakan dengan data diri akun ini"
+    
+    
     const fillFromAccount = () => {
         setGuestName(booking.guestName);
         setGuestEmail(booking.guestEmail);
@@ -83,7 +83,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                     onClick={(e) => e.stopPropagation()}
                     className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
                 >
-                    {/* Header */}
+                    
                     <div className="bg-blue-600 dark:bg-blue-700 p-6 text-white">
                         <div className="flex items-center gap-3">
                             <div className="bg-white/20 p-3 rounded-full">
@@ -98,9 +98,9 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                         </div>
                     </div>
 
-                    {/* Body */}
+                    
                     <div className="p-6 space-y-4">
-                        {/* Room Details */}
+                        
                         <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +124,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                             </div>
                         </div>
 
-                        {/* Stay Duration */}
+                        
                         <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                             </div>
                         </div>
 
-                        {/* Guest Details */}
+                        
                         <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +213,7 @@ export function BookingConfirmation({ booking, onConfirm, onCancel }: BookingCon
                         </div>
                     </div>
 
-                    {/* Footer */}
+                    
                     <div className="bg-gray-50 dark:bg-gray-700 p-6 flex gap-3">
                         <button
                             onClick={onCancel}

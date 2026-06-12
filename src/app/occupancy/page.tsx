@@ -107,7 +107,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
     if (open && room) {
       fetchCheckoutData()
     }
-  }, [open, room]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, room]) 
 
   useEffect(() => {
     if (paymentMethod === 'cash' && cashReceived > 0) {
@@ -481,7 +481,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {/* Checkout Summary */}
+            
             <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
               <CardContent className="pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -527,7 +527,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               </CardContent>
             </Card>
 
-            {/* Action Buttons */}
+            
             <div className="flex gap-3 justify-center">
               <Button
                 onClick={() => printCheckoutInvoice(checkoutInvoice)}
@@ -589,7 +589,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               </div>
             )}
 
-            {/* Guest & Room Info */}
+            
             <Card className="bg-slate-200 dark:bg-gray-900 border-slate-300 dark:border-gray-700">
               <CardContent className="pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -613,7 +613,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               </CardContent>
             </Card>
 
-            {/* Unpaid Bills Section */}
+            
             <div className="space-y-4">
               <h3 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
@@ -669,7 +669,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               )}
             </div>
 
-            {/* Security Deposit Section */}
+            
             <div className="space-y-4">
               <h3 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
@@ -734,7 +734,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               </Card>
             </div>
 
-            {/* Payment Section - Only show if there are unpaid bills and final amount > 0 */}
+            
             {unpaidBills.length > 0 && (paymentAmount - (depositRefund ? depositAmount : 0)) > 0 && (
               <div className="space-y-4">
                 <h3 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
@@ -745,7 +745,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                 <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700">
                   <CardContent className="pt-4">
                     <div className="space-y-4">
-                      {/* Payment Calculation */}
+                      
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Outstanding bills:</span>
@@ -766,7 +766,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                         </div>
                       </div>
 
-                      {/* Payment Method Selection */}
+                      
                       <div className="space-y-2">
                         <Label>Payment Method</Label>
                         <Select value={paymentMethod} onValueChange={(value) => {
@@ -789,7 +789,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
                         </Select>
                       </div>
 
-                      {/* Cash POS Interface for Checkout */}
+                      
                       {paymentMethod === 'cash' && (
                         <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700">
                           <CardContent className="pt-4">
@@ -848,7 +848,7 @@ function CheckoutDialog({ room, open, onOpenChange, onCheckoutComplete }: Checko
               </div>
             )}
 
-            {/* Final Summary */}
+            
             <Card className="bg-slate-300 dark:bg-gray-800 border-slate-400 dark:border-gray-600">
               <CardContent className="pt-4">
                 <h4 className="font-semibold text-slate-800 dark:text-white mb-3">Checkout Summary</h4>
@@ -1513,7 +1513,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {/* Success Summary */}
+            
             <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700">
               <CardContent className="pt-4">
                 <div className="space-y-3">
@@ -1556,7 +1556,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               </CardContent>
             </Card>
 
-            {/* Action Buttons */}
+            
             <div className="flex gap-3 justify-center">
               <Button
                 onClick={() => printInvoice(invoiceData)}
@@ -1606,7 +1606,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
         <div className="overflow-y-auto max-h-[70vh] pr-2">
           <div className="space-y-6 py-4">
 
-            {/* Room Info */}
+            
             <Card className="bg-slate-200 dark:bg-gray-900 border-slate-300 dark:border-gray-700">
               <CardContent className="pt-4">
                 <div className="flex justify-between items-center">
@@ -1620,7 +1620,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               </CardContent>
             </Card>
 
-            {/* Guest Type Selection */}
+            
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-slate-800 dark:text-white">Guest Information</h4>
@@ -1761,7 +1761,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                     </div>
                   </div>
 
-                  {/* Stay Details for Walk-in */}
+                  
                   <div className="space-y-4">
                     <h5 className="font-medium text-slate-800 dark:text-white flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
@@ -1812,7 +1812,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       </div>
                     </div>
 
-                    {/* Breakfast Options for Walk-in */}
+                    
                     <div className="space-y-4">
                       <h5 className="font-medium text-slate-800 dark:text-white flex items-center gap-2">
                         <Utensils className="h-4 w-4" />
@@ -1870,7 +1870,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       </div>
                     </div>
 
-                    {/* Walk-in Total Summary */}
+                    
                     <Card className="bg-slate-200 dark:bg-gray-700 border-slate-300 dark:border-gray-600">
                       <CardContent className="pt-3 pb-3">
                         <div className="space-y-2 text-sm">
@@ -1904,7 +1904,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                 </div>
               )}
 
-              {/* Cancelled reservations — persistent Restore */}
+              
               {cancelledReservations.length > 0 && (
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Cancelled Reservations</Label>
@@ -1937,7 +1937,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
               )}
             </div>
 
-            {/* Payment Processing Section */}
+            
             {showPayment && (
               <Card className="bg-slate-300 dark:bg-gray-800 border-slate-400 dark:border-gray-600">
                 <CardContent className="pt-4">
@@ -1947,7 +1947,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                   </h4>
 
                   <div className="space-y-4">
-                    {/* Existing Payments Section (for reservations with prior payments) */}
+                    
                     {!isWalkIn && existingPayments.length > 0 && (
                       <div className="space-y-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
                         <h5 className="font-semibold text-green-800 dark:text-green-300 flex items-center gap-2">
@@ -1974,7 +1974,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       </div>
                     )}
 
-                    {/* Payment Breakdown */}
+                    
                     <div className="space-y-2 p-3 bg-slate-200 dark:bg-gray-700 rounded-lg border">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Room Amount:</span>
@@ -2030,7 +2030,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                       </Select>
                     </div>
 
-                    {/* Cash POS Interface */}
+                    
                     {paymentMethod === 'cash' && (
                       <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700">
                         <CardContent className="pt-4">
@@ -2039,7 +2039,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                           </h5>
 
                           <div className="space-y-4">
-                            {/* Amount to Pay */}
+                            
                             <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border">
                               <span className="font-medium">Amount to Pay:</span>
                               <span className="text-xl font-bold text-green-600 dark:text-green-400">
@@ -2047,7 +2047,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                               </span>
                             </div>
 
-                            {/* Cash Received Input */}
+                            
                             <div className="space-y-2">
                               <Label htmlFor="cashReceived">Cash Received</Label>
                               <Input
@@ -2061,7 +2061,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                               />
                             </div>
 
-                            {/* Quick Amount Buttons */}
+                            
                             <div className="space-y-2">
                               <Label>Quick Amounts</Label>
                               <div className="grid grid-cols-3 gap-2">
@@ -2084,7 +2084,7 @@ function CheckinDialog({ room, open, onOpenChange, onCheckinComplete }: CheckinD
                               </div>
                             </div>
 
-                            {/* Change Calculation */}
+                            
                             {cashReceived > 0 && (
                               <div className="space-y-2">
                                 {cashReceived < currentTotal ? (
@@ -2465,7 +2465,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
 
         <div className="overflow-y-auto max-h-[65vh] pr-2">
           <div className="space-y-6 py-4">
-            {/* Guest Information */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -2490,7 +2490,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
               </div>
             </div>
 
-            {/* Stay Details */}
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Check-in</Label>
@@ -2527,7 +2527,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
               </div>
             </div>
 
-            {/* Guest Count */}
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Adults</Label>
@@ -2547,7 +2547,7 @@ function CalendarBookingDialog({ room, date, open, onOpenChange, onReservationCo
               </div>
             </div>
 
-            {/* Price Summary */}
+            
             <Card className="bg-slate-200 dark:bg-gray-700 border-slate-300 dark:border-gray-600">
               <CardContent className="pt-3 pb-3">
                 <div className="space-y-2 text-sm">
@@ -2601,13 +2601,13 @@ export default function OccupancyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Calendar State
+  
   const [calendarStartDate, setCalendarStartDate] = useState(new Date())
   const [calendarReservations, setCalendarReservations] = useState<any[]>([])
   
   const fetchCalendarReservations = async (startDate: Date) => {
     try {
-      // Fetch -1 day to +14 days to cover full spans
+      
       const endDate = addDays(startDate, 14)
       const data = await adminFetchCalendarReservations(format(subDays(startDate, 1), 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'))
       
@@ -2636,7 +2636,7 @@ export default function OccupancyPage() {
   const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(null)
   const [housekeepingStaff, setHousekeepingStaff] = useState<any[]>([])
 
-  // Cleaning confirmation dialog state
+  
   const [cleaningDialogRoom, setCleaningDialogRoom] = useState<Room | null>(null)
   const [cleaningAssignedTo, setCleaningAssignedTo] = useState<string>("")
   const [cleaningSubmitting, setCleaningSubmitting] = useState(false)
@@ -2651,7 +2651,7 @@ export default function OccupancyPage() {
         .eq('id', cleaningDialogRoom.id)
       if (updateErr) throw updateErr
 
-      // Try to log who cleaned (best-effort — silently skip if table/cols differ)
+      
       if (cleaningAssignedTo) {
         try {
           await supabase.from('housekeeping_tasks').insert({
@@ -2663,7 +2663,7 @@ export default function OccupancyPage() {
             completed_at: new Date().toISOString(),
           })
         } catch (logErr) {
-          // Logging failure is non-fatal — room status is already updated
+          
           console.warn('Housekeeping task log failed (non-fatal):', logErr)
         }
       }
@@ -2747,12 +2747,12 @@ export default function OccupancyPage() {
     await fetchCalendarReservations(calendarStartDate)
   }
 
-  // Ref agar channel realtime tidak perlu re-subscribe saat navigasi minggu kalender
+  
   const calendarStartDateRef = useRef(calendarStartDate)
   useEffect(() => { calendarStartDateRef.current = calendarStartDate }, [calendarStartDate])
 
-  // Satu burst mutasi (checkout = update reservasi + insert payment + update kamar)
-  // menghasilkan beberapa event beruntun — debounce supaya hanya satu refetch
+  
+  
   const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scheduleRefetch = useCallback(() => {
     if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
@@ -2761,7 +2761,6 @@ export default function OccupancyPage() {
       fetchRooms()
       fetchCalendarReservations(calendarStartDateRef.current)
     }, 400)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const hadDisconnectRef = useRef(false)
@@ -2786,7 +2785,7 @@ export default function OccupancyPage() {
       }, scheduleRefetch)
       .subscribe((status) => {
         if (status === 'SUBSCRIBED' && hadDisconnectRef.current) {
-          // Re-subscribe setelah koneksi putus: tarik ulang data yang terlewat
+          
           hadDisconnectRef.current = false
           scheduleRefetch()
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
@@ -2800,7 +2799,7 @@ export default function OccupancyPage() {
     }
   }, [scheduleRefetch])
 
-  // Refetch saat tab kembali aktif atau koneksi internet pulih
+  
   useEffect(() => {
     const refetchIfVisible = () => {
       if (document.visibilityState === 'visible') scheduleRefetch()
@@ -2909,7 +2908,7 @@ export default function OccupancyPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -2963,7 +2962,7 @@ export default function OccupancyPage() {
         </Card>
       </div>
 
-            {/* GLOBAL ROOM FILTERS */}
+            
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Room Occupancy & Management</h2>
         <Button onClick={() => setShowFilters(!showFilters)} variant="outline">
@@ -3043,7 +3042,7 @@ export default function OccupancyPage() {
         </Card>
       )}
 
-      {/* 7-DAY OCCUPANCY CALENDAR */}
+      
       <div className="space-y-4 mt-8 mb-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-2">
@@ -3119,12 +3118,12 @@ export default function OccupancyPage() {
                         const KNOWN_STATUSES = new Set(['confirmed', 'checked-in', 'overdue', 'checked-out'])
                         const matchingReservations = calendarReservations.filter(r => {
                           if (r.room_id !== room.id) return false;
-                          // Skip legacy reservations with unknown/null status (causes long gray phantom rows)
+                          
                           if (!r.status || !KNOWN_STATUSES.has(r.status)) return false;
                           if (!r.check_in || !r.check_out) return false;
                           const ci = new Date(r.check_in); ci.setHours(0,0,0,0);
-                          // For checked-out reservations, use actual_check_out so calendar
-                          // doesn't keep the slot occupied past when guest physically left.
+                          
+                          
                           const effectiveCheckOutRaw = r.status === 'checked-out' && r.actual_check_out
                             ? r.actual_check_out
                             : r.check_out;
@@ -3231,7 +3230,7 @@ export default function OccupancyPage() {
         </Button>
       </div>
 
-      {/* Filters */}
+      
       {showFilters && (
         <Card>
           <CardHeader>
@@ -3303,7 +3302,7 @@ export default function OccupancyPage() {
         </Card>
       )}
 
-      {/* Rooms Grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRooms.map((room) => (
           <Card key={room.id} className="hover:shadow-lg transition-shadow">
@@ -3326,7 +3325,7 @@ export default function OccupancyPage() {
                 {formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0))} per night
               </p>
 
-              {/* Occupancy Actions */}
+              
               <div className="mt-4 space-y-3">
                 <div className="flex space-x-2 flex-wrap gap-2">
                   {room.status === 'available' && (
@@ -3346,7 +3345,7 @@ export default function OccupancyPage() {
                     </>
                   )}
 
-                  {/* Out of Order - No actions available */}
+                  
                   {room.status === 'out-of-order' && (
                     <div className="text-xs text-red-600 dark:text-red-400 italic">
                       ⚠️ Room unavailable - undergoing major repairs
@@ -3377,7 +3376,7 @@ export default function OccupancyPage() {
                   )}
                 </div>
 
-                {/* Status Info */}
+                
                 {room.status === 'cleaning' && (
                   <div className="space-y-2">
                     <div className="text-xs font-medium flex items-start gap-2 bg-amber-50 dark:bg-amber-900/25 border border-amber-300 dark:border-amber-600 p-3 rounded-lg">
@@ -3425,7 +3424,7 @@ export default function OccupancyPage() {
       </div>
 
 
-      {/* Check-in Dialog */}
+      
       <CheckinDialog
         room={selectedRoom}
         open={checkinDialogOpen}
@@ -3433,21 +3432,21 @@ export default function OccupancyPage() {
         onCheckinComplete={async () => { await fetchRooms(); await fetchCalendarReservations(calendarStartDate); }}
       />
 
-      {/* Checkout Dialog */}
+      
       <CheckoutDialog
         room={selectedRoom}
         open={checkoutDialogOpen}
         onOpenChange={setCheckoutDialogOpen}
         onCheckoutComplete={handleCheckoutComplete}
       />
-      {/* History Dialog */}
+      
       <GuestHistoryDialog
         reservation={selectedHistoryReservation}
         open={historyDialogOpen}
         onOpenChange={setHistoryDialogOpen}
       />
 
-      {/* Calendar Booking Dialog */}
+      
       <CalendarBookingDialog
         room={selectedRoom}
         date={calendarSelectedDate}
@@ -3459,7 +3458,7 @@ export default function OccupancyPage() {
         }}
       />
 
-      {/* Mark as Cleaned Dialog — with assignee picker */}
+      
       <Dialog
         open={!!cleaningDialogRoom}
         onOpenChange={(open) => {
