@@ -260,7 +260,7 @@
   
   @media (min-width: 768px) {
     html {
-      zoom: clamp(0.8, calc(100vw / 1700), 0.9);
+      font-size: clamp(13px, calc(100vw / 132), 14.5px);
     }
   }
 }
