@@ -28,8 +28,6 @@
         "testIgnore": [],
         "testMatch": [
           "bbt-playwright.spec.ts",
-          "bbt-screenshot-capture.spec.ts",
-          "bab4-screenshot-capture.spec.ts",
           "thesis-screenshot-capture.spec.ts"
         ],
         "timeout": 90000
@@ -91,7 +89,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "3.29 + 4.6 Keuangan (dipisah: ringkasan & riwayat)",
+          "title": "4.8 Billing & Invoice",
           "ok": true,
           "tags": [],
           "tests": [
@@ -106,12 +104,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 13620,
+                  "duration": 19678,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-12T20:07:07.571Z",
+                  "startTime": "2026-06-12T20:19:51.757Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -119,9 +117,9 @@
               "status": "expected"
             }
           ],
-          "id": "5ff2bfde4962435120ae-4433fd4c6e1029c513d8",
+          "id": "5ff2bfde4962435120ae-43f0429f06bea3b7bca3",
           "file": "thesis-screenshot-capture.spec.ts",
-          "line": 146,
+          "line": 167,
           "column": 5
         }
       ]
@@ -129,8 +127,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-12T20:07:06.905Z",
-    "duration": 15715.303,
+    "startTime": "2026-06-12T20:19:51.241Z",
+    "duration": 21631.702999999998,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,
