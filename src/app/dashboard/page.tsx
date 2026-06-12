@@ -10,7 +10,6 @@ export const metadata = {
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Get user session
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   let isGuest = true
@@ -18,7 +17,7 @@ export default async function DashboardPage() {
   let userName = "Guest"
 
   if (user) {
-    // Check role
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, full_name, role_type')
@@ -30,7 +29,6 @@ export default async function DashboardPage() {
     userName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Guest'
   }
 
-  // Parallel data fetching for performance
   const [
     { data: rooms },
     { data: reservations },
@@ -49,17 +47,15 @@ export default async function DashboardPage() {
     supabase.from('profiles').select('id, full_name, role')
   ])
 
-  // Process data with defaults to prevent null errors
   const safeRooms = rooms || []
   const safeReservations = reservations || []
   const safeFacilityRequests = facilityRequests || []
   const safeStaffRes = staffRes || []
-  
+
   const staffCount = {
     total: safeStaffRes.length,
-    active: Math.max(0, safeStaffRes.length - 2) // Mock active logic
+    active: Math.max(0, safeStaffRes.length - 2)
   }
-
 
   return (
     <DashboardClient

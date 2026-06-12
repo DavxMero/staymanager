@@ -364,7 +364,7 @@ export default function ExpensesPage() {
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto py-8 space-y-8"
     >
-      {/* Header */}
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-bold flex items-center gap-3">
@@ -640,7 +640,7 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="relative overflow-hidden">
@@ -723,7 +723,7 @@ export default function ExpensesPage() {
         </motion.div>
       </div>
 
-      {/* Expenses Table */}
+      
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">

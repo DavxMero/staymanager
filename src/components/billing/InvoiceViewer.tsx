@@ -38,7 +38,7 @@ interface InvoiceViewerProps {
   onDownload?: (invoice: Invoice) => void
 }
 
-// @ts-nocheck
+
 export function InvoiceViewer({
   invoice,
   isOpen,
@@ -137,11 +137,11 @@ export function InvoiceViewer({
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            {/* Invoice Header */}
+            
             <Card className="print:shadow-none print:border-none">
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Hotel Info */}
+                  
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Building className="h-5 w-5 text-blue-600" />
@@ -163,7 +163,7 @@ export function InvoiceViewer({
                     </div>
                   </div>
 
-                  {/* Invoice Info */}
+                  
                   <div className="space-y-2">
                     <div className="text-right">
                       <h1 className="text-2xl font-bold text-gray-900">INVOICE</h1>
@@ -193,9 +193,9 @@ export function InvoiceViewer({
               </CardContent>
             </Card>
 
-            {/* Bill To & Reservation Details */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bill To */}
+              
               <Card className="print:shadow-none print:border-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">BILL TO</CardTitle>
@@ -214,7 +214,7 @@ export function InvoiceViewer({
                 </CardContent>
               </Card>
 
-              {/* Reservation Details */}
+              
               <Card className="print:shadow-none print:border-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">RESERVATION DETAILS</CardTitle>
@@ -241,7 +241,7 @@ export function InvoiceViewer({
               </Card>
             </div>
 
-            {/* Invoice Items */}
+            
             <Card className="print:shadow-none print:border-none">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -251,7 +251,7 @@ export function InvoiceViewer({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Items Table */}
+                  
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full">
                       <thead className="bg-muted/50">
@@ -283,7 +283,7 @@ export function InvoiceViewer({
 
                   <Separator />
 
-                  {/* Total */}
+                  
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>Total Amount:</span>
@@ -294,7 +294,7 @@ export function InvoiceViewer({
               </CardContent>
             </Card>
 
-            {/* Payment Info */}
+            
             {invoice.status === 'paid' && (
               <Card className="bg-green-50 border-green-200 print:shadow-none print:border-none">
                 <CardContent className="pt-4">
@@ -309,7 +309,7 @@ export function InvoiceViewer({
               </Card>
             )}
 
-            {/* Terms */}
+            
             <Card className="print:shadow-none print:border-none">
               <CardContent className="pt-4">
                 <h4 className="font-medium mb-2">Terms & Conditions</h4>

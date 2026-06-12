@@ -65,7 +65,7 @@ function DialogContent({
         )}
         {...props}
       >
-        <div className="overflow-y-auto max-h-[calc(90vh-3rem)] invisible-scrollbar">
+        <div className="overflow-y-auto max-h-[calc(90vh-3rem)] invisible-scrollbar px-2 -mx-2 py-1 -my-1">
           {children}
         </div>
         {showCloseButton && (

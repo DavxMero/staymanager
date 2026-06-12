@@ -76,7 +76,7 @@ export function DateSelectionCard({
             </div>
 
             <div className="space-y-4">
-                {/* Date Pickers */}
+
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
@@ -153,7 +153,6 @@ export function DateSelectionCard({
                     </div>
                 </div>
 
-                {/* Guest Counter */}
                 <div className="bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -161,7 +160,7 @@ export function DateSelectionCard({
                     </div>
 
                     <div className="space-y-3">
-                        {/* Adults Counter */}
+
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Adults</div>
@@ -187,7 +186,6 @@ export function DateSelectionCard({
                             </div>
                         </div>
 
-                        {/* Children Counter */}
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Children</div>
@@ -215,7 +213,6 @@ export function DateSelectionCard({
                     </div>
                 </div>
 
-                {/* Summary */}
                 {localCheckIn && localCheckOut && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}

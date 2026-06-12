@@ -157,7 +157,7 @@ export default function DevelopmentPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Development Tools</h2>
@@ -173,7 +173,7 @@ export default function DevelopmentPage() {
         </div>
       </div>
 
-      {/* Debugging Tools */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -216,7 +216,7 @@ export default function DevelopmentPage() {
         </CardContent>
       </Card>
 
-      {/* Development Features */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -248,7 +248,7 @@ export default function DevelopmentPage() {
         </CardContent>
       </Card>
 
-      {/* System Logs */}
+      
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -297,7 +297,7 @@ export default function DevelopmentPage() {
         </CardContent>
       </Card>
 
-      {/* Development Stats */}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

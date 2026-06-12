@@ -1,31 +1,5 @@
 'use client'
 
-/**
- * Rooms & Housekeeping Management System
- * 
- * ROOM MANAGEMENT: Original logic preserved, no changes
- * - Uses base_price column as per original design
- * - All existing room CRUD operations unchanged
- * - Room status management unchanged
- * 
- * HOUSEKEEPING ADDITIONS (New):
- * 1. Daily Tasks System:
- *    - Create daily cleaning tasks for available rooms
- *    - Tasks are created on-demand with "Create Daily Tasks" button
- *    - Prevents duplicate daily tasks for the same room on the same day
- * 
- * 2. Database Functions Added:
- *    - run_daily_housekeeping_tasks(): Creates daily tasks
- *    - create_checkout_cleaning_task(): Creates checkout tasks
- *    - get_housekeeping_task_summary(): Statistics
- * 
- * 3. Task Types:
- *    - daily: Routine daily cleaning for available rooms
- *    - checkout: Deep cleaning after guest checkout  
- *    - deep: Deep cleaning maintenance
- *    - special: Special requests
- */
-
 import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -151,7 +125,7 @@ export default function RoomsPage() {
     description: string | null;
     view_type: string | null;
   }>>({})
-  // Detail viewer state — Dialog dengan carousel + amenities untuk staff lihat info kamar lengkap
+
   const [viewRoom, setViewRoom] = useState<Room | null>(null)
   const [viewCarouselIndex, setViewCarouselIndex] = useState(0)
   const [isAddingCustomType, setIsAddingCustomType] = useState(false)
@@ -358,7 +332,6 @@ export default function RoomsPage() {
   const getAllRoomTypes = () => {
     return [...getDefaultRoomTypes(), ...customRoomTypes]
   }
-
 
   const handleRoomCheckout = async (roomId: string, roomNumber: string) => {
     if (!confirm(`Confirm checkout for Room ${roomNumber}?`)) return false
@@ -624,10 +597,10 @@ export default function RoomsPage() {
     setRoomPrice((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0).toString())
     setRoomStatus(room.status || "available")
     setRoomImageUrl(room.image_url || "")
-    // Backward compat: kalau images[] kosong tapi image_url ada → migrasi seed dari kolom lama
+
     const existing = Array.isArray(room.images) ? room.images.filter(Boolean) : []
     setRoomImages(existing.length > 0 ? existing : (room.image_url ? [room.image_url] : []))
-    // Amenities di-resolve dari custom_room_types berdasarkan tipe (shared across rooms of same type)
+
     const meta = typeMetaByName[room.type]
     setRoomAmenities(meta?.amenities && meta.amenities.length > 0 ? [...meta.amenities] : [])
     setCustomAmenityInput("")
@@ -669,7 +642,7 @@ export default function RoomsPage() {
       }
 
       setRoomImages((prev) => [...prev, data.url])
-      // Backward compat: kalau ini foto pertama, isi juga image_url biar tampilan lama tetap jalan
+
       setRoomImageUrl((prev) => prev || data.url)
       toast.success('Image uploaded successfully')
     } catch (err) {
@@ -677,7 +650,7 @@ export default function RoomsPage() {
       toast.error('Failed to upload image', { description: (err as Error).message })
     } finally {
       setImageUploading(false)
-      // Reset input so user bisa pilih file yang sama lagi kalau perlu
+
       e.target.value = ''
     }
   }
@@ -728,7 +701,6 @@ export default function RoomsPage() {
         console.log('Room inserted:', data)
       }
 
-      // Update amenities + bed_configuration di custom_room_types (shared per type)
       if (roomType) {
         const meta = typeMetaByName[roomType]
         const amenitiesChanged = JSON.stringify(meta?.amenities || []) !== JSON.stringify(roomAmenities)
@@ -746,7 +718,7 @@ export default function RoomsPage() {
       }
 
       await fetchRooms()
-      await fetchTypeImages() // refresh typeMetaByName setelah save
+      await fetchTypeImages()
       setIsDialogOpen(false)
       toast.success(currentRoom ? 'Room updated successfully' : 'Room added successfully')
     } catch (err) {
@@ -1287,7 +1259,6 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error: </strong>
@@ -1301,7 +1272,6 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1365,7 +1335,6 @@ export default function RoomsPage() {
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="rooms" className="space-y-4">
         <TabsList>
           <TabsTrigger value="rooms" className="flex items-center gap-2">
@@ -1400,7 +1369,6 @@ export default function RoomsPage() {
             </div>
           </div>
 
-          {/* Room Filters */}
           {showFilters && (
             <Card className="border-2 border-dashed border-border bg-muted/30 dark:bg-muted/10">
               <CardHeader className="pb-4">
@@ -1422,7 +1390,7 @@ export default function RoomsPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Room Type Filter */}
+
                   <div className="space-y-2">
                     <Label htmlFor="typeFilter" className="text-sm font-medium">
                       Room Type
@@ -1444,7 +1412,6 @@ export default function RoomsPage() {
                     </Select>
                   </div>
 
-                  {/* Floor Filter */}
                   <div className="space-y-2">
                     <Label htmlFor="floorFilter" className="text-sm font-medium">
                       Floor
@@ -1466,7 +1433,6 @@ export default function RoomsPage() {
                     </Select>
                   </div>
 
-                  {/* Status Filter */}
                   <div className="space-y-2">
                     <Label htmlFor="roomStatusFilter" className="text-sm font-medium">
                       Status
@@ -1508,7 +1474,6 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Filter Actions and Results */}
                 <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <Button
                     variant="outline"
@@ -1542,11 +1507,9 @@ export default function RoomsPage() {
             </Card>
           )}
 
-          {/* Rooms Grid — auto-rows-fr memastikan semua row punya tinggi sama (max tinggi card) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
             {(() => {
-              // Build per-type image fallback dari rooms lain: kalau Room 305 Presidential
-              // belum punya foto, ambil dari kamar Presidential lain yang sudah ada foto.
+
               const firstImageByType: Record<string, string> = {}
               for (const r of rooms) {
                 if (r.image_url && !firstImageByType[r.type]) {
@@ -1554,7 +1517,7 @@ export default function RoomsPage() {
                 }
               }
               return filteredRooms.map((room) => {
-              // Build gallery: room-level images > legacy image_url > type-level images > borrow from sibling
+
               const roomImgs = Array.isArray(room.images) ? room.images.filter((u): u is string => typeof u === 'string' && Boolean(u)) : []
               const typeImages = typeImagesByName[room.type] || []
               const galleryRaw = [...roomImgs, room.image_url || '', ...typeImages, firstImageByType[room.type] || ''].filter(Boolean) as string[]
@@ -1566,7 +1529,7 @@ export default function RoomsPage() {
 
               return (
               <Card key={room.id} className="overflow-hidden h-full flex flex-col">
-                {/* Mini carousel hero */}
+
                 <DashboardRoomCarousel
                   gallery={gallery}
                   alt={`Room ${room.number}`}
@@ -1593,7 +1556,6 @@ export default function RoomsPage() {
                     {formatCurrencyCompat((((Number(room.price) || Number(room.base_price) || 0) || room.base_price || 0) || room.base_price || 0))} per night
                   </p>
 
-                  {/* Bed config + description */}
                   {meta?.bed_configuration && (
                     <p className="text-xs text-muted-foreground mt-1.5">🛏 {meta.bed_configuration}</p>
                   )}
@@ -1601,7 +1563,6 @@ export default function RoomsPage() {
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{meta.description}</p>
                   )}
 
-                  {/* Amenities preview (max 5 chips + "+N more") */}
                   {amenities.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1">
                       {amenities.slice(0, 5).map((a) => (
@@ -1624,7 +1585,6 @@ export default function RoomsPage() {
                     <span className="font-medium">Status:</span> {statusLabel} (Auto-managed)
                   </div>
 
-                  {/* Room Actions — pushed to bottom for consistent alignment across cards */}
                   <div className="flex mt-auto pt-4 gap-1">
                     <Button
                       variant="outline"
@@ -1651,7 +1611,6 @@ export default function RoomsPage() {
                     </Button>
                   </div>
 
-                  {/* Maintenance Action Only */}
                   {room.status === 'maintenance' && (
                     <div className="mt-3">
                       <Button
@@ -1671,7 +1630,6 @@ export default function RoomsPage() {
                     </div>
                   )}
 
-                  {/* Status Indicators */}
                   {room.status === 'cleaning' && (
                     <div className="mt-3 text-xs text-orange-600 font-medium flex items-center gap-1">
                       🧹 Being cleaned (HIGH priority)
@@ -1847,7 +1805,6 @@ export default function RoomsPage() {
             </div>
           </div>
 
-          {/* Task Filters */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
@@ -1888,7 +1845,6 @@ export default function RoomsPage() {
             </CardContent>
           </Card>
 
-          {/* Tasks Table */}
           <Card>
             <CardContent className="pt-6">
               <Table>
@@ -2041,7 +1997,6 @@ export default function RoomsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Room Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader className="space-y-3">
@@ -2121,13 +2076,12 @@ export default function RoomsPage() {
                     <SelectValue placeholder="Select room type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Default room types */}
+
                     <div className="text-xs text-muted-foreground px-2 py-1 font-medium">Default Types</div>
                     {getDefaultRoomTypes().map(type => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
 
-                    {/* Custom room types */}
                     {customRoomTypes.length > 0 && (
                       <>
                         <div className="text-xs text-muted-foreground px-2 py-1 font-medium border-t mt-1 pt-1">Custom Types</div>
@@ -2137,7 +2091,6 @@ export default function RoomsPage() {
                       </>
                     )}
 
-                    {/* Add custom option */}
                     <div className="border-t mt-1 pt-1">
                       <SelectItem value="__add_custom__" className="text-blue-600 font-medium">
                         <div className="flex items-center gap-2">
@@ -2196,7 +2149,7 @@ export default function RoomsPage() {
                       key={`${url}-${idx}`}
                       className="relative aspect-square rounded-lg overflow-hidden border bg-muted group"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+
                       <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
                       {idx === 0 && (
                         <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-medium">
@@ -2248,7 +2201,6 @@ export default function RoomsPage() {
               )}
             </div>
 
-            {/* Bed Configuration (per tipe) */}
             <div className="grid gap-2">
               <Label htmlFor="roomBed" className="text-sm font-medium">
                 Bed Configuration{' '}
@@ -2270,7 +2222,6 @@ export default function RoomsPage() {
               </Select>
             </div>
 
-            {/* Amenities (per tipe) */}
             <div className="grid gap-2">
               <Label className="text-sm font-medium">
                 Amenities{' '}
@@ -2388,7 +2339,6 @@ export default function RoomsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Room Confirmation Dialog — double verification */}
       <Dialog open={!!roomToDelete} onOpenChange={(open) => !open && setRoomToDelete(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3">
@@ -2459,7 +2409,6 @@ export default function RoomsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Room Detail Viewer — carousel + amenities + specs (read-only) */}
       <Dialog open={!!viewRoom} onOpenChange={(open) => { if (!open) { setViewRoom(null); setViewCarouselIndex(0) } }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="sr-only">
@@ -2479,10 +2428,10 @@ export default function RoomsPage() {
             const idx = Math.min(viewCarouselIndex, Math.max(0, gallery.length - 1))
             return (
               <>
-                {/* Carousel */}
+
                 <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
                   {gallery.length > 0 ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
+
                     <img
                       key={idx}
                       src={gallery[idx]}
@@ -2532,7 +2481,6 @@ export default function RoomsPage() {
                   </Badge>
                 </div>
 
-                {/* Body */}
                 <div className="p-6 space-y-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -2558,7 +2506,6 @@ export default function RoomsPage() {
                     </p>
                   )}
 
-                  {/* Specs */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-gray-200 dark:border-gray-700">
                     <div>
                       <div className="text-xs text-muted-foreground">Type</div>
@@ -2590,7 +2537,6 @@ export default function RoomsPage() {
                     )}
                   </div>
 
-                  {/* Amenities */}
                   <div>
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                       Amenities {amenities.length === 0 && <span className="text-xs font-normal text-muted-foreground">(not configured in Room Type)</span>}
@@ -2644,7 +2590,6 @@ export default function RoomsPage() {
   )
 }
 
-// Mini-carousel untuk hero image di dashboard card. Stateful local index.
 function DashboardRoomCarousel({
   gallery,
   alt,
@@ -2668,7 +2613,7 @@ function DashboardRoomCarousel({
 
   return (
     <div className="relative w-full h-56 bg-muted shrink-0 group">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+
       <img
         key={safeIdx}
         src={gallery[safeIdx]}

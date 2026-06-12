@@ -204,7 +204,7 @@ export function HotelSettings() {
                             <div className="relative w-20 h-20 border rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden">
                                 {logoPreview ? (
                                     <>
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        
                                         <img
                                             src={logoPreview}
                                             alt="Logo preview"

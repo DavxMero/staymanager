@@ -2,20 +2,10 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { formatCurrency as formatCurrencyCompat } from "./database-compatibility";
 
-/**
- * Format angka menjadi format mata uang Rupiah (IDR)
- * @param amount - Jumlah yang akan diformat
- * @returns String dalam format mata uang Rupiah
- */
 export function formatCurrency(amount: number): string {
   return formatCurrencyCompat(amount);
 }
 
-/**
- * Menggabungkan class names dengan tailwind-merge
- * @param inputs - Class names yang akan digabungkan
- * @returns String class names yang telah digabungkan
- */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -37,7 +27,6 @@ export function generateUUID(): string {
     return v.toString(16);
   });
 }
-
 
 import {
   Message,

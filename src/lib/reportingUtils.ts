@@ -63,9 +63,7 @@ export interface RoomIssue {
   estimatedFix?: string
 }
 
-/**
- * Calculates occupancy rate for a given period
- */
+
 export function calculateOccupancyRate(
   reservations: any[],
   totalRooms: number,
@@ -92,24 +90,18 @@ export function calculateOccupancyRate(
   return totalRoomNights > 0 ? (occupiedNights / totalRoomNights) * 100 : 0
 }
 
-/**
- * Calculates Average Daily Rate (ADR)
- */
+
 export function calculateADR(revenue: number, roomsSold: number): number {
   return roomsSold > 0 ? revenue / roomsSold : 0
 }
 
-/**
- * Calculates Revenue per Available Room (RevPAR)
- */
+
 export function calculateRevPAR(revenue: number, availableRooms: number, days: number): number {
   const totalAvailableRooms = availableRooms * days
   return totalAvailableRooms > 0 ? revenue / totalAvailableRooms : 0
 }
 
-/**
- * Generates revenue trend data for charts
- */
+
 export function generateRevenueTrend(
   invoices: any[],
   reservations: any[],
@@ -148,17 +140,13 @@ export function generateRevenueTrend(
   return trendData
 }
 
-/**
- * Calculates occupancy for a specific month (simplified version)
- */
+
 function calculateOccupancyForMonth(reservations: any[], monthStart: string, monthEnd: string): number {
   const baseOccupancy = 60 + Math.random() * 35
   return Math.min(95, Math.max(20, baseOccupancy))
 }
 
-/**
- * Generates check-in/check-out trend data
- */
+
 export function generateCheckInOutTrend(reservations: any[], daysBack: number = 7): CheckInOutData[] {
   const trendData: CheckInOutData[] = []
 
@@ -184,9 +172,7 @@ export function generateCheckInOutTrend(reservations: any[], daysBack: number = 
   return trendData
 }
 
-/**
- * Calculates revenue breakdown by room type
- */
+
 export function calculateRoomTypeRevenue(
   rooms: any[],
   reservations: any[]
@@ -215,9 +201,7 @@ export function calculateRoomTypeRevenue(
   }))
 }
 
-/**
- * Gets color for room type visualization
- */
+
 export function getRoomTypeColor(roomType: string): string {
   const colorMap: { [key: string]: string } = {
     'Presidential': '#8884d8',
@@ -232,9 +216,7 @@ export function getRoomTypeColor(roomType: string): string {
   return colorMap[roomType] || '#0088fe'
 }
 
-/**
- * Calculates service request statistics
- */
+
 export function calculateServiceStats(serviceRequests: any[]): ServiceStats {
   const stats: ServiceStats = {
     total: serviceRequests.length,
@@ -268,9 +250,7 @@ export function calculateServiceStats(serviceRequests: any[]): ServiceStats {
   return stats
 }
 
-/**
- * Calculates housekeeping statistics with efficiency metrics
- */
+
 export function calculateHousekeepingStats(housekeepingTasks: any[]): ServiceStats & {
   averageTime: number
   onTimeCompletion: number
@@ -308,9 +288,7 @@ export function calculateHousekeepingStats(housekeepingTasks: any[]): ServiceSta
   }
 }
 
-/**
- * Generates guest reviews from reservations
- */
+
 export function generateGuestReviews(reservations: any[], limit: number = 10): GuestReview[] {
   const checkedOutReservations = reservations
     .filter(res => res.status === 'checked-out')
@@ -328,9 +306,7 @@ export function generateGuestReviews(reservations: any[], limit: number = 10): G
   }))
 }
 
-/**
- * Generates random rating (mostly positive)
- */
+
 function generateRandomRating(): number {
   const weights = [0.05, 0.05, 0.1, 0.3, 0.5]
   const random = Math.random()
@@ -346,9 +322,7 @@ function generateRandomRating(): number {
   return 5
 }
 
-/**
- * Gets review category based on rating
- */
+
 function getReviewCategory(rating: number): string {
   if (rating >= 5) return 'Excellent'
   if (rating >= 4) return 'Good'
@@ -357,9 +331,7 @@ function getReviewCategory(rating: number): string {
   return 'Very Poor'
 }
 
-/**
- * Gets random review comment
- */
+
 function getRandomReviewComment(): string {
   const comments = [
     "Pelayanan sangat memuaskan, kamar bersih dan nyaman. Staff sangat ramah dan profesional.",
@@ -376,9 +348,7 @@ function getRandomReviewComment(): string {
   return comments[Math.floor(Math.random() * comments.length)]
 }
 
-/**
- * Generates room issues from housekeeping data
- */
+
 export function generateRoomIssues(
   rooms: any[],
   housekeepingTasks: any[],
@@ -406,9 +376,7 @@ export function generateRoomIssues(
   })
 }
 
-/**
- * Generates random maintenance issue
- */
+
 function generateRandomIssue(): string {
   const issues = [
     "AC tidak dingin dan berisik",
@@ -425,31 +393,23 @@ function generateRandomIssue(): string {
   return issues[Math.floor(Math.random() * issues.length)]
 }
 
-/**
- * Format currency for display
- */
+
 export function formatReportCurrency(amount: number): string {
   return formatCurrency(amount)
 }
 
-/**
- * Format percentage for display
- */
+
 export function formatPercentage(percentage: number, decimals: number = 1): string {
   return `${percentage.toFixed(decimals)}%`
 }
 
-/**
- * Calculate growth rate between two periods
- */
+
 export function calculateGrowthRate(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0
   return ((current - previous) / previous) * 100
 }
 
-/**
- * Get period comparison text
- */
+
 export function getPeriodComparisonText(growthRate: number): {
   text: string;
   color: string;

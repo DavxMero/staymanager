@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     console.log('Fetching analytics data for:', { startDate, endDate, roomType })
 
-        // Fetch all invoices for the date range
+        
     let revenueQuery = supabase
       .from('invoices')
       .select(`
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     let invoicesData = rawInvoicesData || []
 
-    // If filtering by room type, fetch their reservations manually to filter invoices
+    
     if (roomType !== 'all' && invoicesData.length > 0) {
       const { data: filteredRes, error: filteredResErr } = await supabase
         .from('reservations')

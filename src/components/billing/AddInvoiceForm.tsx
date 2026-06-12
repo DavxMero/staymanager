@@ -170,7 +170,7 @@ export function AddInvoiceForm({
           transition={{ duration: 0.3 }}
           className="space-y-6"
         >
-          {/* Reservation Selection */}
+
           <div className="space-y-2">
             <Label htmlFor="reservation" className="flex items-center space-x-2">
               <User className="h-4 w-4" />
@@ -213,7 +213,6 @@ export function AddInvoiceForm({
             )}
           </div>
 
-          {/* Reservation Details Preview */}
           {selectedReservation && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -246,7 +245,6 @@ export function AddInvoiceForm({
             </motion.div>
           )}
 
-          {/* Amount */}
           <div className="space-y-2">
             <Label htmlFor="amount" className="flex items-center space-x-2">
               <DollarSign className="h-4 w-4" />
@@ -279,7 +277,6 @@ export function AddInvoiceForm({
             )}
           </div>
 
-          {/* Due Date */}
           <div className="space-y-2">
             <Label htmlFor="due_date" className="flex items-center space-x-2">
               <Calendar className="h-4 w-4" />
@@ -303,7 +300,6 @@ export function AddInvoiceForm({
             )}
           </div>
 
-          {/* Status */}
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <Select
@@ -320,7 +316,6 @@ export function AddInvoiceForm({
               </SelectContent>
             </Select>
           </div>
-
 
         </motion.form>
 

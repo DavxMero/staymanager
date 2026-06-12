@@ -386,7 +386,7 @@ export default function GuestFacilitiesPage() {
         </div>
       </div>
 
-      {/* Category Filter */}
+      
       <div className="flex gap-2 overflow-x-auto pb-2">
         {categories.map((cat) => (
           <Button
@@ -400,11 +400,11 @@ export default function GuestFacilitiesPage() {
         ))}
       </div>
 
-      {/* Services Grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredServices.map((service) => (
           <Card key={service.id} className="flex flex-col hover:shadow-lg transition-shadow cursor-pointer group relative overflow-hidden">
-            {/* Admin Controls Overlay - MOVED TO AVOID OVERLAP */}
+            
             {canManageServices && (
               <div className="absolute top-12 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <Button
@@ -462,7 +462,7 @@ export default function GuestFacilitiesPage() {
         </div>
       )}
 
-      {/* Order Dialog */}
+      
       <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -568,7 +568,7 @@ export default function GuestFacilitiesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Manage Service Dialog (Add/Edit) */}
+      
       <Dialog open={isManageOpen} onOpenChange={setIsManageOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

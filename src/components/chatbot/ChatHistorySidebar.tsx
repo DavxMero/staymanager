@@ -40,7 +40,7 @@ export function ChatHistorySidebar({
 
     return (
         <>
-            {/* Backdrop */}
+
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -53,7 +53,6 @@ export function ChatHistorySidebar({
                 )}
             </AnimatePresence>
 
-            {/* Sidebar */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -63,7 +62,7 @@ export function ChatHistorySidebar({
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 flex flex-col shadow-xl"
                     >
-                        {/* Header */}
+
                         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -81,7 +80,6 @@ export function ChatHistorySidebar({
                             </Button>
                         </div>
 
-                        {/* New Chat Button */}
                         <div className="p-3">
                             <Button
                                 onClick={onNewChat}
@@ -92,7 +90,6 @@ export function ChatHistorySidebar({
                             </Button>
                         </div>
 
-                        {/* Chat List */}
                         <div className="flex-1 overflow-y-auto p-3 space-y-2">
                             {chatHistory.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
@@ -161,7 +158,6 @@ export function ChatHistorySidebar({
                             )}
                         </div>
 
-                        {/* Footer */}
                         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                                 {chatHistory.length} conversation{chatHistory.length !== 1 ? 's' : ''} saved

@@ -181,7 +181,7 @@ export function ModernBillingDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -204,7 +204,7 @@ export function ModernBillingDashboard({
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
@@ -250,9 +250,9 @@ export function ModernBillingDashboard({
         />
       </div>
 
-      {/* Charts Section */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue Chart */}
+        
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -287,7 +287,7 @@ export function ModernBillingDashboard({
           </CardContent>
         </Card>
 
-        {/* Payment Status Chart */}
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export function ModernBillingDashboard({
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
@@ -367,7 +367,7 @@ export function ModernBillingDashboard({
         </Card>
       </div>
 
-      {/* Invoices Table */}
+      
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

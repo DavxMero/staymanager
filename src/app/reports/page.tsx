@@ -255,7 +255,7 @@ export default function ReportsPage() {
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto py-8 space-y-8"
     >
-      {/* Header */}
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-bold flex items-center gap-3">
@@ -339,7 +339,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Quick Stats */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="relative overflow-hidden">
@@ -422,7 +422,7 @@ export default function ReportsPage() {
         </motion.div>
       </div>
 
-      {/* Main Reports Tabs */}
+      
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="gap-2">
@@ -447,14 +447,14 @@ export default function ReportsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
+        
         <TabsContent value="overview" className="space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            {/* Revenue Trend */}
+            
             <Card className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -503,7 +503,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            {/* Room Type Performance */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -551,7 +551,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -604,14 +604,14 @@ export default function ReportsPage() {
           </motion.div>
         </TabsContent>
 
-        {/* Financial Tab */}
+        
         <TabsContent value="financial" className="space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 lg:grid-cols-3 gap-6"
           >
-            {/* Financial Summary */}
+            
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -671,7 +671,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            {/* Key Metrics */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -716,14 +716,14 @@ export default function ReportsPage() {
           </motion.div>
         </TabsContent>
 
-        {/* Check In/Out Tab */}
+        
         <TabsContent value="checkinout" className="space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            {/* Check-in/out Chart */}
+            
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -746,7 +746,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            {/* Check-in Statistics */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -789,7 +789,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            {/* Check-out Statistics */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -834,14 +834,14 @@ export default function ReportsPage() {
           </motion.div>
         </TabsContent>
 
-        {/* Reviews Tab */}
+        
         <TabsContent value="reviews" className="space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            {/* Reviews Summary */}
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="p-6 text-center">
@@ -877,7 +877,7 @@ export default function ReportsPage() {
               </Card>
             </div>
 
-            {/* Reviews List */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -938,14 +938,14 @@ export default function ReportsPage() {
           </motion.div>
         </TabsContent>
 
-        {/* Room Issues Tab */}
+        
         <TabsContent value="issues" className="space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            {/* Issues Summary */}
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="p-6 text-center">
@@ -983,7 +983,7 @@ export default function ReportsPage() {
               </Card>
             </div>
 
-            {/* Issues Table */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

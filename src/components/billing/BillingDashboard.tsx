@@ -93,7 +93,7 @@ export function BillingDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -106,7 +106,7 @@ export function BillingDashboard({
         </h2>
       </motion.div>
 
-      {/* Stats Grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
@@ -153,7 +153,7 @@ export function BillingDashboard({
         />
       </div>
 
-      {/* Status Summary */}
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

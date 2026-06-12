@@ -3,20 +3,20 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
+import {
+  Card,
+  CardContent,
+  CardHeader,
   CardTitle,
   CardDescription
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { 
-  ArrowLeft, 
-  Printer, 
-  Plus, 
+import {
+  ArrowLeft,
+  Printer,
+  Plus,
   CreditCard,
   Building,
   User,
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency as formatCurrencyCompat } from '@/lib/database-compatibility'
 import { AddBillingItemForm } from '@/components/billing/AddBillingItemForm'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -37,7 +37,7 @@ import { toast } from 'sonner'
 
 interface InvoiceDetailClientProps {
   invoice: Invoice
-  reservation: any // Reservation + joined guests/rooms
+  reservation: any
   initialBillingItems: BillingItem[]
 }
 
@@ -48,7 +48,6 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
   const [isAddingItem, setIsAddingItem] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
-  // Status Badge Colors
   const statusColors = {
     paid: "bg-green-100 text-green-800 border-green-200",
     pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -58,34 +57,31 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
   const handleAddItems = async (newItems: Omit<BillingItem, 'id' | 'created_at'>[]) => {
     setIsProcessing(true)
     try {
-      // 1. Insert items into database
+
       const { data: insertedItems, error: insertError } = await supabase
         .from('billing_items')
         .insert(newItems)
         .select('*')
-      
+
       if (insertError) throw insertError
 
-      // 2. Calculate new totals
       const newItemsTotal = newItems.reduce((sum, item) => sum + item.total_price, 0)
       const newSubtotal = currentInvoice.subtotal + newItemsTotal
       const newTotal = newSubtotal + currentInvoice.tax_amount - currentInvoice.discount_amount
 
-      // 3. Update invoice in database
       const { data: updatedInvoice, error: updateError } = await supabase
         .from('invoices')
-        .update({ 
+        .update({
           subtotal: newSubtotal,
           total_amount: newTotal,
-          amount: newTotal // Keep UI alias synced
+          amount: newTotal
         })
         .eq('id', currentInvoice.id)
         .select()
         .single()
-      
+
       if (updateError) throw updateError
 
-      // 4. Update UI State
       setItems([...(insertedItems as BillingItem[]), ...items])
       setCurrentInvoice(updatedInvoice)
       setIsAddingItem(false)
@@ -112,12 +108,11 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
           .eq('id', currentInvoice.id)
           .select()
           .single()
-        
+
         if (error) throw error
         setCurrentInvoice(updatedInvoice)
         toast.success('Invoice marked as paid')
 
-        // Also update reservation payment status
         if (reservation?.id) {
           await supabase.from('reservations').update({ payment_status: 'paid' }).eq('id', reservation.id)
         }
@@ -131,12 +126,12 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-6 pb-20 print:pb-0"
     >
-      {/* Header Actions - hidden in print mode */}
+
       <div className="flex items-center justify-between print:hidden">
         <Button variant="ghost" className="gap-2" onClick={() => router.push('/billing')}>
           <ArrowLeft className="h-4 w-4" /> Back to Billing
@@ -165,7 +160,6 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
         </div>
       </div>
 
-      {/* Main Invoice Card */}
       <Card className="print:shadow-none print:border-none print:m-0">
         <CardHeader className="flex flex-col md:flex-row justify-between border-b pb-6 space-y-4 md:space-y-0">
           <div>
@@ -188,7 +182,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
         </CardHeader>
 
         <CardContent className="pt-6 space-y-8">
-          {/* Guest & Reservation Info */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-lg">
             <div className="space-y-3">
               <h4 className="font-semibold text-sm text-gray-500 uppercase tracking-wider flex items-center gap-2">
@@ -200,7 +194,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
                 {reservation?.guests?.phone && <p className="text-gray-600 dark:text-gray-400">{reservation.guests.phone}</p>}
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <h4 className="font-semibold text-sm text-gray-500 uppercase tracking-wider flex items-center gap-2">
                 <Building className="h-4 w-4" /> Reservation Details
@@ -218,7 +212,6 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
             </div>
           </div>
 
-          {/* Billing Items Table */}
           <div className="space-y-4">
             <div className="flex items-center justify-between print:hidden">
               <h3 className="text-xl font-semibold">Itemized Charges</h3>
@@ -241,7 +234,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {/* Base Room Charge - Injected from Reservation */}
+
                   {reservation && (
                     <tr className="bg-white dark:bg-slate-950">
                       <td className="px-4 py-4 font-medium">Accommodation (Room Rate)</td>
@@ -251,8 +244,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
                       <td className="px-4 py-4 text-right font-medium">{formatCurrencyCompat(reservation.room_total)}</td>
                     </tr>
                   )}
-                  
-                  {/* Additional Items */}
+
                   {items.map((item) => (
                     <tr key={item.id} className="bg-white dark:bg-slate-950">
                       <td className="px-4 py-3">{item.item_name || item.description}</td>
@@ -264,7 +256,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
                       <td className="px-4 py-3 text-right font-medium">{formatCurrencyCompat(item.total_price)}</td>
                     </tr>
                   ))}
-                  
+
                   {items.length === 0 && !reservation && (
                     <tr>
                       <td colSpan={5} className="px-4 py-8 text-center text-gray-500">No items found on this invoice.</td>
@@ -275,7 +267,6 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
             </div>
           </div>
 
-          {/* Totals Section */}
           <div className="flex justify-end print:pt-8">
             <div className="w-full max-w-sm space-y-3">
               <div className="flex justify-between text-sm">
@@ -305,7 +296,6 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
         </CardContent>
       </Card>
 
-      {/* Add Item Dialog */}
       <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
         <DialogContent className="sm:max-w-[600px] print:hidden">
           <DialogHeader>
@@ -318,7 +308,7 @@ export function InvoiceDetailClient({ invoice, reservation, initialBillingItems 
                 <p>Processing items...</p>
               </div>
             ) : (
-              <AddBillingItemForm 
+              <AddBillingItemForm
                 reservationId={reservation?.id?.toString() || currentInvoice.reservation_id}
                 onAddItem={handleAddItems}
                 onCancel={() => setIsAddingItem(false)}

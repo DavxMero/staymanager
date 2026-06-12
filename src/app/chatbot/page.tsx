@@ -37,9 +37,9 @@ type ParsedChatbotError = {
 function parseChatbotError(raw: string): ParsedChatbotError {
   const msg = raw.toLowerCase();
 
-  // High demand di sisi Google Gemini (model-side overload). Bukan quota lokal —
-  // multi-key tidak membantu. Solusi: retry beberapa detik kemudian, atau ganti
-  // model di dropdown atas (Pro biasanya kapasitas terpisah).
+  
+  
+  
   if (
     msg.includes('high demand') ||
     msg.includes('experiencing high demand') ||
@@ -169,7 +169,7 @@ export default function ChatbotPage() {
       } else {
         console.error('[useChat onError]', error);
       }
-      const toastId = `chatbot-error-${parsed.title}`; // pakai ID stable supaya error berulang merge ke toast yang sama
+      const toastId = `chatbot-error-${parsed.title}`; 
       toast.error(parsed.title, {
         id: toastId,
         description: parsed.description,
@@ -365,8 +365,8 @@ export default function ChatbotPage() {
       return;
     }
 
-    // Data akun login — dipakai sebagai prefill nama/email dan
-    // sumber tombol "Samakan dengan data diri akun ini" di modal
+    
+    
     setShowBooking({
       room,
       checkIn: selectedDates.checkIn || toLocalDateString(new Date()),
@@ -399,7 +399,7 @@ export default function ChatbotPage() {
   const handleConfirmBooking = async (guest: { guestName: string; guestEmail: string; guestPhone: string }) => {
     if (!showBooking) return;
 
-    // Total = tarif per malam x jumlah malam (bukan tarif 1 malam saja)
+    
     const nights = Math.max(
       1,
       Math.round(
@@ -514,7 +514,7 @@ Phone: ${info.guestPhone}`
     cleanContent = cleanContent.replace(/ROOM_CARDS_JSON:\s*\{[\s\S]*?\}/g, '');
     cleanContent = cleanContent.replace(/\{\s*"(id|rooms)"[\s\S]*?\}\s*(?=\n|$)/g, '');
     cleanContent = cleanContent.replace(/\[\s*\{[\s\S]*?\}\s*\]/g, '');
-    cleanContent = cleanContent.replace(/\{\s*"id":\s*"[^}]*$/g, ''); // Partial JSON at end
+    cleanContent = cleanContent.replace(/\{\s*"id":\s*"[^}]*$/g, ''); 
     cleanContent = cleanContent.replace(/,\s*\{[\s\S]*$/g, '');
 
     cleanContent = cleanContent.replace(/\]\}/g, '');
@@ -530,9 +530,9 @@ Phone: ${info.guestPhone}`
     return cleanContent;
   };
 
-  // Cache hasil parsing per konten pesan. Konten pesan lama tidak berubah,
-  // jadi saat streaming hanya pesan terakhir yang di-parse ulang —
-  // bukan seluruh riwayat pada setiap render.
+  
+  
+  
   const messageParseCacheRef = useRef(new Map<string, {
     cleaned: string;
     roomsFromContent: Room[] | null;
@@ -628,7 +628,7 @@ Phone: ${info.guestPhone}`
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-100">
 
-      {/* Header */}
+      
       <header className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 px-6 py-4 shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -650,7 +650,7 @@ Phone: ${info.guestPhone}`
           </div>
 
           <div className="flex items-center gap-3">
-            {/* History Button - Only for logged in users */}
+            
             {user && (
               <Button
                 variant="outline"
@@ -663,7 +663,7 @@ Phone: ${info.guestPhone}`
               </Button>
             )}
 
-            {/* Powered-by label (replaces model selector — default Gemini 2.5 Flash) */}
+            
             <div
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground select-none"
               title="AI model in use"
@@ -680,8 +680,7 @@ Phone: ${info.guestPhone}`
               </span>
             </div>
 
-            {/* Auth Buttons — render hanya setelah auth resolved untuk hindari flash Login/Sign Up saat sudah login.
-                Saat masih loading: render nothing (bukan skeleton) supaya tidak ada kotak kosong yang mengganggu. */}
+            
             {!authChecked ? null : user ? (
               userRole === 'staff' ? (
                 <Link href="/dashboard">
@@ -720,7 +719,7 @@ Phone: ${info.guestPhone}`
               </>
             )}
 
-            {/* Status Badge */}
+            
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isLoading
               ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
               : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
@@ -729,7 +728,7 @@ Phone: ${info.guestPhone}`
               {isLoading ? 'Typing...' : 'Online'}
             </div>
 
-            {/* Dark Mode Toggle */}
+            
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -750,7 +749,7 @@ Phone: ${info.guestPhone}`
         </div>
       </header>
 
-      {/* Guest Mode Banner — hanya tampil setelah auth resolved supaya tidak flash saat user sudah login */}
+      
       {authChecked && !user && (
         <div className="bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 shadow-sm">
           <div className="max-w-6xl mx-auto flex items-center justify-center gap-3">
@@ -764,12 +763,12 @@ Phone: ${info.guestPhone}`
         </div>
       )}
 
-      {/* Chat Area */}
+      
       <main className="flex-1 overflow-y-auto p-4 md:p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="max-w-4xl mx-auto space-y-6">
 
 
-          {/* Welcome Message */}
+          
           {messages.length === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -788,7 +787,7 @@ Phone: ${info.guestPhone}`
                 Your professional hotel concierge is here to assist you. I can help you check room availability, make reservations, and answer any questions about our hotel.
               </p>
 
-              {/* Quick Actions */}
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
                 {[
                   { icon: '🏨', text: 'Check Room Availability', prompt: 'Show me available rooms for tomorrow' },
@@ -818,7 +817,7 @@ Phone: ${info.guestPhone}`
                 ))}
               </div>
 
-              {/* Thesis Survey CTA — REMOVE AFTER DATA COLLECTION COMPLETE */}
+              
               <motion.a
                 href="https://docs.google.com/forms/d/e/1FAIpQLSezJ-8p5Xux47lfWOiifdcQTzIIuk6rs0-ZJVfpx7FLPnl54A/viewform"
                 target="_blank"
@@ -922,14 +921,14 @@ Phone: ${info.guestPhone}`
                   className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[85%] md:max-w-[70%] ${m.role === 'assistant' ? 'w-full' : ''}`}>
-                    {/* Message Bubble */}
+                    
                     <div
                       className={`p-4 rounded-2xl shadow-sm ${m.role === 'user'
                         ? 'bg-blue-600 text-white rounded-tr-none'
                         : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none'
                         }`}
                     >
-                      {/* Avatar & Role */}
+                      
                       {m.role === 'assistant' && (
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
@@ -941,7 +940,7 @@ Phone: ${info.guestPhone}`
                         </div>
                       )}
 
-                      {/* Message Content with Markdown Support */}
+                      
                       <div className="font-inter">
                         {m.role === 'user' ? (
                           <div className="text-sm leading-relaxed font-medium">{m.content}</div>
@@ -957,7 +956,7 @@ Phone: ${info.guestPhone}`
                         ) : null}
                       </div>
 
-                      {/* Tool Invocations */}
+                      
                       {m.toolInvocations?.map((tool) => {
                         if (!('result' in tool)) {
                           return (
@@ -979,7 +978,7 @@ Phone: ${info.guestPhone}`
                       })}
                     </div>
 
-                    {/* Room Cards — aggregated by type (1 card per type) */}
+                    
                     {rooms && rooms.length > 0 && (() => {
                       const groups = new Map<string, { rep: typeof rooms[number]; count: number }>();
                       for (const r of rooms) {
@@ -1008,7 +1007,7 @@ Phone: ${info.guestPhone}`
                       );
                     })()}
 
-                    {/* Interactive Components */}
+                    
                     {guestForm && (
                       <div className="mt-4 max-w-md">
                         <InteractiveBookingCard
@@ -1045,7 +1044,7 @@ Phone: ${info.guestPhone}`
                       </div>
                     )}
 
-                    {/* Regenerate button — hanya di assistant message terakhir, setelah streaming selesai */}
+                    
                     {m.role === 'assistant' && index === messages.length - 1 && !isLoading && (
                       <button
                         type="button"
@@ -1065,8 +1064,7 @@ Phone: ${info.guestPhone}`
             })}
           </AnimatePresence>
 
-          {/* Typing indicator — muncul hanya saat last message dari USER (assistant belum start stream).
-              Setelah assistant bubble muncul, indicator hilang dan content streaming tampil langsung di bubble. */}
+          
           {isLoading && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -1089,7 +1087,7 @@ Phone: ${info.guestPhone}`
         </div>
       </main>
 
-      {/* Input Area */}
+      
       <footer className="bg-white/80 dark:bg-[#111111]/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 p-4 md:p-6 sticky bottom-0 z-10">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex gap-3 items-end">
@@ -1141,7 +1139,7 @@ Phone: ${info.guestPhone}`
         </form>
       </footer>
 
-      {/* Booking Confirmation Modal */}
+      
       {showBooking && (
         <BookingConfirmation
           booking={showBooking}
@@ -1150,7 +1148,7 @@ Phone: ${info.guestPhone}`
         />
       )}
 
-      {/* Chat History Sidebar */}
+      
       <ChatHistorySidebar
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}

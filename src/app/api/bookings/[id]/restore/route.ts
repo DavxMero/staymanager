@@ -59,8 +59,8 @@ export async function POST(
             .maybeSingle();
 
         if (error) {
-            // GiST exclusion constraint no_overlap_active_reservations:
-            // the room was rebooked while this reservation was cancelled
+            
+            
             if (error.code === '23P01') {
                 return NextResponse.json(
                     { error: 'Kamar sudah dipesan tamu lain pada tanggal tersebut — reservasi tidak dapat dipulihkan' },

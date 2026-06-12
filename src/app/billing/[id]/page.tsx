@@ -12,7 +12,6 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const resolvedParams = await params
   const invoiceId = resolvedParams.id
 
-  // 1. Fetch Invoice
   const { data: invoice, error: invoiceError } = await supabase
     .from('invoices')
     .select('*')
@@ -24,14 +23,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     redirect('/billing')
   }
 
-  // 2. Fetch Reservation with Room
   const { data: reservation } = await supabase
     .from('reservations')
     .select('*, guests(full_name, email, phone), rooms(number, type)')
     .eq('id', invoice.reservation_id)
     .single()
 
-  // 3. Fetch Billing Items
   const { data: billingItems } = await supabase
     .from('billing_items')
     .select('*')
@@ -40,10 +37,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <InvoiceDetailClient 
-        invoice={invoice} 
+      <InvoiceDetailClient
+        invoice={invoice}
         reservation={reservation || null}
-        initialBillingItems={billingItems || []} 
+        initialBillingItems={billingItems || []}
       />
     </div>
   )

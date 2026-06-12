@@ -32,20 +32,18 @@ export function useGuestReservation(): GuestReservationState {
     async function fetchGuestReservation() {
       try {
         const supabase = createClient();
-        
-        // 1. Get current logged in user
+
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
           throw new Error('User not authenticated');
         }
 
-        // 2. Get guest record matching user_id
         const { data: guestData, error: guestError } = await supabase
           .from('guests')
           .select('id')
           .eq('user_id', user.id)
           .single();
-          
+
         if (guestError || !guestData) {
           if (isMounted) {
             setState(prev => ({
@@ -57,7 +55,6 @@ export function useGuestReservation(): GuestReservationState {
           return;
         }
 
-        // 3. Get active reservation for this guest
         const { data: reservationData, error: reservationError } = await supabase
           .from('reservations')
           .select(`
