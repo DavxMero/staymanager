@@ -7,7 +7,8 @@ import {
   Edit,
   MoreHorizontal,
   Search,
-  Filter,
+  CalendarRange,
+  X,
   SortAsc,
   SortDesc
 } from 'lucide-react'
@@ -62,12 +63,38 @@ export function EnhancedInvoicesTable({
   onDownloadInvoice: (invoice: Invoice) => void
   onEditInvoice: (invoice: Invoice) => void
 }) {
+  const SAMPLE_SIZE = 10
+
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' })
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [appliedRange, setAppliedRange] = useState<{ from: string; to: string } | null>(null)
+
+  const applyDateRange = () => {
+    if (dateFrom && dateTo) setAppliedRange({ from: dateFrom, to: dateTo })
+  }
+
+  const clearDateRange = () => {
+    setDateFrom('')
+    setDateTo('')
+    setAppliedRange(null)
+  }
+
+  const baseInvoices = useMemo(() => {
+    if (appliedRange) {
+      return invoices.filter(invoice => {
+        if (!invoice.created_at) return false
+        const d = new Date(invoice.created_at)
+        return d >= new Date(`${appliedRange.from}T00:00:00`) && d <= new Date(`${appliedRange.to}T23:59:59`)
+      })
+    }
+    return invoices.slice(0, SAMPLE_SIZE)
+  }, [invoices, appliedRange])
 
   const filteredAndSortedInvoices = useMemo(() => {
-    const filtered = invoices.filter(invoice => {
+    const filtered = baseInvoices.filter(invoice => {
       const matchesSearch =
         invoice.id.toString().includes(searchTerm) ||
         invoice.reservation_id.toString().includes(searchTerm) ||
@@ -94,7 +121,7 @@ export function EnhancedInvoicesTable({
     }
 
     return filtered
-  }, [invoices, searchTerm, statusFilter, sortConfig])
+  }, [baseInvoices, searchTerm, statusFilter, sortConfig])
 
   const requestSort = (key: keyof Invoice) => {
     let direction: 'asc' | 'desc' = 'asc'
@@ -118,15 +145,19 @@ export function EnhancedInvoicesTable({
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle>All Invoices</CardTitle>
-            <CardDescription>Manage and track all billing records</CardDescription>
+            <CardTitle>Invoice History</CardTitle>
+            <CardDescription>
+              {appliedRange
+                ? `Invoices from ${appliedRange.from} to ${appliedRange.to}`
+                : `Showing the ${SAMPLE_SIZE} most recent invoices — pick a date range to load more`}
+            </CardDescription>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search invoices..."
-                className="pl-10 w-full md:w-64"
+                className="pl-10 w-full md:w-48"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -142,9 +173,36 @@ export function EnhancedInvoicesTable({
                 <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                aria-label="From date"
+                className="w-[150px]"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+              <span className="text-sm text-muted-foreground">to</span>
+              <Input
+                type="date"
+                aria-label="To date"
+                className="w-[150px]"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                onClick={applyDateRange}
+                disabled={!dateFrom || !dateTo}
+              >
+                <CalendarRange className="mr-2 h-4 w-4" />
+                Load Range
+              </Button>
+              {appliedRange && (
+                <Button variant="ghost" size="icon" onClick={clearDateRange} aria-label="Clear date range">
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -233,12 +291,10 @@ export function EnhancedInvoicesTable({
         {filteredAndSortedInvoices.length > 0 && (
           <div className="flex items-center justify-between py-4">
             <p className="text-sm text-muted-foreground">
-              Showing {filteredAndSortedInvoices.length} of {invoices.length} invoices
+              {appliedRange
+                ? `Showing ${filteredAndSortedInvoices.length} invoice(s) in selected range`
+                : `Showing ${filteredAndSortedInvoices.length} of ${invoices.length} invoices (latest ${SAMPLE_SIZE})`}
             </p>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">Previous</Button>
-              <Button variant="outline" size="sm">Next</Button>
-            </div>
           </div>
         )}
       </CardContent>
