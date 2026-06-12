@@ -120,6 +120,31 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Breathing room between a field label and the control right below it
+     inside dialogs. Existing space-y-2 (8px) gets visually eaten by the
+     global html zoom (0.8–1.0) plus the input focus ring, so labels look
+     glued to their inputs. This adds a consistent extra gap everywhere
+     without touching each form. */
+  /* :not(.items-center) skips horizontal label+control rows and
+     checkbox rows, which must stay vertically centered */
+  [data-slot="dialog-content"] div:not(.items-center) > label + input,
+  [data-slot="dialog-content"] div:not(.items-center) > label + textarea,
+  [data-slot="dialog-content"] div:not(.items-center) > label + select,
+  [data-slot="dialog-content"] div:not(.items-center) > label + button[role="combobox"],
+  [data-slot="dialog-content"] div:not(.items-center) > label + div:has(> input),
+  [data-slot="dialog-content"] div:not(.items-center) > label + div:has(> textarea),
+  [data-slot="dialog-content"] div:not(.items-center) > label + div:has(> select),
+  [data-slot="dialog-content"] div:not(.items-center) > label + div:has(> button[role="combobox"]) {
+    margin-top: 0.375rem;
+  }
+
+  /* Same pattern for helper text directly under a control */
+  [data-slot="dialog-content"] input + p,
+  [data-slot="dialog-content"] textarea + p,
+  [data-slot="dialog-content"] div:has(> input) + p {
+    margin-top: 0.375rem;
+  }
 }
 
 /* Custom scrollbar styles for dialog boxes */
