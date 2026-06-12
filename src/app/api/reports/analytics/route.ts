@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || format(endOfMonth(new Date()), 'yyyy-MM-dd')
     const roomType = searchParams.get('roomType') || 'all'
 
-    console.log('Fetching analytics data for:', { startDate, endDate, roomType })
-
         
     let revenueQuery = supabase
       .from('invoices')
@@ -111,6 +109,27 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching billing items:', billingItemsError)
     }
 
+    const sixMonthsAgo = format(startOfMonth(subMonths(new Date(), 5)), 'yyyy-MM-dd')
+
+    const { data: trendInvoicesData, error: trendInvoicesError } = await supabase
+      .from('invoices')
+      .select('total_amount, status, created_at')
+      .gte('created_at', sixMonthsAgo)
+
+    if (trendInvoicesError) {
+      console.error('Error fetching trend invoices:', trendInvoicesError)
+    }
+
+    const { data: trendReservationsData, error: trendReservationsError } = await supabase
+      .from('reservations')
+      .select('check_in, check_out, status, created_at')
+      .not('status', 'in', '("cancelled","no_show")')
+      .gte('check_out', sixMonthsAgo)
+
+    if (trendReservationsError) {
+      console.error('Error fetching trend reservations:', trendReservationsError)
+    }
+
     const analytics = calculateAnalytics({
       invoices: invoicesData || [],
       reservations: reservationsData || [],
@@ -118,6 +137,8 @@ export async function GET(request: NextRequest) {
       roomService: roomServiceData || [],
       housekeeping: housekeepingData || [],
       billingItems: billingItemsData || [],
+      trendInvoices: trendInvoicesData || [],
+      trendReservations: trendReservationsData || [],
       startDate,
       endDate
     })
@@ -142,8 +163,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function overlapNights(checkIn: string, checkOut: string, rangeStart: Date, rangeEnd: Date): number {
+  const start = new Date(checkIn) > rangeStart ? new Date(checkIn) : rangeStart
+  const end = new Date(checkOut) < rangeEnd ? new Date(checkOut) : rangeEnd
+  const nights = Math.round((end.getTime() - start.getTime()) / 86400000)
+  return Math.max(0, nights)
+}
+
 function calculateAnalytics(data: any) {
-  const { invoices, reservations, rooms, roomService, housekeeping, billingItems, startDate, endDate } = data
+  const { invoices, reservations, rooms, roomService, housekeeping, billingItems, trendInvoices, trendReservations, startDate, endDate } = data
 
   const totalRevenue = invoices.reduce((sum: number, invoice: any) => {
     return sum + (invoice.status === 'paid' ? (invoice.total_amount || 0) : 0)
@@ -153,7 +181,18 @@ function calculateAnalytics(data: any) {
   const totalRooms = rooms.length
 
   const occupiedRooms = rooms.filter((room: any) => room.status === 'occupied').length
-  const currentOccupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0
+
+  const periodStart = startOfDay(parseISO(startDate))
+  const periodEnd = endOfDay(parseISO(endDate))
+  const periodDays = Math.max(1, Math.round((periodEnd.getTime() - periodStart.getTime()) / 86400000))
+  const activeReservations = reservations.filter((res: any) => !['cancelled', 'no_show'].includes(res.status))
+  const occupiedRoomNights = activeReservations.reduce(
+    (sum: number, res: any) => sum + overlapNights(res.check_in, res.check_out, periodStart, periodEnd),
+    0
+  )
+  const currentOccupancyRate = totalRooms > 0
+    ? Math.min(100, (occupiedRoomNights / (totalRooms * periodDays)) * 100)
+    : 0
 
   const revenueByRoomType = rooms.reduce((acc: any, room: any) => {
     if (!acc[room.type]) {
@@ -171,33 +210,45 @@ function calculateAnalytics(data: any) {
 
   const monthlyRevenue = []
   for (let i = 5; i >= 0; i--) {
-    const monthStart = format(subMonths(new Date(), i), 'yyyy-MM-01')
-    const monthEnd = format(endOfMonth(subMonths(new Date(), i)), 'yyyy-MM-dd')
+    const monthDate = subMonths(new Date(), i)
+    const monthStart = startOfMonth(monthDate)
+    const monthEnd = endOfDay(endOfMonth(monthDate))
+    const monthStartStr = format(monthStart, 'yyyy-MM-dd')
+    const monthEndStr = format(monthEnd, 'yyyy-MM-dd')
+    const daysInMonth = Math.round((monthEnd.getTime() - monthStart.getTime()) / 86400000) + 1
 
-    const monthInvoices = invoices.filter((inv: any) => {
+    const monthInvoices = trendInvoices.filter((inv: any) => {
       const invDate = format(new Date(inv.created_at), 'yyyy-MM-dd')
-      return invDate >= monthStart && invDate <= monthEnd && inv.status === 'paid'
+      return invDate >= monthStartStr && invDate <= monthEndStr && inv.status === 'paid'
     })
 
-    const monthBookings = reservations.filter((res: any) => {
+    const monthBookings = trendReservations.filter((res: any) => {
       const resDate = format(new Date(res.created_at), 'yyyy-MM-dd')
-      return resDate >= monthStart && resDate <= monthEnd
+      return resDate >= monthStartStr && resDate <= monthEndStr
     })
+
+    const monthRoomNights = trendReservations.reduce(
+      (sum: number, res: any) => sum + overlapNights(res.check_in, res.check_out, monthStart, monthEnd),
+      0
+    )
 
     monthlyRevenue.push({
-      month: format(subMonths(new Date(), i), 'MMM'),
+      month: format(monthDate, 'MMM'),
       revenue: monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || 0), 0),
       bookings: monthBookings.length,
       adr: monthBookings.length > 0
         ? monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || 0), 0) / monthBookings.length
         : 0,
-      occupancy: Math.min(95, 60 + Math.random() * 35)
+      occupancy: totalRooms > 0
+        ? Math.min(100, Math.round((monthRoomNights / (totalRooms * daysInMonth)) * 1000) / 10)
+        : 0
     })
   }
 
   const checkInOutData = []
+  const rangeAnchor = endOfDay(parseISO(endDate))
   for (let i = 6; i >= 0; i--) {
-    const date = new Date()
+    const date = new Date(rangeAnchor)
     date.setDate(date.getDate() - i)
     const dateStr = format(date, 'yyyy-MM-dd')
 
@@ -242,9 +293,7 @@ function calculateAnalytics(data: any) {
       Math.max(1, housekeeping.filter((task: any) => task.actual_duration).length)
   }
 
-  const guestReviews = generateSampleReviews(reservations)
-
-  const roomIssues = generateSampleRoomIssues(rooms, housekeeping)
+  const roomIssues = buildRoomIssues(housekeeping)
 
   const adr = totalBookings > 0 ? totalRevenue / totalBookings : 0
   const revpar = totalRooms > 0 ? totalRevenue / totalRooms : 0
@@ -269,7 +318,6 @@ function calculateAnalytics(data: any) {
     checkInOutData,
     roomServiceStats,
     housekeepingStats,
-    guestReviews,
     roomIssues,
     billingItems: billingItems || []
   }
@@ -285,36 +333,7 @@ function getColorForRoomType(type: string): string {
   return colors[type] || '#0088fe'
 }
 
-function generateSampleReviews(reservations: any[]) {
-  return reservations
-    .filter(res => res.status === 'checked-out')
-    .slice(0, 10)
-    .map((res, index) => ({
-      id: res.id,
-      guest: res.guests?.full_name || `Guest ${res.id}`,
-      room: res.rooms?.number || 'Unknown',
-      rating: Math.floor(Math.random() * 2) + 4,
-      comment: getRandomReviewComment(),
-      date: res.check_out,
-      category: Math.floor(Math.random() * 2) + 4 >= 4 ? 'Excellent' : 'Good'
-    }))
-}
-
-function getRandomReviewComment(): string {
-  const comments = [
-    "Pelayanan sangat memuaskan, kamar bersih dan nyaman. Staff sangat ramah dan profesional.",
-    "Hotel bagus dengan fasilitas lengkap. Breakfast enak, tapi AC di kamar agak berisik.",
-    "Lokasi strategis tapi kamar kurang terawat. Shower air panasnya tidak stabil.",
-    "Presidential suite luar biasa! View kota yang menakjubkan dan pelayanan kelas satu.",
-    "Kecewa dengan kebersihan kamar. Ditemukan debu di sudut-sudut ruangan.",
-    "Staff ramah dan helpful. Kamar nyaman dengan WiFi cepat.",
-    "Great experience overall. The room was clean and comfortable.",
-    "Breakfast was amazing. Room service was quick and efficient."
-  ]
-  return comments[Math.floor(Math.random() * comments.length)]
-}
-
-function generateSampleRoomIssues(rooms: any[], housekeeping: any[]) {
+function buildRoomIssues(housekeeping: any[]) {
   const maintenanceTasks = housekeeping.filter(task => task.task_type === 'maintenance')
 
   return maintenanceTasks.slice(0, 10).map(task => ({

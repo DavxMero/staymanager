@@ -89,7 +89,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "4.8 Billing & Invoice",
+          "title": "3.29 + 4.6 Keuangan (dipisah: ringkasan & riwayat)",
           "ok": true,
           "tags": [],
           "tests": [
@@ -104,12 +104,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 19678,
+                  "duration": 14941,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-12T20:19:51.757Z",
+                  "startTime": "2026-06-12T20:37:36.433Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -117,9 +117,43 @@
               "status": "expected"
             }
           ],
-          "id": "5ff2bfde4962435120ae-43f0429f06bea3b7bca3",
+          "id": "5ff2bfde4962435120ae-4433fd4c6e1029c513d8",
           "file": "thesis-screenshot-capture.spec.ts",
-          "line": 167,
+          "line": 147,
+          "column": 5
+        },
+        {
+          "title": "4.9 + 4.23 Laporan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14331,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-12T20:37:52.189Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5ff2bfde4962435120ae-3a9aa6061f0deca812d3",
+          "file": "thesis-screenshot-capture.spec.ts",
+          "line": 175,
           "column": 5
         }
       ]
@@ -127,9 +161,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-12T20:19:51.241Z",
-    "duration": 21631.702999999998,
-    "expected": 1,
+    "startTime": "2026-06-12T20:37:35.850Z",
+    "duration": 32072.6,
+    "expected": 2,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
