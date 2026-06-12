@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
     TrendingUp,
@@ -20,7 +21,10 @@ import {
     PieChart,
     FileSpreadsheet,
     Printer,
-    Loader2
+    Loader2,
+    Receipt,
+    ArrowRight,
+    Clock
 } from "lucide-react"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
@@ -90,6 +94,7 @@ interface Payment {
 }
 
 export default function FinancialPage() {
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState("overview")
     const [isLoading, setIsLoading] = useState(true)
 
@@ -99,6 +104,8 @@ export default function FinancialPage() {
     const [totalIncome, setTotalIncome] = useState(0)
     const [totalExpenses, setTotalExpenses] = useState(0)
     const [netProfit, setNetProfit] = useState(0)
+    const [pendingInvoicesAmount, setPendingInvoicesAmount] = useState(0)
+    const [pendingInvoicesCount, setPendingInvoicesCount] = useState(0)
 
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false)
     const [isSavingExpense, setIsSavingExpense] = useState(false)
@@ -149,6 +156,17 @@ export default function FinancialPage() {
             setTotalExpenses(expTotal)
             setTotalIncome(payTotal)
             setNetProfit(payTotal - expTotal)
+
+            const { data: pendingInvoices, error: invoicesError } = await supabase
+                .from('invoices')
+                .select('amount, status')
+                .in('status', ['pending', 'overdue'])
+
+            if (invoicesError) console.error('Error fetching pending invoices:', invoicesError)
+
+            const pendingList = pendingInvoices || []
+            setPendingInvoicesCount(pendingList.length)
+            setPendingInvoicesAmount(pendingList.reduce((sum, inv) => sum + Number(inv.amount || 0), 0))
 
         } catch (error) {
             console.error('Error loading financial data:', error)
@@ -203,7 +221,11 @@ export default function FinancialPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Financial Overview</h1>
                     <p className="text-muted-foreground">Manage your property's cash flow, income, and expenses.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" onClick={() => router.push('/billing')}>
+                        <Receipt className="mr-2 h-4 w-4" />
+                        Billing & Invoices
+                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -250,7 +272,7 @@ export default function FinancialPage() {
             </div>
 
             
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-green-800 dark:text-green-300">
@@ -261,7 +283,7 @@ export default function FinancialPage() {
                     <CardContent>
                         <div className="text-2xl font-bold text-green-700 dark:text-green-400">{formatCurrency(totalIncome)}</div>
                         <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                            +20.1% from last month
+                            {payments.length} confirmed payment(s)
                         </p>
                     </CardContent>
                 </Card>
@@ -276,7 +298,7 @@ export default function FinancialPage() {
                     <CardContent>
                         <div className="text-2xl font-bold text-red-700 dark:text-red-400">{formatCurrency(totalExpenses)}</div>
                         <p className="text-xs text-red-600 dark:text-red-500 mt-1">
-                            +4.5% from last month
+                            {expenses.length} recorded expense(s)
                         </p>
                     </CardContent>
                 </Card>
@@ -295,9 +317,30 @@ export default function FinancialPage() {
                         </p>
                     </CardContent>
                 </Card>
+
+                <Card
+                    className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer transition-shadow hover:shadow-md"
+                    onClick={() => router.push('/billing')}
+                    role="link"
+                    aria-label="Open Billing & Invoices"
+                >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                            Pending Invoices
+                        </CardTitle>
+                        <Clock className="h-4 w-4 text-amber-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{formatCurrency(pendingInvoicesAmount)}</div>
+                        <p className="text-xs text-amber-600 dark:text-amber-500 mt-1 flex items-center gap-1">
+                            {pendingInvoicesCount} unpaid invoice(s) — open Billing
+                            <ArrowRight className="h-3 w-3" />
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
+            <Tabs value={activeTab} className="space-y-4" onValueChange={setActiveTab}>
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="income">Income History</TabsTrigger>
@@ -308,11 +351,17 @@ export default function FinancialPage() {
                 <TabsContent value="overview" className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                         <Card className="col-span-4">
-                            <CardHeader>
-                                <CardTitle>Recent Transactions</CardTitle>
-                                <CardDescription>
-                                    Latest financial activities from all sources.
-                                </CardDescription>
+                            <CardHeader className="flex flex-row items-start justify-between space-y-0">
+                                <div>
+                                    <CardTitle>Recent Transactions</CardTitle>
+                                    <CardDescription>
+                                        Latest financial activities from all sources.
+                                    </CardDescription>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => setActiveTab('income')}>
+                                    View all
+                                    <ArrowRight className="ml-1 h-4 w-4" />
+                                </Button>
                             </CardHeader>
                             <CardContent>
                                 <Table>

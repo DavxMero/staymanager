@@ -19,6 +19,7 @@ async function settle(page: Page, ms = 2500) {
 }
 
 async function shot(page: Page, name: string, fullPage: boolean) {
+  await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' }).catch(() => {});
   await page.screenshot({ path: `${OUT}/${name}.png`, fullPage });
 }
 

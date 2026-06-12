@@ -105,7 +105,6 @@ interface AnalyticsData {
   checkInOutData: any[]
   roomServiceStats: any
   housekeepingStats: any
-  guestReviews: any[]
   roomIssues: any[]
   billingItems: any[]
 }
@@ -140,7 +139,6 @@ export default function ReportsPage() {
 
       if (result.success) {
         setAnalyticsData(result.data)
-        console.log('Analytics data loaded:', result.data)
       } else {
         throw new Error(result.error || 'Failed to load analytics data')
       }
@@ -243,12 +241,6 @@ export default function ReportsPage() {
     }
   }
 
-  const getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'bg-green-100 text-green-800'
-    if (rating >= 3.5) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -265,63 +257,11 @@ export default function ReportsPage() {
             Reports & Analytics
           </h1>
           <p className="text-muted-foreground text-lg mt-2">
-            Real-time hotel performance insights from your StayManager database
+            Managerial report for a selected period — occupancy, revenue, ADR/RevPAR, and operations. Pick a date range, then export as PDF/Excel for monthly reporting.
           </p>
         </div>
 
         <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Filters
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="invisible-scrollbar">
-              <DialogHeader>
-                <DialogTitle>Report Filters</DialogTitle>
-                <DialogDescription>
-                  Customize your reports with specific date ranges and criteria
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={dateRange.startDate}
-                    onChange={(e) => handleDateRangeChange('startDate', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={dateRange.endDate}
-                    onChange={(e) => handleDateRangeChange('endDate', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="roomType">Room Type</Label>
-                  <Select value={roomTypeFilter} onValueChange={setRoomTypeFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Room Types</SelectItem>
-                      <SelectItem value="Presidential">Presidential Suite</SelectItem>
-                      <SelectItem value="Suite">Suite</SelectItem>
-                      <SelectItem value="Deluxe">Deluxe</SelectItem>
-                      <SelectItem value="Standard">Standard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
           <Button variant="outline" onClick={fetchAnalyticsData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -338,6 +278,49 @@ export default function ReportsPage() {
           </Button>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-end gap-4 p-4">
+          <div className="space-y-1">
+            <Label htmlFor="startDate">Report Period — From</Label>
+            <Input
+              id="startDate"
+              type="date"
+              className="w-[170px]"
+              value={dateRange.startDate}
+              onChange={(e) => handleDateRangeChange('startDate', e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="endDate">To</Label>
+            <Input
+              id="endDate"
+              type="date"
+              className="w-[170px]"
+              value={dateRange.endDate}
+              onChange={(e) => handleDateRangeChange('endDate', e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="roomType">Room Type</Label>
+            <Select value={roomTypeFilter} onValueChange={setRoomTypeFilter}>
+              <SelectTrigger id="roomType" className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Room Types</SelectItem>
+                <SelectItem value="Presidential">Presidential Suite</SelectItem>
+                <SelectItem value="Suite">Suite</SelectItem>
+                <SelectItem value="Deluxe">Deluxe</SelectItem>
+                <SelectItem value="Standard">Standard</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-sm text-muted-foreground ml-auto">
+            Showing data for <span className="font-medium text-foreground">{format(new Date(dateRange.startDate), 'dd MMM yyyy')}</span> – <span className="font-medium text-foreground">{format(new Date(dateRange.endDate), 'dd MMM yyyy')}</span>
+          </p>
+        </CardContent>
+      </Card>
 
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -394,8 +377,7 @@ export default function ReportsPage() {
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <Users className="h-4 w-4 text-purple-500 mr-1" />
-                <span className="text-purple-600 font-medium">{analyticsData.summary.occupiedRooms} occupied</span>
-                <span className="text-muted-foreground ml-1">right now</span>
+                <span className="text-muted-foreground">room-nights sold in selected period</span>
               </div>
             </CardContent>
           </Card>
@@ -424,7 +406,7 @@ export default function ReportsPage() {
 
       
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -436,10 +418,6 @@ export default function ReportsPage() {
           <TabsTrigger value="checkinout" className="gap-2">
             <CalendarDays className="h-4 w-4" />
             <span className="hidden sm:inline">Check In/Out</span>
-          </TabsTrigger>
-          <TabsTrigger value="reviews" className="gap-2">
-            <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Reviews</span>
           </TabsTrigger>
           <TabsTrigger value="issues" className="gap-2">
             <Wrench className="h-4 w-4" />
@@ -829,110 +807,6 @@ export default function ReportsPage() {
                   </div>
                   <span className="text-lg font-bold text-yellow-600">34%</span>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </TabsContent>
-
-        
-        <TabsContent value="reviews" className="space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">4.6</div>
-                  <div className="flex justify-center mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`h-5 w-5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Average Rating</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">{analyticsData.guestReviews.length}</div>
-                  <MessageSquare className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Total Reviews</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">87%</div>
-                  <Crown className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Recommendation Rate</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-orange-600 mb-2">2.3</div>
-                  <Clock className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Days Response Time</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-blue-600" />
-                  Recent Guest Reviews
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[500px] invisible-scrollbar">
-                  <div className="space-y-4">
-                    {analyticsData.guestReviews.map((review) => (
-                      <motion.div
-                        key={review.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: review.id * 0.1 }}
-                        className="border rounded-lg p-4 space-y-3"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-semibold text-lg">{review.guest}</div>
-                            <div className="text-sm text-muted-foreground">Room {review.room} • {format(new Date(review.date), 'dd MMM yyyy')}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                    }`}
-                                />
-                              ))}
-                            </div>
-                            <Badge className={getRatingColor(review.rating)}>
-                              {review.category}
-                            </Badge>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {review.comment}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Mail className="h-4 w-4 mr-1" />
-                            Reply
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Details
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </ScrollArea>
               </CardContent>
             </Card>
           </motion.div>

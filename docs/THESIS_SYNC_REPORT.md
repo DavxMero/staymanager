@@ -4,6 +4,17 @@ Source code berstatus FINAL. Semua ketidaksesuaian di bawah harus diperbaiki **d
 
 ---
 
+## ⚠️ INSTRUKSI UNTUK AGENT WORD — BACA DULU
+
+1. **Yang boleh langsung kamu eksekusi**: revisi TEKS/narasi sesuai seksi A (A1–A13) dan E di bawah. Terapkan persis seperti tertulis, jaga gaya bahasa akademik skripsi yang sudah ada.
+2. **Seksi B = JANGAN DIUBAH** — klaim-klaim itu sudah terverifikasi cocok dengan kode.
+3. **Seksi C = opsional** — fitur baru yang boleh ditambahkan ke Bab 4 bila pemilik setuju; tanyakan dulu sebelum menambah.
+4. **ATURAN GAMBAR (double verification)**: untuk SEGALA perubahan yang menyangkut gambar — mengganti file gambar, menambah/menghapus gambar, mengubah nomor gambar, atau mengubah caption — **JANGAN langsung eksekusi**. Buat dulu DAFTAR usulan (nomor gambar → file pengganti dari `docs/assets/screenshots/` per tabel seksi D → caption usulan), lalu **konfirmasi ke pemilik (Dava)** dan tunggu persetujuan eksplisit sebelum menerapkan.
+5. Semua screenshot terbaru ada di `docs/assets/screenshots/` dengan nama file yang sudah memuat nomor gambarnya (lihat tabel pemetaan di seksi D). UI aplikasi kini berbahasa Inggris penuh — sesuaikan kutipan label di teks dengan tampilan pada screenshot baru.
+6. Setelah selesai, laporkan ringkasan: revisi teks apa saja yang diterapkan + daftar usulan gambar yang menunggu konfirmasi.
+
+---
+
 ## A. WAJIB DIREVISI DI SKRIPSI (kode ≠ klaim skripsi)
 
 ### A1. Middleware `src/proxy.ts` SUDAH TIDAK ADA
@@ -130,3 +141,11 @@ Capture: Playwright, Chrome 1280×800 @2x. Full-page untuk halaman modul (utuh a
 Bukan screenshot aplikasi (tidak di-capture): Gambar 2.1–2.6 (sumber paper), 3.1–3.24 & 3.30 (diagram olahan penulis, source `docs/assets/diagrams-src/`, render `docs/assets/images/`), 3.3–3.5 (website OPERA/Cloudbeds/Little Hotelier), 4.11 (chart olahan penulis), L.6.x (foto dokumentasi wawancara).
 
 Regenerasi screenshot kapan saja: `pnpm dev` lalu `pnpm exec playwright test docs/verification/thesis-screenshot-capture.spec.ts --project=chromium`.
+
+---
+
+## E. REVISI UI TERBARU (2026-06-13) — narasi skripsi terkait perlu disesuaikan
+
+1. **Modul Billing (/billing)**: Invoice History kini menampilkan **10 invoice terbaru** secara default; data lebih banyak ditarik melalui filter rentang tanggal (From/To + tombol "Load Range"). Sesuaikan deskripsi modul Billing di Bab 4.2.11 bila menyebut daftar invoice penuh.
+2. **Modul Keuangan (/financial)**: kini punya tombol pintasan **"Billing & Invoices"** di header dan kartu KPI keempat **"Pending Invoices"** (jumlah + nominal invoice belum dibayar, dapat diklik menuju /billing); KPI lain menampilkan jumlah transaksi riil (bukan persentase pertumbuhan dummy); tabel Recent Transactions punya tombol "View all" menuju tab Income History. Relevan untuk Bab 4.2.8 dan bukti Aturan Emas #2 (shortcut).
+3. **Modul Laporan (/reports)**: tab **Reviews DIHAPUS** (datanya dummy — tidak ada tabel reviews di database; hindari menyebut fitur review di skripsi). Tab tersisa: Overview, Financial, Check In/Out, Room Issues. Filter periode kini tampil INLINE di atas halaman (From/To + Room Type + teks "Showing data for ..."), bukan tersembunyi di dialog. Occupancy Rate dan grafik occupancy bulanan kini dihitung dari **data riil room-nights reservasi** (occupied room-nights ÷ (jumlah kamar × hari)), bukan angka acak; grafik check-in/out mengikuti tanggal akhir periode terpilih. Sesuaikan Bab 4.2.12 dan klaim mana pun yang menyebut 5 tab atau data review.
