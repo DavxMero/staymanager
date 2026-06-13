@@ -23,6 +23,12 @@ async function shot(page: Page, name: string, fullPage: boolean) {
   await page.screenshot({ path: `${OUT}/${name}.png`, fullPage });
 }
 
+async function clearSpotlight(page: Page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('.__spot').forEach((e) => e.remove());
+  });
+}
+
 async function loginAdmin(page: Page) {
   await page.goto(`${BASE_URL}/login`);
   await page.locator('#email').fill(ADMIN_EMAIL);
@@ -130,18 +136,76 @@ test('4.4 Manajemen Tamu', async ({ page }) => {
 });
 
 test('4.5 + 4.19 + 4.24 Occupancy', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await loginAdmin(page);
   await page.goto(`${BASE_URL}/occupancy`);
   await settle(page, 5000);
   await shot(page, 'gambar-4-5-reservasi-occupancy', true);
+
+  await clearSpotlight(page);
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(400);
   await shot(page, 'gambar-4-19a-aturan3-feedback-sebelum', false);
-  try {
-    const emptyCell = page.locator('[class*="border-dashed"]').first();
-    await emptyCell.hover({ timeout: 5000 });
-    await page.waitForTimeout(800);
-  } catch {}
+
+  await page.evaluate(() => {
+    const el = document.querySelector('[class*="border-dashed"]') as HTMLElement | null;
+    if (!el) return;
+    el.classList.remove('border-dashed', 'text-transparent', 'bg-transparent');
+    el.classList.add('border-solid', 'bg-blue-50', 'border-blue-300', 'text-blue-600');
+    const plus = el.querySelector('.opacity-0') as HTMLElement | null;
+    if (plus) plus.classList.remove('opacity-0');
+    const r = el.getBoundingClientRect();
+    const pad = 7;
+    const ov = document.createElement('div');
+    ov.className = '__spot';
+    Object.assign(ov.style, {
+      position: 'fixed',
+      left: `${r.left - pad}px`,
+      top: `${r.top - pad}px`,
+      width: `${r.width + pad * 2}px`,
+      height: `${r.height + pad * 2}px`,
+      border: '3px solid #ef4444',
+      borderRadius: '9999px',
+      boxShadow: '0 0 10px 2px rgba(239,68,68,0.5)',
+      zIndex: '999999',
+      pointerEvents: 'none',
+    });
+    document.body.appendChild(ov);
+  });
+  await page.waitForTimeout(400);
   await shot(page, 'gambar-4-19b-aturan3-feedback-sesudah', false);
+  await clearSpotlight(page);
+
+  await page.evaluate(() => {
+    const legend = [...document.querySelectorAll('div')].find(
+      (d) =>
+        d.className.includes('border-t') &&
+        d.textContent!.includes('Booked (Confirmed)') &&
+        d.textContent!.includes('Available')
+    ) as HTMLElement | undefined;
+    if (!legend) return;
+    legend.scrollIntoView({ block: 'center' });
+    const r = legend.getBoundingClientRect();
+    const pad = 10;
+    const ov = document.createElement('div');
+    ov.className = '__spot';
+    Object.assign(ov.style, {
+      position: 'fixed',
+      left: `${r.left - pad}px`,
+      top: `${r.top - pad}px`,
+      width: `${r.width + pad * 2}px`,
+      height: `${r.height + pad * 2}px`,
+      border: '3px solid #ef4444',
+      borderRadius: '12px',
+      boxShadow: '0 0 12px 2px rgba(239,68,68,0.5)',
+      zIndex: '999999',
+      pointerEvents: 'none',
+    });
+    document.body.appendChild(ov);
+  });
+  await page.waitForTimeout(500);
   await shot(page, 'gambar-4-24-aturan8-beban-memori', false);
+  await clearSpotlight(page);
 });
 
 test('3.29 + 4.6 Keuangan (dipisah: ringkasan & riwayat)', async ({ page }) => {
