@@ -1,4 +1,4 @@
-import { test, type Page } from '@playwright/test';
+import { test, type Page, type Locator } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
@@ -27,6 +27,37 @@ async function clearSpotlight(page: Page) {
   await page.evaluate(() => {
     document.querySelectorAll('.__spot').forEach((e) => e.remove());
   });
+}
+
+async function spotlight(page: Page, locator: Locator, shape: 'circle' | 'rect' = 'rect', pad = 8) {
+  try {
+    await locator.scrollIntoViewIfNeeded({ timeout: 4000 });
+  } catch {}
+  const handle = await locator.elementHandle().catch(() => null);
+  if (!handle) return;
+  await page.evaluate(
+    ({ el, shape, pad }) => {
+      const r = (el as HTMLElement).getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const ov = document.createElement('div');
+      ov.className = '__spot';
+      Object.assign(ov.style, {
+        position: 'fixed',
+        left: `${r.left - pad}px`,
+        top: `${r.top - pad}px`,
+        width: `${r.width + pad * 2}px`,
+        height: `${r.height + pad * 2}px`,
+        border: '3px solid #ef4444',
+        borderRadius: shape === 'circle' ? '9999px' : '12px',
+        boxShadow: '0 0 12px 2px rgba(239,68,68,0.5)',
+        zIndex: '999999',
+        pointerEvents: 'none',
+      });
+      document.body.appendChild(ov);
+    },
+    { el: handle, shape, pad }
+  );
+  await page.waitForTimeout(300);
 }
 
 async function loginAdmin(page: Page) {
@@ -64,7 +95,9 @@ test('3.27 + 4.1 + 4.12 Login', async ({ page }) => {
   await settle(page);
   await shot(page, 'gambar-3-27-login', false);
   await shot(page, 'gambar-4-1-login', false);
+  await spotlight(page, page.locator('form'), 'rect', 10);
   await shot(page, 'gambar-4-12-learnability-login', false);
+  await clearSpotlight(page);
 });
 
 test('3.25 Halaman publik (tanpa login)', async ({ page }) => {
@@ -84,8 +117,12 @@ test('4.2 + 4.13 + 4.18 Dashboard', async ({ page }) => {
   await page.goto(`${BASE_URL}/dashboard`);
   await settle(page, 4000);
   await shot(page, 'gambar-4-2-dashboard', true);
+  await spotlight(page, page.getByText('View Occupancy', { exact: true }).locator('xpath=ancestor::a[1]'), 'rect', 8);
   await shot(page, 'gambar-4-13-efficiency-dashboard', false);
+  await clearSpotlight(page);
+  await spotlight(page, page.getByText('Check Availability', { exact: true }).locator('xpath=ancestor::a[1]'), 'rect', 8);
   await shot(page, 'gambar-4-18-aturan2-shortcut', false);
+  await clearSpotlight(page);
 });
 
 test('3.28 + 4.3 + 4.14 + 4.17 Manajemen Kamar', async ({ page }) => {
@@ -94,8 +131,12 @@ test('3.28 + 4.3 + 4.14 + 4.17 Manajemen Kamar', async ({ page }) => {
   await settle(page, 4000);
   await shot(page, 'gambar-3-28-manajemen-kamar', true);
   await shot(page, 'gambar-4-3-manajemen-kamar', true);
+  await spotlight(page, page.locator('[data-slot="sidebar"]').filter({ hasText: 'Dashboard' }).first(), 'rect', 6);
   await shot(page, 'gambar-4-14-memorability-navigasi', false);
+  await clearSpotlight(page);
+  await spotlight(page, page.getByRole('button', { name: 'Detail' }).first().locator('xpath=..'), 'rect', 8);
   await shot(page, 'gambar-4-17-aturan1-konsistensi', false);
+  await clearSpotlight(page);
 });
 
 test('4.20 Toast sukses edit kamar (closure) + 4.19c feedback toast', async ({ page }) => {
@@ -110,8 +151,10 @@ test('4.20 Toast sukses edit kamar (closure) + 4.19c feedback toast', async ({ p
   await page.getByRole('button', { name: 'Update Room' }).click({ timeout: 10_000 });
   await page.waitForSelector('[data-sonner-toast]', { timeout: 15_000 }).catch(() => {});
   await page.waitForTimeout(600);
+  await spotlight(page, page.locator('[data-sonner-toast]').first(), 'rect', 8);
   await shot(page, 'gambar-4-20-aturan4-closure-toast', false);
   await shot(page, 'gambar-4-19c-aturan3-feedback-toast', false);
+  await clearSpotlight(page);
 });
 
 test('4.22 Dialog konfirmasi hapus (pembatalan aksi)', async ({ page }) => {
@@ -121,7 +164,9 @@ test('4.22 Dialog konfirmasi hapus (pembatalan aksi)', async ({ page }) => {
   try {
     await page.locator('button:has(svg.lucide-trash-2), button:has(svg.lucide-trash)').first().click({ timeout: 8000 });
     await page.waitForTimeout(1200);
+    await spotlight(page, page.getByRole('button', { name: /cancel|batal/i }).first(), 'circle', 8);
     await shot(page, 'gambar-4-22-aturan6-pembatalan-dialog', false);
+    await clearSpotlight(page);
     await page.getByRole('button', { name: /cancel|batal/i }).first().click({ timeout: 5000 }).catch(() => {});
   } catch {
     await shot(page, 'gambar-4-22-aturan6-pembatalan-dialog', false);
@@ -241,7 +286,9 @@ test('4.9 + 4.23 Laporan', async ({ page }) => {
   await page.goto(`${BASE_URL}/reports`);
   await settle(page, 5000);
   await shot(page, 'gambar-4-9-laporan', true);
+  await spotlight(page, page.getByText('Report Period — From').locator('xpath=ancestor::div[contains(@class,"p-4")][1]'), 'rect', 8);
   await shot(page, 'gambar-4-23-aturan7-kendali-pengguna', false);
+  await clearSpotlight(page);
 });
 
 test('4.21 Penanganan kesalahan (login error)', async ({ page }) => {
@@ -250,7 +297,9 @@ test('4.21 Penanganan kesalahan (login error)', async ({ page }) => {
   await page.locator('#password').fill('wrongpassword');
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await page.waitForTimeout(3500);
+  await spotlight(page, page.locator('[role="alert"]').first(), 'rect', 8);
   await shot(page, 'gambar-4-21-aturan5-error-handling', false);
+  await clearSpotlight(page);
 });
 
 test('4.10 + 4.15 + 4.16 Chatbot: kartu kamar, validasi form, konfirmasi reservasi', async ({ page }) => {
@@ -268,7 +317,9 @@ test('4.10 + 4.15 + 4.16 Chatbot: kartu kamar, validasi form, konfirmasi reserva
     const nameInput = page.locator('#bc-guest-name');
     await nameInput.fill('ab');
     await page.waitForTimeout(800);
+    await spotlight(page, page.getByText('Name must be at least 3 characters').first(), 'rect', 6);
     await shot(page, 'gambar-4-15-error-rate-validasi-form', false);
+    await clearSpotlight(page);
     await nameInput.fill('David Guest');
     await page.locator('#bc-guest-phone').fill('081234567890');
     await page.waitForTimeout(500);
@@ -278,7 +329,9 @@ test('4.10 + 4.15 + 4.16 Chatbot: kartu kamar, validasi form, konfirmasi reserva
       return /berhasil dibuat|reservasi.*dibuat|reservation.*created|payment|pembayaran/i.test(t) && !t.includes('Typing');
     }, { timeout: 120_000 }).catch(() => {});
     await page.waitForTimeout(5000);
+    await spotlight(page, page.getByText(/telah berhasil dibuat|berhasil dibuat|reservation.*created|booking confirmed/i).first(), 'rect', 8);
     await shot(page, 'gambar-4-16-satisfaction-konfirmasi-reservasi', false);
+    await clearSpotlight(page);
   } catch {
     await shot(page, 'gambar-4-15-error-rate-validasi-form', false);
     await shot(page, 'gambar-4-16-satisfaction-konfirmasi-reservasi', false);
