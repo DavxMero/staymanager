@@ -3,9 +3,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   Eye,
-  Download,
-  Edit,
-  MoreHorizontal,
   Search,
   CalendarRange,
   X,
@@ -32,14 +29,9 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-
 import { Invoice } from '@/types'
+
+const invoiceAmount = (inv: Invoice) => Number(inv.total_amount ?? inv.amount ?? 0)
 
 interface SortConfig {
   key: keyof Invoice | null
@@ -54,14 +46,10 @@ const statusVariants: Record<string, string> = {
 
 export function EnhancedInvoicesTable({
   invoices,
-  onViewInvoice,
-  onDownloadInvoice,
-  onEditInvoice
+  onViewInvoice
 }: {
   invoices: Invoice[]
   onViewInvoice: (invoice: Invoice) => void
-  onDownloadInvoice: (invoice: Invoice) => void
-  onEditInvoice: (invoice: Invoice) => void
 }) {
   const SAMPLE_SIZE = 10
 
@@ -97,8 +85,9 @@ export function EnhancedInvoicesTable({
     const filtered = baseInvoices.filter(invoice => {
       const matchesSearch =
         invoice.id.toString().includes(searchTerm) ||
-        invoice.reservation_id.toString().includes(searchTerm) ||
-        invoice.amount.toString().includes(searchTerm)
+        (invoice.invoice_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (invoice.reservation_id || '').toString().includes(searchTerm) ||
+        invoiceAmount(invoice).toString().includes(searchTerm)
 
       const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter
 
@@ -217,10 +206,10 @@ export function EnhancedInvoicesTable({
                     {getSortIcon('id')}
                   </div>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('reservation_id')}>
+                <TableHead className="cursor-pointer" onClick={() => requestSort('invoice_number')}>
                   <div className="flex items-center">
-                    Reservation
-                    {getSortIcon('reservation_id')}
+                    Invoice No.
+                    {getSortIcon('invoice_number')}
                   </div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => requestSort('created_at')}>
@@ -229,10 +218,10 @@ export function EnhancedInvoicesTable({
                     {getSortIcon('created_at')}
                   </div>
                 </TableHead>
-                <TableHead className="text-right cursor-pointer" onClick={() => requestSort('amount')}>
+                <TableHead className="text-right cursor-pointer" onClick={() => requestSort('total_amount')}>
                   <div className="flex items-center justify-end">
                     Amount
-                    {getSortIcon('amount')}
+                    {getSortIcon('total_amount')}
                   </div>
                 </TableHead>
                 <TableHead>Status</TableHead>
@@ -244,36 +233,19 @@ export function EnhancedInvoicesTable({
                 filteredAndSortedInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium">#{invoice.id}</TableCell>
-                    <TableCell>Reservation #{invoice.reservation_id}</TableCell>
+                    <TableCell className="font-mono text-xs">{invoice.invoice_number || '—'}</TableCell>
                     <TableCell>{invoice.created_at ? new Date(invoice.created_at).toLocaleDateString() : 'N/A'}</TableCell>
-                    <TableCell className="text-right font-medium">{formatCurrencyCompat(invoice.amount)}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrencyCompat(invoiceAmount(invoice))}</TableCell>
                     <TableCell>
-                      <Badge className={statusVariants[invoice.status]}>
+                      <Badge className={statusVariants[invoice.status] || statusVariants.pending}>
                         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onViewInvoice(invoice)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEditInvoice(invoice)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDownloadInvoice(invoice)}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button variant="ghost" size="sm" onClick={() => onViewInvoice(invoice)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

@@ -165,9 +165,9 @@ test('4.7 Inventaris (Logistics)', async ({ page }) => {
   await shot(page, 'gambar-4-7-inventaris', true);
 });
 
-test('4.8 Billing & Invoice', async ({ page }) => {
+test('4.8 Billing & Invoice (Invoices tab in Financial)', async ({ page }) => {
   await loginAdmin(page);
-  await page.goto(`${BASE_URL}/billing`);
+  await page.goto(`${BASE_URL}/financial?tab=invoices`);
   await settle(page, 4000);
   await shot(page, 'gambar-4-8-billing-invoice', true);
 });

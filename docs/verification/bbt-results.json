@@ -104,12 +104,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 14941,
+                  "duration": 25126,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-12T20:37:36.433Z",
+                  "startTime": "2026-06-13T18:21:43.377Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -123,7 +123,7 @@
           "column": 5
         },
         {
-          "title": "4.9 + 4.23 Laporan",
+          "title": "4.8 Billing & Invoice (Invoices tab in Financial)",
           "ok": true,
           "tags": [],
           "tests": [
@@ -138,12 +138,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 14331,
+                  "duration": 11616,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-12T20:37:52.189Z",
+                  "startTime": "2026-06-13T18:22:08.617Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -151,9 +151,9 @@
               "status": "expected"
             }
           ],
-          "id": "5ff2bfde4962435120ae-3a9aa6061f0deca812d3",
+          "id": "5ff2bfde4962435120ae-ac6be19e8fb90cff2567",
           "file": "thesis-screenshot-capture.spec.ts",
-          "line": 175,
+          "line": 168,
           "column": 5
         }
       ]
@@ -161,8 +161,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-12T20:37:35.850Z",
-    "duration": 32072.6,
+    "startTime": "2026-06-13T18:21:42.892Z",
+    "duration": 38729.419,
     "expected": 2,
     "skipped": 0,
     "unexpected": 0,

@@ -60,10 +60,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { EnhancedInvoicesTable } from "@/components/billing/EnhancedInvoicesTable"
 import { supabase } from "@/lib/supabaseClient"
 import { formatCurrency } from "@/lib/utils"
 import { exportFinancialToCSV, exportFinancialToPDF } from "@/lib/report-export"
 import { toast } from "sonner"
+import type { Invoice } from "@/types"
 
 interface Expense {
     id: number
@@ -100,6 +102,7 @@ export default function FinancialPage() {
 
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [payments, setPayments] = useState<Payment[]>([])
+    const [invoices, setInvoices] = useState<Invoice[]>([])
 
     const [totalIncome, setTotalIncome] = useState(0)
     const [totalExpenses, setTotalExpenses] = useState(0)
@@ -121,6 +124,14 @@ export default function FinancialPage() {
 
     useEffect(() => {
         fetchFinancialData()
+    }, [])
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const tab = new URLSearchParams(window.location.search).get('tab')
+        if (tab && ['overview', 'invoices', 'income', 'expenses'].includes(tab)) {
+            setActiveTab(tab)
+        }
     }, [])
 
     const fetchFinancialData = async () => {
@@ -157,16 +168,19 @@ export default function FinancialPage() {
             setTotalIncome(payTotal)
             setNetProfit(payTotal - expTotal)
 
-            const { data: pendingInvoices, error: invoicesError } = await supabase
+            const { data: invoicesData, error: invoicesError } = await supabase
                 .from('invoices')
-                .select('amount, status')
-                .in('status', ['pending', 'overdue'])
+                .select('*')
+                .order('created_at', { ascending: false })
 
-            if (invoicesError) console.error('Error fetching pending invoices:', invoicesError)
+            if (invoicesError) console.error('Error fetching invoices:', invoicesError)
 
-            const pendingList = pendingInvoices || []
+            const loadedInvoices = (invoicesData || []) as Invoice[]
+            setInvoices(loadedInvoices)
+
+            const pendingList = loadedInvoices.filter((inv) => inv.status === 'pending' || inv.status === 'overdue')
             setPendingInvoicesCount(pendingList.length)
-            setPendingInvoicesAmount(pendingList.reduce((sum, inv) => sum + Number(inv.amount || 0), 0))
+            setPendingInvoicesAmount(pendingList.reduce((sum, inv) => sum + Number(inv.total_amount ?? inv.amount ?? 0), 0))
 
         } catch (error) {
             console.error('Error loading financial data:', error)
@@ -222,7 +236,7 @@ export default function FinancialPage() {
                     <p className="text-muted-foreground">Manage your property's cash flow, income, and expenses.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => router.push('/billing')}>
+                    <Button variant="outline" onClick={() => setActiveTab('invoices')}>
                         <Receipt className="mr-2 h-4 w-4" />
                         Billing & Invoices
                     </Button>
@@ -320,9 +334,9 @@ export default function FinancialPage() {
 
                 <Card
                     className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer transition-shadow hover:shadow-md"
-                    onClick={() => router.push('/billing')}
+                    onClick={() => setActiveTab('invoices')}
                     role="link"
-                    aria-label="Open Billing & Invoices"
+                    aria-label="Open Invoices tab"
                 >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-300">
@@ -333,7 +347,7 @@ export default function FinancialPage() {
                     <CardContent>
                         <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{formatCurrency(pendingInvoicesAmount)}</div>
                         <p className="text-xs text-amber-600 dark:text-amber-500 mt-1 flex items-center gap-1">
-                            {pendingInvoicesCount} unpaid invoice(s) — open Billing
+                            {pendingInvoicesCount} unpaid invoice(s) — view Invoices
                             <ArrowRight className="h-3 w-3" />
                         </p>
                     </CardContent>
@@ -343,6 +357,7 @@ export default function FinancialPage() {
             <Tabs value={activeTab} className="space-y-4" onValueChange={setActiveTab}>
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="invoices">Invoices</TabsTrigger>
                     <TabsTrigger value="income">Income History</TabsTrigger>
                     <TabsTrigger value="expenses">Expenses</TabsTrigger>
                 </TabsList>
@@ -452,7 +467,15 @@ export default function FinancialPage() {
                     </div>
                 </TabsContent>
 
-                
+
+                <TabsContent value="invoices" className="space-y-4">
+                    <EnhancedInvoicesTable
+                        invoices={invoices}
+                        onViewInvoice={(invoice) => router.push(`/billing/${invoice.id}`)}
+                    />
+                </TabsContent>
+
+
                 <TabsContent value="income" className="space-y-4">
                     <Card>
                         <CardHeader>
