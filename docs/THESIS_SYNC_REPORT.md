@@ -128,7 +128,7 @@ Capture: Playwright, Chrome 1280×800 @2x. Full-page untuk halaman modul (utuh a
 | 4.13 Efficiency | gambar-4-13-efficiency-dashboard.png |
 | 4.14 Memorability | gambar-4-14-memorability-navigasi.png |
 | 4.15 Error Rate (validasi real-time) | gambar-4-15-error-rate-validasi-form.png (modal Confirm Booking, error "Name must be at least 3 characters") |
-| 4.16 Satisfaction | gambar-4-16-satisfaction-konfirmasi-reservasi.png (reservasi berhasil dibuat + Payment Options) |
+| 4.16 Satisfaction | gambar-4-16-satisfaction-konfirmasi-reservasi.png (pesan konfirmasi "Reservasi…telah berhasil dibuat" — disorot lingkaran merah) |
 | 4.17 Aturan 1 Konsistensi | gambar-4-17-aturan1-konsistensi.png |
 | 4.18 Aturan 2 Shortcut | gambar-4-18-aturan2-shortcut.png |
 | 4.19 Aturan 3 Feedback | gambar-4-19a-...-sebelum.png + gambar-4-19b-...-sesudah.png (hover sel kosong memunculkan tombol +) + gambar-4-19c-...-toast.png (toast sukses) |
@@ -139,6 +139,8 @@ Capture: Playwright, Chrome 1280×800 @2x. Full-page untuk halaman modul (utuh a
 | 4.24 Aturan 8 Beban Memori | gambar-4-24-aturan8-beban-memori.png (badge status + kalender) |
 
 Bukan screenshot aplikasi (tidak di-capture): Gambar 2.1–2.6 (sumber paper), 3.1–3.24 & 3.30 (diagram olahan penulis, source `docs/assets/diagrams-src/`, render `docs/assets/images/`), 3.3–3.5 (website OPERA/Cloudbeds/Little Hotelier), 4.11 (chart olahan penulis), L.6.x (foto dokumentasi wawancara).
+
+**Anotasi spotlight (2026-06-14)**: SEMUA gambar bukti heuristik/8 Aturan Emas (4.12–4.24, termasuk 4.19a/b/c & 4.24) kini diberi **lingkaran/kotak merah** untuk menyorot elemen UI yang sedang dibahas (form login, ring occupancy, sidebar navigasi, pesan validasi, konfirmasi reservasi, grup tombol, kartu shortcut, toast, alert error, tombol Cancel, filter laporan, legenda warna). Gambar overview modul (3.25–3.29, 4.1–4.10) **tetap bersih tanpa spotlight**. Untuk caption gambar 4.12–4.24, boleh ditambahkan kalimat "(lingkaran merah menandai elemen yang dibahas)" — perubahan caption ini tetap tunduk aturan double-verification: ajukan dulu ke pemilik.
 
 Regenerasi screenshot kapan saja: `pnpm dev` lalu `pnpm exec playwright test docs/verification/thesis-screenshot-capture.spec.ts --project=chromium`.
 
