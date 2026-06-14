@@ -1,4 +1,4 @@
-# Laporan Sinkronisasi Skripsi ↔ Source Code (2026-06-13)
+# Laporan Sinkronisasi Skripsi ↔ Source Code (2026-06-13, re-audit 2026-06-15)
 
 Source code berstatus FINAL. Semua ketidaksesuaian di bawah harus diperbaiki **di dokumen skripsi (Word)**, bukan di kode. Verifikasi dilakukan terhadap kode aktual di master (commit terbaru) + introspeksi Supabase live.
 
@@ -46,9 +46,19 @@ Source code berstatus FINAL. Semua ketidaksesuaian di bawah harus diperbaiki **d
 - Fakta kode: `/settings` justru masuk GUEST_ALLOWED_ROUTES di RouteGuard (guest perlu akses tab profil); hanya tab Hotel/AI yang digate permission `settings`; subhalaman database/development/health/security tanpa cek role tambahan dan sebagian fiturnya simulasi.
 - Revisi: ubah kalimat menjadi "Halaman Settings dapat diakses semua pengguna login untuk pengaturan profil; tab konfigurasi hotel dan AI dibatasi permission `settings` (super_admin/manager)".
 
-### A7. Ejaan nilai ENUM status — pakai TANDA HUBUNG
-- Fakta kode/DB: `checked-in`, `checked-out` (hyphen), `no_show` (underscore — satu-satunya), housekeeping `in-progress`.
-- Revisi: semua `checked_in` / `checked_out` / `in_progress` di Bab 3–4 (sequence, activity, struktur tabel) diganti `checked-in` / `checked-out` / `in-progress`.
+### A7. Nilai status — SET LENGKAP terverifikasi dari CHECK constraint DB (2026-06-15)
+Semua status di DB divalidasi pakai **CHECK constraint** (bukan native ENUM type), `character varying`. Nilai persis (dari `pg_get_constraintdef`):
+- **reservations.status** (6): `pending, confirmed, checked-in, checked-out, cancelled, no_show`. **TIDAK ADA `overdue`.**
+- **rooms.status** (5): `available, occupied, maintenance, cleaning, out_of_order`. **TIDAK ADA `reserved`.**
+- **housekeeping_tasks.status** (6): `pending, assigned, in-progress, completed, cancelled, failed`. (tidak ada `scheduled`; ada `assigned` & `failed`).
+- **housekeeping_tasks.task_type** (7): `daily, deep, checkout, checkin, maintenance, special, inspection`.
+- **housekeeping_tasks.priority** (5): `low, medium, high, urgent, critical`.
+- Ejaan tanda hubung vs garis bawah konsisten: `checked-in`, `checked-out`, `in-progress`, `out_of_order`, `no_show`.
+- Revisi: ganti semua `checked_in`/`checked_out`/`in_progress` → `checked-in`/`checked-out`/`in-progress`; sesuaikan daftar nilai status reservasi & kamar ke set di atas.
+
+**PENTING — `overdue` & `reserved` adalah status TURUNAN (derived), bukan tersimpan di DB:**
+- `overdue` (reservasi): hanya dipakai sebagai **pembanding** di UI/logika (occupancy/page.tsx:373, 3118, 3144, 3166; actions.ts:80) untuk menandai reservasi `checked-in` yang lewat tanggal check-out. Tidak ada satu pun kode yang meng-INSERT/UPDATE status menjadi `overdue`, dan CHECK constraint menolaknya — jadi cek `status === 'overdue'` praktis **tidak pernah terpenuhi** lewat nilai tersimpan. Implikasi: badge "Overdue" (merah berkedip) dan **late fee otomatis** (lihat C5) efektif tak terpicu kecuali status `overdue` di-set di lapisan lain. Skripsi: jelaskan "overdue" sebagai **status tampilan turunan** (dihitung dari tanggal), bukan nilai ENUM tersimpan; atau jangan klaim late-fee-on-overdue sebagai alur otomatis aktif.
+- `reserved` (kamar): di occupancy/page.tsx:2725 dihitung **in-memory** untuk tampilan kalender (kamar dengan reservasi `confirmed` mendatang). Namun rooms/page.tsx:534 mencoba `UPDATE rooms SET status='reserved'` yang **melanggar `rooms_status_check`** (akan error 23514). Skripsi: deskripsikan "reserved" sebagai status tampilan turunan; jangan masukkan ke daftar nilai kolom `rooms.status`.
 
 ### A8. Query rooms pada cekKetersediaan
 - Lokasi: Bab 3.3.2.1.3.2 ("SELECT * FROM rooms WHERE status='available'").
@@ -59,9 +69,11 @@ Source code berstatus FINAL. Semua ketidaksesuaian di bawah harus diperbaiki **d
 - Fakta kode: Zod hanya dipakai untuk parameter function tools chatbot + validasi API upload. Seluruh form UI memakai useState + validasi manual (mis. cek `.trim()`, validasi inline di dialog konfirmasi booking).
 - Revisi: selaraskan dengan Tabel 3.5 yang sudah benar ("useState manual + Zod khusus chatbot tools"). Ganti kalimat aturan #5 menjadi "Validasi form dilakukan secara real-time pada lapisan komponen (inline error di bawah field)".
 
-### A10. payment_status ENUM punya 4 nilai
+### A10. DUA kolom status pembayaran yang BERBEDA — jangan tertukar
 - Lokasi: Bab 3.3.2.3.2 ("pending, paid, partial").
-- Fakta DB: `pending, partial, paid, refunded`.
+- Fakta DB (terverifikasi CHECK constraint 2026-06-15):
+  - **`reservations.payment_status`** (4): `pending, partial, paid, refunded` — ini yang dimaksud Bab 3.3.2.3.2; tambahkan `refunded` (dan `partial` jika belum).
+  - **`payments.status`** (4): `pending, completed, failed, refunded` — kolom TERPISAH di tabel `payments`, nilainya BEDA (pakai `completed/failed`, bukan `paid/partial`). Pastikan skripsi tidak menyamakan kedua kolom ini.
 
 ### A11. Kutipan teks UI berbahasa Indonesia sudah usang — UI kini FULL ENGLISH
 - Contoh di skripsi: tombol "Masuk", "Masuk dengan Google", "Tambah Kamar", "Pesan Sekarang", placeholder "Opsional — untuk konfirmasi reservasi", label "Lupa Password".
@@ -74,6 +86,15 @@ Source code berstatus FINAL. Semua ketidaksesuaian di bawah harus diperbaiki **d
 ### A13. Klaim "Setiap endpoint diproteksi middleware autentikasi" (Bab 2.5.2)
 - Status sekarang (setelah hardening 2026-06-13): SEMUA route mutasi diproteksi `getServerUserContext` + `hasPermission` (guests, rooms, custom-room-types, expenses, inventory, purchase-orders, suppliers, users, reports/analytics, reports/export, housekeeping ×2, guest-facilities, rooms/upload-image, files/upload) — KECUALI `/api/chat` yang by-design menerima anonim untuk tool read-only (verifikasi sesi server-side dilakukan untuk tool transaksional). Server actions occupancy juga digate `canManageBookings`.
 - Revisi: ubah "middleware" → "API route guards server-side"; tambahkan pengecualian /api/chat by-design.
+
+### A14. Detail proteksi API route — nuansa (audit 2026-06-15)
+Mayoritas route mutasi diproteksi `getServerUserContext` + `hasPermission`, TAPI ada pengecualian yang perlu akurat di skripsi:
+- `/api/reports/analytics` → `hasPermission(ctx,'reports','dashboard')`; `/api/reports/export` → `hasPermission(ctx,'reports')` — **JAWABAN pertanyaan terbuka agent Word: YA, kedua endpoint laporan diproteksi `hasPermission('reports')`** (analytics/route.ts:8-10, export/route.ts:6-8).
+- `/api/chat` — anonim by-design (read-only tools); verifikasi sesi dilakukan di dalam tool transaksional.
+- `/api/auth/callback` — tanpa guard (memang endpoint pertukaran OAuth).
+- `/api/files/upload` — pakai `supabase.auth.getUser()` (token klien), BUKAN `getServerUserContext` — jalur auth berbeda; tetap butuh user login.
+- `/api/guest-facilities` — **GET & POST tidak dicek permission** (hanya `getServerUserContext`), sedangkan PUT & DELETE digate `hasPermission(ctx,'guests','occupancy','operations')`. Artinya setiap user login bisa membuat/melihat permintaan fasilitas tanpa cek peran (gap permission ringan). Jangan klaim "semua endpoint guest-facilities digate per-peran".
+- Revisi: pertahankan narasi "API route guards server-side" sebagai lapisan utama, tapi sebutkan pengecualian by-design (/api/chat, /api/auth/callback) dan jalur auth alternatif (/api/files/upload). RLS (lapisan 3) belum diintrospeksi di audit ini — `PERLU CEK MANUAL` jika skripsi mengklaim policy RLS spesifik per tabel.
 
 ## B. AKURAT — JANGAN DIUBAH (terverifikasi benar)
 
@@ -97,7 +118,7 @@ Source code berstatus FINAL. Semua ketidaksesuaian di bawah harus diperbaiki **d
 2. Tool chatbot getMyBookings & cancelBooking (lihat A2).
 3. Verifikasi data diri sebelum konfirmasi booking chatbot (modal "Verify Your Details": nama/telepon/email editable, validasi real-time, tombol "Use my account details") — bukti bagus untuk Aturan Emas #5.
 4. Anti prompt-injection: input tamu dibungkus `<guest_message>` + blok system prompt khusus.
-5. Late fee otomatis: reservasi overdue memicu insert `billing_items` kategori late_fee per hari.
+5. Late fee otomatis: logika insert `billing_items` kategori `late_fee` per hari ADA (occupancy/page.tsx:373-394), TAPI dipicu oleh `reservation.status === 'overdue'` yang tidak pernah tersimpan di DB (lihat A7) → alur ini efektif tak aktif. Jangan klaim sebagai fitur otomatis yang berjalan; sebut sebagai logika tersedia namun bergantung status turunan.
 6. Pilihan model AI di UI chatbot: Gemini 2.5 Flash / 2.5 Pro (maxSteps 3, maxDuration 60).
 7. Toast sukses/gagal di semua aksi CRUD + spinner loading di tombol submit (bukti Aturan Emas #3 & #4).
 
