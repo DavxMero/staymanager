@@ -70,3 +70,10 @@ supabase/.temp
 # Playwright output
 /test-results/
 docs/verification/bbt-html-report/
+
+# Skripsi / thesis docs & assets (disimpan lokal, tidak di-push)
+/docs/
+
+# Claude / graphify (disimpan lokal, tidak di-push)
+CLAUDE.md
+/graphify-out/
